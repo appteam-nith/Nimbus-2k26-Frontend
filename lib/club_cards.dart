@@ -38,8 +38,10 @@ class _ClubCardState extends State<ClubCard>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation =
-        Tween<double>(begin: 1.0, end: 0.95).animate(_animationController);
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(_animationController);
   }
 
   @override
@@ -79,15 +81,16 @@ class _ClubCardState extends State<ClubCard>
                 color: Colors.black.withOpacity(_expanded ? 0.18 : 0.1),
                 blurRadius: _expanded ? 22 : 15,
                 offset: const Offset(0, 6),
-              )
+              ),
             ],
           ),
           child: AnimatedSize(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             child: Row(
-              crossAxisAlignment:
-                  _expanded ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              crossAxisAlignment: _expanded
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
                 Container(
                   width: 52,
@@ -116,7 +119,10 @@ class _ClubCardState extends State<ClubCard>
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: widget.departmentColor,
                           borderRadius: BorderRadius.circular(6),
@@ -136,7 +142,7 @@ class _ClubCardState extends State<ClubCard>
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: AppColors.muted,
                         ),
                       ),
                     ],

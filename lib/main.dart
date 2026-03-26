@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'timeline/controller/timeline_controller.dart';
 import 'models/profile_model.dart';
+import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'timeline/screens/timeline_screen.dart';
 import 'events_page.dart';
 import 'departmental_clubs_page.dart';
@@ -16,6 +18,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => TimelineController()),
         ChangeNotifierProvider(create: (_) => ProfileModel()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const MyApp(),
     ),
@@ -34,8 +37,26 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         useMaterial3: true,
       ),
-      home: const MainNavigationScreen(),
+      home: const AuthWrapper(),
+      routes: {
+        '/home': (context) => const MainNavigationScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
+    // Show LoginScreen if not authenticated, otherwise show MainNavigationScreen
+    return authProvider.isAuthenticated
+        ? const MainNavigationScreen()
+        : const LoginScreen();
   }
 }
 

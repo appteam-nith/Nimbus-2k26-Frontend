@@ -25,7 +25,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
     'Arch',
     'MNC',
     'Physics',
-    'Material'
+    'Material',
   ];
 
   @override
@@ -52,7 +52,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: AppColors.dark,
         title: const Text(
           'Departmental Clubs',
           style: TextStyle(
@@ -65,7 +65,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () {},
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -88,10 +88,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
       controller: _searchController,
       decoration: InputDecoration(
         hintText: 'Search clubs by name or dept',
-        hintStyle: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 14,
-        ),
+        hintStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14),
         prefixIcon: const Icon(Icons.search),
         filled: true,
         fillColor: const Color(0xFFF4F6FA),
@@ -136,7 +133,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
                       fontFamily: 'Inter',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected ? Colors.white : AppColors.dark,
                     ),
                   ),
                 ),
@@ -211,8 +208,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'title': 'Medextrous',
         'department': 'Mechanical ',
         'departmentColor': const Color.fromARGB(255, 240, 200, 200),
-        'description':
-            'Designing and manufacturing the machines of tomorrow.',
+        'description': 'Designing and manufacturing the machines of tomorrow.',
         'imagePath': 'assets/clubs/Medextrous.jpg',
         'filterKey': 'Mech',
       },
@@ -267,12 +263,14 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
   List<Map<String, dynamic>> _getFilteredClubs() {
     final allClubs = _getAllClubs();
     return allClubs.where((club) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           club['title'].toLowerCase().contains(_searchQuery) ||
           club['department'].toLowerCase().contains(_searchQuery) ||
           club['description'].toLowerCase().contains(_searchQuery);
 
-      final matchesFilter = _selectedFilterIndex == 0 ||
+      final matchesFilter =
+          _selectedFilterIndex == 0 ||
           club['filterKey'] == filters[_selectedFilterIndex];
 
       return matchesSearch && matchesFilter;
@@ -286,26 +284,23 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
       return Center(
         child: Text(
           'No clubs found',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
         ),
       );
     }
 
     return ListView(
       children: filteredClubs
-          .map((club) => ClubCard(
-                title: club['title'],
-                department: club['department'],
-                departmentColor: club['departmentColor'],
-                description: club['description'],
-                imagePath: club['imagePath'],
-              ))
+          .map(
+            (club) => ClubCard(
+              title: club['title'],
+              department: club['department'],
+              departmentColor: club['departmentColor'],
+              description: club['description'],
+              imagePath: club['imagePath'],
+            ),
+          )
           .toList(),
     );
   }
-
-
 }

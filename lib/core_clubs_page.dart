@@ -37,13 +37,10 @@ class _CoreClubsPageState extends State<CoreClubsPage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: AppColors.dark,
         title: const Text(
           'Core Clubs',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       body: Padding(
@@ -124,9 +121,11 @@ class _CoreClubsPageState extends State<CoreClubsPage> {
       return allClubs;
     }
     return allClubs
-        .where((club) =>
-            club['title']!.toLowerCase().contains(_searchQuery) ||
-            club['description']!.toLowerCase().contains(_searchQuery))
+        .where(
+          (club) =>
+              club['title']!.toLowerCase().contains(_searchQuery) ||
+              club['description']!.toLowerCase().contains(_searchQuery),
+        )
         .toList();
   }
 
@@ -138,26 +137,23 @@ class _CoreClubsPageState extends State<CoreClubsPage> {
       return Center(
         child: Text(
           'No clubs found',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
         ),
       );
     }
 
     return ListView(
       children: filteredClubs
-          .map((club) => CoreClubCard(
-                title: club['title']!,
-                description: club['description']!,
-                imagePath: club['imagePath']!,
-              ))
+          .map(
+            (club) => CoreClubCard(
+              title: club['title']!,
+              description: club['description']!,
+              imagePath: club['imagePath']!,
+            ),
+          )
           .toList(),
     );
   }
-
-
 }
 
 // CoreClubCard is now provided by lib/core_club_card.dart

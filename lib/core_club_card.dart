@@ -36,8 +36,10 @@ class _CoreClubCardState extends State<CoreClubCard>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation =
-        Tween<double>(begin: 1.0, end: 0.96).animate(_animationController);
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(_animationController);
   }
 
   @override
@@ -72,18 +74,19 @@ class _CoreClubCardState extends State<CoreClubCard>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(_expanded ? 0.18 : 0.06),
+                color: Colors.black.withValues(alpha: _expanded ? 0.18 : 0.06),
                 blurRadius: _expanded ? 22 : 10,
                 offset: const Offset(0, 6),
-              )
+              ),
             ],
           ),
           child: AnimatedSize(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             child: Row(
-              crossAxisAlignment:
-                  _expanded ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              crossAxisAlignment: _expanded
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
                 // 🖼 CLUB IMAGE
                 Container(
