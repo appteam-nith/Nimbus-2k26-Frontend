@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_model.dart';
 import '../services/api_service.dart';
 
 enum AuthStatus { idle, loading, success, error }
 
-// ── Google OAuth2 config ───────────────────────────────────────────
-// Client ID from .env GOOGLE_CLIENT_ID
-const String _googleClientId = '646738-duygsdhasbdja';
-const String _googleRedirectUrl =
-    'com.example.nimbus_2k26_frontend:/oauth2redirect';
-
 class AuthProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  final FlutterAppAuth _appAuth = const FlutterAppAuth();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId:
+        '646738-duygsdhasbdja.apps.googleusercontent.com', // Use full client ID for web
+    scopes: ['email', 'profile'],
+  );
 
   // ── state ─────────────────────────────────────────────────────────
   AuthStatus _status = AuthStatus.idle;
@@ -54,19 +52,70 @@ class AuthProvider extends ChangeNotifier {
     _checkExistingAuth();
   }
 
+  /// Check existing token. If found, show home immediately, then fetch
+  /// the real user name from the backend in the background so the profile
+  /// always shows the correct name even on app restart.
   Future<void> _checkExistingAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    final name = prefs.getString('user_name');
-    final email = prefs.getString('user_email');
     if (token != null && token.isNotEmpty) {
       _isAuthenticated = true;
-      _userName = name;
-      _userEmail = email;
-      notifyListeners();
+      _userName = prefs.getString('user_name');
+      _userEmail = prefs.getString('user_email');
+      notifyListeners(); // Show home immediately with cached name
+
+      // Always refresh name from server in the background
+      _fetchAndCacheProfile();
     }
   }
 
+  /// Fetch user profile from backend and cache name locally.
+  /// Called silently — errors are swallowed (expired token handled gracefully).
+  Future<void> _fetchAndCacheProfile() async {
+    try {
+      final profileData = await _apiService.getUserProfile();
+      final user = profileData['user'] as Map<String, dynamic>?;
+      final name = user?['full_name'] as String?;
+      final email = user?['email'] as String?;
+      if (name != null && name.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', name);
+        if (email != null) await prefs.setString('user_email', email);
+        _userName = name;
+        _userEmail = email;
+        notifyListeners(); // Triggers AuthWrapper → syncProfile()
+      }
+    } catch (_) {
+      // Silently ignore — token may be expired or network unavailable
+    }
+  }
+
+  /// Saves token + user info to SharedPreferences and local state.
+  Future<void> _saveUserData(String token, String? name, String? email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    if (name != null && name.isNotEmpty) {
+      _userName = name;
+      await prefs.setString('user_name', name);
+    }
+    if (email != null && email.isNotEmpty) {
+      _userEmail = email;
+      await prefs.setString('user_email', email);
+    }
+  }
+
+  /// Push real user name from AuthProvider into ProfileModel.
+  /// Called by AuthWrapper on every build when authenticated.
+  void syncProfile(ProfileModel profileModel) {
+    if (_userName != null && _userName!.isNotEmpty) {
+      profileModel.updateName(_userName!);
+    }
+    if (_userEmail != null && _userEmail!.isNotEmpty) {
+      profileModel.updateBio(_userEmail!);
+    }
+  }
+
+  // ── state helpers ─────────────────────────────────────────────────
   void toggleObscurePassword() {
     _obscurePassword = !_obscurePassword;
     notifyListeners();
@@ -98,29 +147,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Saves user info to SharedPreferences and updates local state
-  Future<void> _saveUserData(
-      String token, String? name, String? email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-    if (name != null) {
-      _userName = name;
-      await prefs.setString('user_name', name);
-    }
-    if (email != null) {
-      _userEmail = email;
-      await prefs.setString('user_email', email);
-    }
-  }
-
-  /// After auth, sync the ProfileModel with the real user name
-  void syncProfile(ProfileModel profileModel) {
-    if (_userName != null && _userName!.isNotEmpty) {
-      profileModel.updateName(_userName!);
-    }
-    if (_userEmail != null) {
-      profileModel.updateBio(_userEmail!);
-    }
+  void clearError() {
+    _errorMessage = null;
+    _status = AuthStatus.idle;
+    notifyListeners();
   }
 
   // ── Login ─────────────────────────────────────────────────────────
@@ -133,13 +163,14 @@ class AuthProvider extends ChangeNotifier {
       );
       final token = response['token'] as String;
 
-      // Fetch the real user profile to get their name
-      final profileData = await _apiService.getUserProfile();
-      final user = profileData['user'];
-      final name = user?['full_name'] as String?;
-      final email = user?['email'] as String?;
+      // Save token first so getUserProfile() can use it
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      _apiService.setToken(token);
 
-      await _saveUserData(token, name, email);
+      // Fetch real user profile (name, email) immediately after login
+      await _fetchAndCacheProfile();
+
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;
@@ -150,22 +181,29 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ── Sign Up ───────────────────────────────────────────────────────
-  /// Returns true on successful registration. Caller should navigate to OTP
-  /// screen — the actual login happens after OTP verification (verifyAndLogin).
+  /// Registers the user. Returns true so caller navigates to OTP screen.
+  /// Actual login (JWT token) happens after OTP verification via [loginAfterOtp].
   Future<bool> signUp() async {
     _setStatus(AuthStatus.loading);
     try {
       final name =
           '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
               .trim();
+
+      // Register with backend
       await _apiService.register(
         name: name,
         email: signupEmailController.text.trim(),
         password: signupPassController.text,
       );
-      // Save the name locally so the OTP screen / profile can use it
+
+      // Save name locally so OTP screen + profile can show it
       _userName = name;
       _userEmail = signupEmailController.text.trim();
+      final prefs = await SharedPreferences.getInstance();
+      if (name.isNotEmpty) await prefs.setString('user_name', name);
+      await prefs.setString('user_email', signupEmailController.text.trim());
+
       _setStatus(AuthStatus.success);
       return true;
     } catch (e) {
@@ -174,7 +212,8 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Called after OTP screen — logs in with the credentials from signup
+  /// Called after the user completes OTP verification.
+  /// Logs in, saves the JWT, fetches profile, marks authenticated.
   Future<bool> loginAfterOtp() async {
     _setStatus(AuthStatus.loading);
     try {
@@ -183,7 +222,14 @@ class AuthProvider extends ChangeNotifier {
         password: signupPassController.text,
       );
       final token = response['token'] as String;
-      await _saveUserData(token, _userName, _userEmail);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      _apiService.setToken(token);
+
+      // Fetch real profile (confirms name etc.)
+      await _fetchAndCacheProfile();
+
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;
@@ -193,33 +239,46 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Google Sign-In via OAuth2 (no Firebase needed) ────────────────
+  // ── Google Sign-In ─────────────────────────────────────────────────
   Future<bool> googleSignIn() async {
     _setStatus(AuthStatus.loading);
     try {
-      final result = await _appAuth.authorizeAndExchangeCode(
-        AuthorizationTokenRequest(
-          _googleClientId,
-          _googleRedirectUrl,
-          discoveryUrl:
-              'https://accounts.google.com/.well-known/openid-configuration',
-          scopes: ['openid', 'email', 'profile'],
-          promptValues: ['select_account'],
-        ),
-      );
+      final account = await _googleSignIn.signIn();
 
-      if (result == null || result.idToken == null) {
+      if (account == null) {
         _setStatus(AuthStatus.error, error: 'Google sign-in was cancelled');
         return false;
       }
 
-      final response = await _apiService.googleSignIn(idToken: result.idToken!);
-      final token = response['token'] as String;
-      final user = response['user'];
-      final name = user?['name'] as String?;
-      final email = user?['email'] as String?;
+      // Get authentication token
+      // On mobile: use idToken
+      // On web: idToken may be null, use accessToken instead
+      final googleAuth = await account.authentication;
+      final token = googleAuth.idToken ?? googleAuth.accessToken;
 
-      await _saveUserData(token, name, email);
+      if (token == null) {
+        _setStatus(
+          AuthStatus.error,
+          error: 'Failed to authenticate with Google. Please try again.',
+        );
+        return false;
+      }
+
+      // Send to backend with user info
+      final response = await _apiService.googleSignIn(
+        idToken: token,
+        email: account.email,
+        displayName: account.displayName,
+        googleId: account.id,
+      );
+      final jwtToken = response['token'] as String;
+      final user = response['user'] as Map<String, dynamic>?;
+      final name =
+          user?['full_name'] as String? ?? account.displayName ?? 'User';
+      final email = user?['email'] as String? ?? account.email;
+
+      await _saveUserData(jwtToken, name, email);
+      _apiService.setToken(jwtToken);
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;

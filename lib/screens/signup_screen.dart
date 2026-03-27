@@ -197,22 +197,48 @@ class _SignupView extends StatelessWidget {
                     PrimaryButton(
                       label: 'Create Account',
                       loading: isLoading,
-                      onPressed: auth.agreedToTerms
-                          ? () async {
-                              final ok = await auth.signUp();
-                              if (ok && context.mounted) {
-                                // Navigate to OTP screen — login happens after verification
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => OtpScreen(
-                                      email: auth.signupEmailController.text,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          : null,
+                      onPressed: () async {
+                        if (!auth.agreedToTerms) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please agree to the Terms & Conditions'),
+                              backgroundColor: AppColors.red,
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+
+                        auth.clearError();
+                        final ok = await auth.signUp();
+                        if (!context.mounted) return;
+                        
+                        if (ok) {
+                          // Navigate to OTP screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OtpScreen(
+                                email: auth.signupEmailController.text,
+                              ),
+                            ),
+                          );
+                        } else {
+                          // Show error from backend (e.g. Email already exists)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                auth.errorMessage ??
+                                    'Registration failed. Please try again.',
+                              ),
+                              backgroundColor: AppColors.red,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     const SizedBox(height: 20),
 

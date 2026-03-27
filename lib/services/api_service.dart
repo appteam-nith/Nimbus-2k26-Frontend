@@ -23,6 +23,11 @@ class ApiService {
     await prefs.setString('auth_token', token);
   }
 
+  /// Directly sets the in-memory token (called after login before further API calls)
+  void setToken(String token) {
+    _token = token;
+  }
+
   Future<void> clearToken() async {
     _token = null;
     final prefs = await SharedPreferences.getInstance();
@@ -93,12 +98,24 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  /// Google Sign-In — sends idToken from google_sign_in package
-  Future<Map<String, dynamic>> googleSignIn({required String idToken}) async {
+  /// Google Sign-In — sends idToken or user info from google_sign_in package
+  Future<Map<String, dynamic>> googleSignIn({
+    required String idToken,
+    String? email,
+    String? displayName,
+    String? googleId,
+  }) async {
+    final body = {
+      'idToken': idToken,
+      if (email != null) 'email': email,
+      if (displayName != null) 'name': displayName,
+      if (googleId != null) 'googleId': googleId,
+    };
+
     final response = await http.post(
       Uri.parse('$baseUrl/api/users/auth/google'),
       headers: _getHeaders(),
-      body: jsonEncode({'idToken': idToken}),
+      body: jsonEncode(body),
     );
     final data = _handleResponse(response);
     if (data['token'] != null) {
@@ -148,9 +165,7 @@ class ApiService {
   }
 
   /// Update user profile — only supports {name} for now
-  Future<Map<String, dynamic>> updateUserProfile({
-    required String name,
-  }) async {
+  Future<Map<String, dynamic>> updateUserProfile({required String name}) async {
     await _loadToken();
     final response = await http.put(
       Uri.parse('$baseUrl/api/users/profile'),
