@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/profile_model.dart';
 import '../services/api_service.dart';
 
 enum AuthStatus { idle, loading, success, error }
 
-// Google OAuth2 config — update CLIENT_ID with your real Google OAuth Client ID
-// from https://console.cloud.google.com → APIs & Services → Credentials
-const String _googleClientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-const String _googleRedirectUrl = 'com.example.nimbus_2k26_frontend:/oauth2redirect';
+// ── Google OAuth2 config ───────────────────────────────────────────
+// Client ID from .env GOOGLE_CLIENT_ID
+const String _googleClientId = '646738-duygsdhasbdja';
+const String _googleRedirectUrl =
+    'com.example.nimbus_2k26_frontend:/oauth2redirect';
 
 class AuthProvider extends ChangeNotifier {
-  // ── API Service ──────────────────────────────────────────────────
   final ApiService _apiService = ApiService();
   final FlutterAppAuth _appAuth = const FlutterAppAuth();
 
-  // ── shared state ─────────────────────────────────────────────────
+  // ── state ─────────────────────────────────────────────────────────
   AuthStatus _status = AuthStatus.idle;
   String? _errorMessage;
   bool _obscurePassword = true;
   bool _isAuthenticated = false;
-  Map<String, dynamic>? _userData;
+  String? _userName;
+  String? _userEmail;
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
   bool get obscurePassword => _obscurePassword;
   bool get isAuthenticated => _isAuthenticated;
-  Map<String, dynamic>? get userData => _userData;
+  String? get userName => _userName;
+  String? get userEmail => _userEmail;
 
-  // ── login fields ─────────────────────────────────────────────────
+  // ── login fields ──────────────────────────────────────────────────
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
 
-  // ── signup fields ────────────────────────────────────────────────
+  // ── signup fields ─────────────────────────────────────────────────
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController signupEmailController = TextEditingController();
@@ -51,12 +54,15 @@ class AuthProvider extends ChangeNotifier {
     _checkExistingAuth();
   }
 
-  /// Check if user is already logged in (token in SharedPreferences)
   Future<void> _checkExistingAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+    final name = prefs.getString('user_name');
+    final email = prefs.getString('user_email');
     if (token != null && token.isNotEmpty) {
       _isAuthenticated = true;
+      _userName = name;
+      _userEmail = email;
       notifyListeners();
     }
   }
@@ -92,6 +98,31 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Saves user info to SharedPreferences and updates local state
+  Future<void> _saveUserData(
+      String token, String? name, String? email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    if (name != null) {
+      _userName = name;
+      await prefs.setString('user_name', name);
+    }
+    if (email != null) {
+      _userEmail = email;
+      await prefs.setString('user_email', email);
+    }
+  }
+
+  /// After auth, sync the ProfileModel with the real user name
+  void syncProfile(ProfileModel profileModel) {
+    if (_userName != null && _userName!.isNotEmpty) {
+      profileModel.updateName(_userName!);
+    }
+    if (_userEmail != null) {
+      profileModel.updateBio(_userEmail!);
+    }
+  }
+
   // ── Login ─────────────────────────────────────────────────────────
   Future<bool> login() async {
     _setStatus(AuthStatus.loading);
@@ -100,7 +131,15 @@ class AuthProvider extends ChangeNotifier {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
-      _userData = response['user'];
+      final token = response['token'] as String;
+
+      // Fetch the real user profile to get their name
+      final profileData = await _apiService.getUserProfile();
+      final user = profileData['user'];
+      final name = user?['full_name'] as String?;
+      final email = user?['email'] as String?;
+
+      await _saveUserData(token, name, email);
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;
@@ -111,10 +150,11 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ── Sign Up ───────────────────────────────────────────────────────
+  /// Returns true on successful registration. Caller should navigate to OTP
+  /// screen — the actual login happens after OTP verification (verifyAndLogin).
   Future<bool> signUp() async {
     _setStatus(AuthStatus.loading);
     try {
-      // Combine first + last name — backend only has `full_name` field
       final name =
           '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
               .trim();
@@ -123,12 +163,27 @@ class AuthProvider extends ChangeNotifier {
         email: signupEmailController.text.trim(),
         password: signupPassController.text,
       );
-      // Auto-login after successful registration
-      final loginResponse = await _apiService.login(
+      // Save the name locally so the OTP screen / profile can use it
+      _userName = name;
+      _userEmail = signupEmailController.text.trim();
+      _setStatus(AuthStatus.success);
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  /// Called after OTP screen — logs in with the credentials from signup
+  Future<bool> loginAfterOtp() async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final response = await _apiService.login(
         email: signupEmailController.text.trim(),
         password: signupPassController.text,
       );
-      _userData = loginResponse['user'];
+      final token = response['token'] as String;
+      await _saveUserData(token, _userName, _userEmail);
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;
@@ -158,10 +213,13 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
 
-      final response = await _apiService.googleSignIn(
-        idToken: result.idToken!,
-      );
-      _userData = response['user'];
+      final response = await _apiService.googleSignIn(idToken: result.idToken!);
+      final token = response['token'] as String;
+      final user = response['user'];
+      final name = user?['name'] as String?;
+      final email = user?['email'] as String?;
+
+      await _saveUserData(token, name, email);
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
       return true;
@@ -177,8 +235,12 @@ class AuthProvider extends ChangeNotifier {
   // ── Logout ─────────────────────────────────────────────────────────
   Future<void> logout() async {
     await _apiService.logout();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_name');
+    await prefs.remove('user_email');
     _isAuthenticated = false;
-    _userData = null;
+    _userName = null;
+    _userEmail = null;
     _clearControllers();
     _setStatus(AuthStatus.idle);
   }
@@ -198,11 +260,8 @@ class AuthProvider extends ChangeNotifier {
     _setStatus(AuthStatus.idle, error: null);
   }
 
-  /// Strips "Exception: " prefix from error messages for clean UI display
   String _cleanError(String raw) {
-    if (raw.startsWith('Exception: ')) {
-      return raw.substring('Exception: '.length);
-    }
+    if (raw.startsWith('Exception: ')) return raw.substring(11);
     return raw;
   }
 

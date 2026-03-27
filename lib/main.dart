@@ -53,10 +53,15 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
-    // Show LoginScreen if not authenticated, otherwise show MainNavigationScreen
-    return authProvider.isAuthenticated
-        ? const MainNavigationScreen()
-        : const LoginScreen();
+    if (authProvider.isAuthenticated) {
+      // Push real user name into ProfileModel whenever auth state is confirmed
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final profileModel = context.read<ProfileModel>();
+        authProvider.syncProfile(profileModel);
+      });
+      return const MainNavigationScreen();
+    }
+    return const LoginScreen();
   }
 }
 
