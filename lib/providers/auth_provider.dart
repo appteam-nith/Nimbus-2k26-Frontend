@@ -186,25 +186,23 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signUp() async {
     _setStatus(AuthStatus.loading);
     try {
-      final name =
-          '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
-              .trim();
-
-      // Register with backend
-      await _apiService.register(
-        name: name,
-        email: signupEmailController.text.trim(),
-        password: signupPassController.text,
-      );
-
-      // Save name locally so OTP screen + profile can show it
-      _userName = name;
-      _userEmail = signupEmailController.text.trim();
-      final prefs = await SharedPreferences.getInstance();
-      if (name.isNotEmpty) await prefs.setString('user_name', name);
-      await prefs.setString('user_email', signupEmailController.text.trim());
+      // Send OTP to the entered email address
+      await _apiService.sendOtp(email: signupEmailController.text.trim());
 
       _setStatus(AuthStatus.success);
+      return true; // Navigate to OTP screen
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  /// Resends the OTP to the signup email
+  Future<bool> resendOtp() async {
+    _setStatus(AuthStatus.loading);
+    try {
+      await _apiService.sendOtp(email: signupEmailController.text.trim());
+      _setStatus(AuthStatus.idle); // reset to idle so UI doesn't spin forever
       return true;
     } catch (e) {
       _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
@@ -213,17 +211,38 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Called after the user completes OTP verification.
-  /// Logs in, saves the JWT, fetches profile, marks authenticated.
-  Future<bool> loginAfterOtp() async {
+  /// Registers the user with the backend, then logs in, fetches profile, and marks authenticated.
+  Future<bool> loginAfterOtp(String otp) async {
     _setStatus(AuthStatus.loading);
     try {
+      final name =
+          '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
+              .trim();
+      final email = signupEmailController.text.trim();
+      final password = signupPassController.text;
+
+      // 1. Register with backend using the OTP
+      await _apiService.register(
+        name: name,
+        email: email,
+        password: password,
+        otp: otp,
+      );
+
+      // Save name locally so profile can show it immediately
+      _userName = name;
+      _userEmail = email;
+      final prefs = await SharedPreferences.getInstance();
+      if (name.isNotEmpty) await prefs.setString('user_name', name);
+      await prefs.setString('user_email', email);
+
+      // 2. Login to get the JWT token
       final response = await _apiService.login(
-        email: signupEmailController.text.trim(),
-        password: signupPassController.text,
+        email: email,
+        password: password,
       );
       final token = response['token'] as String;
 
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', token);
       _apiService.setToken(token);
 

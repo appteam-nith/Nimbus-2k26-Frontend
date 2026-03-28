@@ -78,8 +78,10 @@ class _OtpScreenState extends State<OtpScreen> {
     final auth = context.read<AuthProvider>();
     final profileModel = context.read<ProfileModel>();
 
-    // Login using signup credentials — this gets the JWT token
-    final ok = await auth.loginAfterOtp();
+    final otpStr = _otpControllers.map((c) => c.text).join();
+
+    // Verify OTP and Login using signup credentials
+    final ok = await auth.loginAfterOtp(otpStr);
 
     if (!mounted) return;
 
@@ -245,11 +247,19 @@ class _OtpScreenState extends State<OtpScreen> {
                     // Resend
                     Center(
                       child: GestureDetector(
-                        onTap: _secondsLeft == 0
-                            ? () {
-                                _startTimer();
-                                for (final c in _otpControllers) c.clear();
-                                _focusNodes[0].requestFocus();
+                        onTap: _secondsLeft == 0 && !_isLoading
+                            ? () async {
+                                final auth = context.read<AuthProvider>();
+                                final success = await auth.resendOtp();
+                                if (success) {
+                                  _startTimer();
+                                  for (final c in _otpControllers) c.clear();
+                                  _focusNodes[0].requestFocus();
+                                } else {
+                                  setState(() {
+                                    _errorMessage = auth.errorMessage ?? 'Failed to resend code';
+                                  });
+                                }
                               }
                             : null,
                         child: RichText(

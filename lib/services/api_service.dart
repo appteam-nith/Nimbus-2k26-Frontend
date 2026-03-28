@@ -84,16 +84,32 @@ class ApiService {
     return data;
   }
 
-  /// Register new user — backend accepts {name, email, password}
+  /// Send an OTP to the given email
+  Future<Map<String, dynamic>> sendOtp({required String email}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/users/send-otp'),
+      headers: _getHeaders(),
+      body: jsonEncode({'email': email}),
+    );
+    return _handleResponse(response);
+  }
+
+  /// Register new user — backend accepts {name, email, password, otp}
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String password,
+    required String otp,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/users/register'),
       headers: _getHeaders(),
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+        'otp': otp,
+      }),
     );
     return _handleResponse(response);
   }
