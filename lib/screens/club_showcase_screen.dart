@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/club_models.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Club Showcase Screen
-//  Opens when the user taps a club card on the Dep-clubs list screen.
-// ─────────────────────────────────────────────────────────────────────────────
-
 class ClubShowcaseScreen extends StatefulWidget {
   final Club club;
 
@@ -40,7 +35,6 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
       backgroundColor: const Color(0xFFF6F6F8),
       body: NestedScrollView(
         headerSliverBuilder: (ctx, inner) => [
-          // ── Sliver app bar with hero banner ─────────────────────────
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
@@ -58,9 +52,7 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
                 padding: const EdgeInsets.all(8),
                 child: _CircleBtn(
                   icon: Icons.ios_share_outlined,
-                  onTap: () {
-                    // TODO: share club
-                  },
+                  onTap: () {},
                 ),
               ),
             ],
@@ -79,8 +71,6 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
               background: _HeroBanner(club: club),
             ),
           ),
-
-          // ── Sticky tab bar ───────────────────────────────────────────
           SliverPersistentHeader(
             pinned: true,
             delegate: _TabBarDelegate(
@@ -109,8 +99,6 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
             ),
           ),
         ],
-
-        // ── Tab body ─────────────────────────────────────────────────
         body: TabBarView(
           controller: _tabCtrl,
           children: [
@@ -120,8 +108,6 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
           ],
         ),
       ),
-
-      // ── Bottom CTA ───────────────────────────────────────────────────
       bottomNavigationBar: _JoinBar(club: club),
     );
   }
@@ -141,7 +127,6 @@ class _HeroBanner extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Gradient background
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -151,8 +136,6 @@ class _HeroBanner extends StatelessWidget {
             ),
           ),
         ),
-
-        // Decorative circles
         Positioned(
           right: -60, top: -40,
           child: Container(
@@ -173,41 +156,24 @@ class _HeroBanner extends StatelessWidget {
             ),
           ),
         ),
-
-        // Content
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 90, 24, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Club logo + name row
               Row(
                 children: [
+                  // ── Club logo: asset → network → letter fallback ──────
                   Container(
                     width: 64, height: 64,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: club.imageUrl != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              club.imageUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Center(
-                            child: Text(
-                              club.department.label[0],
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 28,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _ClubImage(club: club, size: 64),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -239,8 +205,6 @@ class _HeroBanner extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Stats row
               Row(
                 children: [
                   _StatPill(value: '${club.memberCount}', label: 'Members'),
@@ -254,6 +218,58 @@ class _HeroBanner extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Reusable club image widget  (asset → network → letter placeholder)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ClubImage extends StatelessWidget {
+  final Club club;
+  final double size;
+
+  const _ClubImage({required this.club, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    if (club.imageAsset != null) {
+      return Image.asset(
+        club.imageAsset!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _letterPlaceholder(),
+      );
+    }
+    if (club.imageUrl != null) {
+      return Image.network(
+        club.imageUrl!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _letterPlaceholder(),
+      );
+    }
+    return _letterPlaceholder();
+  }
+
+  Widget _letterPlaceholder() {
+    return Container(
+      width: size,
+      height: size,
+      color: Colors.white.withOpacity(0.15),
+      alignment: Alignment.center,
+      child: Text(
+        club.department.label[0],
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w700,
+          fontSize: size * 0.4,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }
@@ -310,6 +326,18 @@ class _ProjectsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (club.projects.isEmpty) {
+      return const Center(
+        child: Text(
+          'No projects yet 🚀',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       itemCount: club.projects.length,
@@ -340,7 +368,6 @@ class _ProjectCard extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            // Left accent bar
             Container(
               width: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
@@ -349,15 +376,12 @@ class _ProjectCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-
-            // Content
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 14, 14, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title + status badge
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -393,8 +417,6 @@ class _ProjectCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-
-                    // Tech stack tag
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
@@ -413,8 +435,6 @@ class _ProjectCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    // Description
                     Text(
                       project.description,
                       style: const TextStyle(
@@ -426,11 +446,7 @@ class _ProjectCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-
-                    // Divider
                     const Divider(color: Color(0xFFF1F5F9), thickness: 1, height: 1),
-
-                    // Footer row
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Row(
@@ -550,7 +566,6 @@ class _AchievementCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon bubble
           Container(
             width: 48, height: 48,
             decoration: BoxDecoration(
@@ -641,15 +656,17 @@ class _AboutTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          _AboutSection(
-            title: 'Tech Stack',
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _allTech(club).map((t) => _TechChip(label: t)).toList(),
+          if (_allTech(club).isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _AboutSection(
+              title: 'Tech Stack',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _allTech(club).map((t) => _TechChip(label: t)).toList(),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -808,7 +825,6 @@ class _JoinBar extends StatelessWidget {
           ),
           child: ElevatedButton(
             onPressed: () {
-              // TODO: Apply to join / show form
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -1016,10 +1032,6 @@ class _CircleBtn extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SliverPersistentHeaderDelegate for the tab bar
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'models/club_models.dart';
 import 'app_colors.dart';
 import 'club_cards.dart';
 
@@ -166,11 +167,13 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
     );
   }
 
+  // ── Club data with clubId matching kSampleClubs ──────────────────────────
   List<Map<String, dynamic>> _getAllClubs() {
     return [
       {
+        'clubId': 'team-exe',
         'title': 'Team .EXE',
-        'department': 'Computer Science ',
+        'department': 'Computer Science',
         'departmentColor': const Color(0xFFEEF5FF),
         'description':
             'The official technical club of CSE, focusing on web dev, competitive coding, and open source.',
@@ -178,8 +181,9 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'CSE',
       },
       {
+        'clubId': 'hermetica',
         'title': 'Hermetica',
-        'department': 'Chemical ',
+        'department': 'Chemical',
         'departmentColor': const Color(0xFFF0FBEF),
         'description':
             'Innovating in process design and sustainable chemical solutions for the future.',
@@ -187,6 +191,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'Chem',
       },
       {
+        'clubId': 'vibhav',
         'title': 'Vibhav',
         'department': 'Electronics & Communication',
         'departmentColor': const Color(0xFFFFF9ED),
@@ -196,8 +201,9 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'ECE',
       },
       {
+        'clubId': 'ojas',
         'title': 'Ojas',
-        'department': 'Electrical ',
+        'department': 'Electrical',
         'departmentColor': const Color.fromARGB(248, 224, 255, 247),
         'description':
             'Lighting up the campus with innovation in power systems and renewable energy.',
@@ -205,16 +211,18 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'Electrical',
       },
       {
+        'clubId': 'medextrous',
         'title': 'Medextrous',
-        'department': 'Mechanical ',
+        'department': 'Mechanical',
         'departmentColor': const Color.fromARGB(255, 240, 200, 200),
         'description': 'Designing and manufacturing the machines of tomorrow.',
         'imagePath': 'assets/clubs/Medextrous.jpg',
         'filterKey': 'Mech',
       },
       {
+        'clubId': 'c-helix',
         'title': 'C-Helix',
-        'department': 'Civil ',
+        'department': 'Civil',
         'departmentColor': const Color.fromARGB(255, 220, 190, 240),
         'description':
             'Exploring infrastructure, structural design, and sustainable civil engineering projects.',
@@ -222,6 +230,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'Civil',
       },
       {
+        'clubId': 'matcom',
         'title': 'Matcom',
         'department': 'Mathematics & Computing',
         'departmentColor': const Color(0xFFEEF5FF),
@@ -231,6 +240,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'MNC',
       },
       {
+        'clubId': 'metamorph',
         'title': 'Metamorph',
         'department': 'Materials Science',
         'departmentColor': const Color.fromARGB(255, 240, 245, 180),
@@ -240,6 +250,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'Material',
       },
       {
+        'clubId': 'design-o-crafts',
         'title': 'Design O Crafts',
         'department': 'Architecture',
         'departmentColor': const Color.fromARGB(255, 242, 200, 240),
@@ -249,8 +260,9 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         'filterKey': 'Arch',
       },
       {
+        'clubId': 'team-abraxas',
         'title': 'Team Abraxas',
-        'department': 'Physics ',
+        'department': 'Physics',
         'departmentColor': const Color.fromARGB(255, 200, 235, 210),
         'description':
             'Exploring quantum mechanics, astrophysics, and experimental physics research.',
@@ -277,6 +289,23 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
     }).toList();
   }
 
+  // ── Navigate to ClubShowcaseScreen using the matched Club object ──────────
+  void _openClubDetail(BuildContext context, Map<String, dynamic> clubData) {
+    final Club? matched = kSampleClubs.cast<Club?>().firstWhere(
+      (c) => c!.id == clubData['clubId'],
+      orElse: () => null,
+    );
+
+    if (matched != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ClubShowcaseScreen(club: matched),
+        ),
+      );
+    }
+  }
+
   Widget _clubList() {
     final filteredClubs = _getFilteredClubs();
 
@@ -293,6 +322,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
       children: filteredClubs
           .map(
             (club) => ClubCard(
+              clubId: club['clubId'],        // ← new required field
               title: club['title'],
               department: club['department'],
               departmentColor: club['departmentColor'],
