@@ -289,22 +289,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
     }).toList();
   }
 
-  // ── Navigate to ClubShowcaseScreen using the matched Club object ──────────
-  void _openClubDetail(BuildContext context, Map<String, dynamic> clubData) {
-    final Club? matched = kSampleClubs.cast<Club?>().firstWhere(
-      (c) => c!.id == clubData['clubId'],
-      orElse: () => null,
-    );
-
-    if (matched != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ClubShowcaseScreen(club: matched),
-        ),
-      );
-    }
-  }
+  
 
   Widget _clubList() {
     final filteredClubs = _getFilteredClubs();
