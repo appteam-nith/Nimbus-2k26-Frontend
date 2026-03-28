@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_model.dart';
-import '../screens/profile_screen.dart';
+import '../screens/profile_page.dart';
 
 class HeaderWidget extends StatefulWidget {
   const HeaderWidget({super.key});
@@ -42,7 +42,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
                   );
                 },
                 child: CircleAvatar(
