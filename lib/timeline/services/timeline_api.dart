@@ -7,9 +7,6 @@ class TimelineApi {
     final now = DateTime.now();
 
     return [
-      // ======================
-      // DAY 1
-      // ======================
       TimelineEvent(
         id: '1',
         title: 'Opening Ceremony',
@@ -30,9 +27,7 @@ class TimelineApi {
         day: 1,
       ),
 
-      // ======================
-      // DAY 2
-      // ======================
+
       TimelineEvent(
         id: '3',
         title: 'Tech Talk',
@@ -53,9 +48,6 @@ class TimelineApi {
         day: 2,
       ),
 
-      // ======================
-      // DAY 3
-      // ======================
       TimelineEvent(
         id: '5',
         title: 'Final Presentations',
@@ -75,9 +67,7 @@ class TimelineApi {
         isLive: false,
         day: 3,
       ),
-      // ======================
-      // ➕ NEW – DAY 1
-      // ======================
+
       TimelineEvent(
         id: '7',
         title: 'UI/UX Design Sprint',
@@ -132,9 +122,7 @@ class TimelineApi {
         isLive: false,
         day: 1,
       ),
-      // ======================
-      // ➕ NEW – DAY 2
-      // ======================
+
       TimelineEvent(
         id: '13',
         title: 'DSA Contest ht jhlva rhlav htswvk htwvk jhtwkvhtbsk shb skh c h ds',
@@ -189,9 +177,7 @@ class TimelineApi {
         isLive: false,
         day: 2,
       ),
-      // ======================
-      // ➕ NEW – DAY 3
-      // ======================
+
       TimelineEvent(
         id: '19',
         title: 'Mock Interviews',

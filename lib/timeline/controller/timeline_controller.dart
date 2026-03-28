@@ -10,13 +10,12 @@ class TimelineController extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  int _selectedDay = 1; // 1,2,3
+  int _selectedDay = 1;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get selectedDay => _selectedDay;
 
-  // ✅ FIXED – use event.day
   List<TimelineEvent> get events {
     return _allEvents
         .where((e) => e.day == _selectedDay)

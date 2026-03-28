@@ -12,9 +12,7 @@ class TimelineEventCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // =========================
           // DOT ONLY (line is in screen)
-          // =========================
           SizedBox(
             width: 32,
             child: Stack(
@@ -30,7 +28,7 @@ class TimelineEventCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: event.isLive
                           ? const Color(0xFF3B82F6)
-                          : const Color(0xFFF0F4F8), // matches screen bg
+                          : const Color(0xFFF0F4F8),
                       border: event.isLive
                           ? null
                           : Border.all(
@@ -52,9 +50,7 @@ class TimelineEventCard extends StatelessWidget {
               ],
             ),
           ),
-          // =========================
           // CARD AREA
-          // =========================
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 16, 8),
@@ -86,15 +82,15 @@ class TimelineEventCard extends StatelessWidget {
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: event.isLive
-                        ? const BorderSide(
-                            color: Color(0xFF60A5FA),
-                            width: 1.4,
-                          )
-                        : const BorderSide(
-                            color: Color(0xFFE5E7EB),
-                            width: 0.5,
-                          ),
+                    // side: event.isLive
+                    //     ? const BorderSide(
+                    //         color: Color.fromARGB(255, 133, 184, 245),
+                    //         width: 1.2,
+                    //       )
+                    //     : const BorderSide(
+                    //         color: Color(0xFFE5E7EB),
+                    //         width: 0.5,
+                    //       ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(14, 8, 8, 14),
@@ -108,24 +104,25 @@ class TimelineEventCard extends StatelessWidget {
                               padding: const EdgeInsets.only(right: 75),
                               child: Text(
                                 event.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium!
-                                    .copyWith(
-                                      fontSize: event.isLive ? 20 : 16,
-                                    ),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: event.isLive ? 20 : 17,
+                                  color: const Color(0xFF1E293B),
+                                  letterSpacing: -0.5,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               event.description,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: event.isLive ? 15.5 : 14,
-                                    color: const Color(0xFF64748B),
-                                  ),
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                fontSize: event.isLive ? 15.5 : 14,
+                                color: const Color(0xFF64748B),
+                                letterSpacing: -0.5,
+                              ),
                             ),
                             SizedBox(height: event.isLive ? 12 : 10),
                             Row(
@@ -144,17 +141,18 @@ class TimelineEventCard extends StatelessWidget {
                                 Text(
                                   event.location,
                                   style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w400,
                                     fontSize: event.isLive ? 14.5 : 13.5,
                                     color: const Color(0xFF64748B),
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        // =========================
                         // LIVE badge
-                        // =========================
                         if (event.isLive)
                           Positioned(
                             top: 0,
@@ -168,7 +166,12 @@ class TimelineEventCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 color: const Color.fromARGB(255, 245, 223, 221),
                                 border: Border.all(
-                                  color: const Color.fromARGB(255, 241, 129, 121),
+                                  color: const Color.fromARGB(
+                                    255,
+                                    241,
+                                    129,
+                                    121,
+                                  ),
                                   width: 1.2,
                                 ),
                               ),
@@ -184,18 +187,19 @@ class TimelineEventCard extends StatelessWidget {
                                   Text(
                                     'LIVE',
                                     style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w700,
                                       color: Color(0xFFDC2626),
                                       fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.5,
+                                      // fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                        // =========================
                         // TIME
-                        // =========================
                         Positioned(
                           top: 2,
                           right: 0,
@@ -213,6 +217,8 @@ class TimelineEventCard extends StatelessWidget {
                             child: Text(
                               _formatTime(event.startTime),
                               style: const TextStyle(
+                                fontFamily: 'Inter',
+                                letterSpacing: -0.5,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                                 color: Color(0xFF3B82F6),

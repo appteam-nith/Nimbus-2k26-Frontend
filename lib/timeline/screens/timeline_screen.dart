@@ -55,9 +55,6 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 }
                 return Stack(
                   children: [
-                    // =========================
-                    // CONTINUOUS SOLID LINE
-                    // =========================
                     Positioned(
                       left: 15,
                       top: 0,
@@ -67,9 +64,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                         color: const Color(0xFF135BEC),
                       ),
                     ),
-                    // =========================
                     // EVENT LIST
-                    // =========================
                     ListView.builder(
                       itemCount: controller.events.length,
                       itemBuilder: (context, index) {
