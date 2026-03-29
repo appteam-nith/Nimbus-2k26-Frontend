@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:clerk_flutter/clerk_flutter.dart';
+import 'package:provider/provider.dart';
 import '../widgets/auth_widgets.dart';
+import '../providers/auth_provider.dart';
 
-/// Single unified auth screen — shown when no Clerk session is active.
-///
-/// ClerkAuthentication handles:
-///   • Email + password sign-in / sign-up
-///   • Google OAuth
-///   • OTP verification (if enabled in Clerk dashboard)
-///
-/// After sign-in, ClerkAuthBuilder in AuthWrapper detects the new session
-/// and calls handleClerkSignIn → navigates to home automatically.
-///
-/// [initialMode] is unused by ClerkAuthentication directly but kept so
-/// that the old LoginScreen / SignupScreen routes still compile.
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _AuthView();
-  }
-}
-
-class _AuthView extends StatelessWidget {
-  const _AuthView();
 
   @override
   Widget build(BuildContext context) {
@@ -37,19 +17,66 @@ class _AuthView extends StatelessWidget {
             // ── Nimbus branding hero ──────────────────────────────────
             const AuthHero(
               title: 'Welcome to Nimbus 👋',
-              subtitle: 'Sign in or create an account to continue',
+              subtitle: 'Sign in with your @nith.ac.in email',
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 48),
 
-            // ── Clerk pre-built auth UI ───────────────────────────────
-            // Handles email/password AND Google in one widget.
-            // After success, AuthWrapper detects the Clerk session and
-            // navigates home — no manual navigation needed here.
-            const Expanded(
+            // ── Google Sign In Button ───────────────────────────────
+            Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 32),
-                child: ClerkAuthentication(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return Column(
+                      children: [
+                        if (auth.status == AuthStatus.loading)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 24.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        SocialButton(
+                          label: 'Continue with Google',
+                          icon: Image.network(
+                            'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                            height: 24,
+                            width: 24,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.g_mobiledata, size: 32),
+                          ),
+                          onPressed: auth.status == AuthStatus.loading
+                              ? null
+                              : () async {
+                                  // Navigating to home is handled entirely
+                                  // by the AuthWrapper in main.dart when
+                                  // isAuthenticated flips to true.
+                                  await auth.signInWithGoogle();
+                                },
+                        ),
+                        if (auth.errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Text(
+                                auth.errorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ],

@@ -67,16 +67,17 @@ class ApiService {
 
   // ── AUTH ENDPOINTS ─────────────────────────────────────────────────
 
-  /// Login user — returns JWT token
-  Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
-  }) async {
+  /// Send Firebase ID token to backend for verification and receive a JWT.
+  Future<Map<String, dynamic>> googleSignIn(String idToken) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/users/login'),
-      headers: _getHeaders(),
-      body: jsonEncode({'email': email, 'password': password}),
+      Uri.parse('$baseUrl/api/users/auth/google'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'idToken': idToken}),
     );
+    
     final data = _handleResponse(response);
     if (data['token'] != null) {
       await _saveToken(data['token']);
@@ -84,50 +85,6 @@ class ApiService {
     return data;
   }
 
-  /// Send an OTP to the given email
-  Future<Map<String, dynamic>> sendOtp({required String email}) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/users/send-otp'),
-      headers: _getHeaders(),
-      body: jsonEncode({'email': email}),
-    );
-    return _handleResponse(response);
-  }
-
-  /// Register new user — backend accepts {name, email, password, otp}
-  Future<Map<String, dynamic>> register({
-    required String name,
-    required String email,
-    required String password,
-    required String otp,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/users/register'),
-      headers: _getHeaders(),
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'password': password,
-        'otp': otp,
-      }),
-    );
-    return _handleResponse(response);
-  }
-
-  /// Sync Clerk user with backend DB — call once right after Clerk sign-in.
-  /// Sends the Clerk session token as a Bearer token so the backend's
-  /// `protect` middleware recognises it via `getAuth(req).userId`.
-  Future<Map<String, dynamic>> syncClerkUser(String clerkToken) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/users/sync'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $clerkToken',
-      },
-    );
-    return _handleResponse(response);
-  }
 
   /// Logout — clears token locally (no backend logout route)
   Future<void> logout() async {

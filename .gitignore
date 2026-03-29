@@ -46,3 +46,5 @@ app.*.map.json
 
 # Dart defines — contains secret keys, never commit the real file
 dart_defines.json
+
+google-services.json
