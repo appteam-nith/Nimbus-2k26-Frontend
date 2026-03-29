@@ -1,10 +1,4 @@
 {
-  // Launch configs automatically pass dart_defines.json so you never need
-  // to type --dart-define-from-file manually.
-  //
-  // SETUP: Copy dart_defines.sample.json → dart_defines.json and fill in
-  // your real CLERK_PUBLISHABLE_KEY (from the backend .env file).
-  // dart_defines.json is gitignored and will never be committed.
   "version": "0.2.0",
   "configurations": [
     {
@@ -17,15 +11,13 @@
       "name": "Nimbus (profile)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "profile",
-      "args": ["--dart-define-from-file=dart_defines.json"]
+      "args": ["--dart-define-from-file=dart_defines.json", "--profile"]
     },
     {
       "name": "Nimbus (release)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "release",
-      "args": ["--dart-define-from-file=dart_defines.json"]
+      "args": ["--dart-define-from-file=dart_defines.json", "--release"]
     }
   ]
 }

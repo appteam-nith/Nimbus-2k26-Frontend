@@ -31,31 +31,42 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ClerkAuth wraps MaterialApp so every widget in the tree can access
-    // Clerk's auth state via ClerkAuthBuilder / ClerkAuth.of(context).
-    return ClerkAuth(
-      config: ClerkAuthConfig(publishableKey: kClerkPublishableKey),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          scaffoldBackgroundColor: const Color(0xffF5F6FA),
-          primaryColor: Colors.blue,
-          useMaterial3: true,
-        ),
-        home: const AuthWrapper(),
-        routes: {
-          '/home': (context) => const MainNavigationScreen(),
-          '/login': (context) => const LoginScreen(),
-        },
+    final app = MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xffF5F6FA),
+        primaryColor: Colors.blue,
+        useMaterial3: true,
       ),
+      home: const AuthWrapper(),
+      routes: {
+        '/home': (context) => const MainNavigationScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
     );
+
+    // Only wrap with ClerkAuth when a valid publishable key was injected via
+    // --dart-define-from-file=dart_defines.json.
+    // Without the flag, clerkEnabled == false and the app uses the legacy
+    // JWT flow — no Clerk overlay, no error messages.
+    if (clerkEnabled) {
+      return ClerkAuth(
+        config: ClerkAuthConfig(publishableKey: kClerkPublishableKey),
+        child: app,
+      );
+    }
+
+    return app;
   }
 }
 
-/// AuthWrapper handles three auth states:
-///   1. Clerk session active  → sync with backend → show home
-///   2. Legacy JWT stored     → show home directly
-///   3. No auth              → show login screen
+/// Routes to the correct screen based on auth state.
+///
+/// Supports two modes:
+///   • Clerk mode (clerkEnabled == true): uses [ClerkAuthBuilder] to detect
+///     Clerk sessions and sync them to the backend.
+///   • Legacy mode (clerkEnabled == false): reads only from [AuthProvider]
+///     (custom JWT flow). Normal login / register still works.
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -64,25 +75,33 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  // Guard to prevent calling handleClerkSignIn more than once per session.
   bool _clerkHandled = false;
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
+    // ── Legacy-only mode (no dart-define key passed) ─────────────────
+    if (!clerkEnabled) {
+      if (authProvider.isAuthenticated) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          authProvider.syncProfile(context.read<ProfileModel>());
+        });
+        return const MainNavigationScreen();
+      }
+      return const LoginScreen();
+    }
+
+    // ── Clerk mode ───────────────────────────────────────────────────
     return ClerkAuthBuilder(
-      // ── Clerk has an active session ──────────────────────────────
       signedInBuilder: (context, clerkAuthState) {
         if (!_clerkHandled && !authProvider.isAuthenticated) {
           _clerkHandled = true;
-          // Capture provider ref before the async gap to satisfy the
-          // use_build_context_synchronously lint.
           final ap = context.read<AuthProvider>();
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) return;
             final sessionToken = await clerkAuthState.sessionToken();
-            // SessionToken is a Clerk type — extract raw JWT string via toString().
             if (mounted) {
               await ap.handleClerkSignIn(sessionToken.toString());
             }
@@ -97,26 +116,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
           return const MainNavigationScreen();
         }
 
-        // Clerk session exists but sync is still in progress.
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       },
 
-      // ── No Clerk session ─────────────────────────────────────────
       signedOutBuilder: (context, clerkAuthState) {
-        // Reset flag so next Clerk sign-in triggers a fresh sync.
         _clerkHandled = false;
-
         if (authProvider.isAuthenticated) {
-          // User authenticated via legacy JWT — no Clerk session needed.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             authProvider.syncProfile(context.read<ProfileModel>());
           });
           return const MainNavigationScreen();
         }
-
         return const LoginScreen();
       },
     );

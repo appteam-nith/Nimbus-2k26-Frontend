@@ -250,40 +250,53 @@ class AuthProvider extends ChangeNotifier {
   /// Posts to POST /api/users/sync with the Clerk session token so the
   /// backend creates / updates the DB record, then marks the user authenticated.
   Future<void> handleClerkSignIn(String clerkToken) async {
-    // Guard against concurrent or repeated calls.
     if (_isAuthenticated || _clerkSyncInProgress) return;
     _clerkSyncInProgress = true;
 
     try {
       _apiService.setToken(clerkToken);
 
-      // Persist token so protected API calls work after rebuild.
+      // Persist token immediately so protected API calls work.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', clerkToken);
 
-      // Sync Clerk user → backend DB (creates/updates record).
-      final syncData = await _apiService.syncClerkUser(clerkToken);
+      // ✅ Navigate home RIGHT AWAY — don't block on backend sync.
+      _isAuthenticated = true;
+      _setStatus(AuthStatus.success);
+
+      // Background sync — updates name/email but doesn't affect navigation.
+      _syncClerkUserInBackground(clerkToken, prefs);
+    } catch (e) {
+      debugPrint('[AuthProvider] Clerk sign-in setup failed: $e');
+    } finally {
+      _clerkSyncInProgress = false;
+    }
+  }
+
+  void _syncClerkUserInBackground(
+    String clerkToken,
+    SharedPreferences prefs,
+  ) {
+    _apiService.syncClerkUser(clerkToken).then((syncData) {
       final user = syncData['user'] as Map<String, dynamic>?;
       final name = (user?['full_name'] as String?) ?? '';
       final email = (user?['email'] as String?) ?? '';
 
-      if (name.isNotEmpty) {
+      bool changed = false;
+      if (name.isNotEmpty && _userName != name) {
         _userName = name;
-        await prefs.setString('user_name', name);
+        prefs.setString('user_name', name);
+        changed = true;
       }
-      if (email.isNotEmpty) {
+      if (email.isNotEmpty && _userEmail != email) {
         _userEmail = email;
-        await prefs.setString('user_email', email);
+        prefs.setString('user_email', email);
+        changed = true;
       }
-
-      _isAuthenticated = true;
-      _setStatus(AuthStatus.success);
-    } catch (e) {
-      debugPrint('[AuthProvider] Clerk sync failed: $e');
-      // Don't crash the app — sync failure is non-fatal.
-    } finally {
-      _clerkSyncInProgress = false;
-    }
+      if (changed) notifyListeners();
+    }).catchError((e) {
+      debugPrint('[AuthProvider] Background sync failed (non-fatal): $e');
+    });
   }
 
   // ── Logout ─────────────────────────────────────────────────────────
