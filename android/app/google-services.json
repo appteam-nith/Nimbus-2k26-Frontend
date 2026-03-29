@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "332925057609",
+    "project_id": "nimbus-2k26-6d468",
+    "storage_bucket": "nimbus-2k26-6d468.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332925057609:android:48d2104fd38f809a261d98",
+        "android_client_info": {
+          "package_name": "com.example.nimbus_2k26_frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "332925057609-5o0p3imia7tokrd7h5qhvrvl9lgp7r24.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nimbus_2k26_frontend",
+            "certificate_hash": "59b6abfa9fe53348e47e35dae3ebc6f7da2580e7"
+          }
+        },
+        {
+          "client_id": "332925057609-u28qbs4f62lcbj6as1mjgtgknm1frrn2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nimbus_2k26_frontend",
+            "certificate_hash": "17355cd001e72dc1253cc857611dff12313841bc"
+          }
+        },
+        {
+          "client_id": "332925057609-0v2n5ct0suce1u60hc67kdaaqt9gd4jj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFDQW61dfw8MfZ8vO00etDZIMN_-oiHfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "332925057609-0v2n5ct0suce1u60hc67kdaaqt9gd4jj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
