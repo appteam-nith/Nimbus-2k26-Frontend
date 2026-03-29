@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:clerk_flutter/clerk_flutter.dart';
-import '../app_colors.dart';
 import '../widgets/auth_widgets.dart';
 
 /// Single unified auth screen — shown when no Clerk session is active.
