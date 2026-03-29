@@ -114,51 +114,17 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  /// Google Sign-In — sends idToken or user info from google_sign_in package
-  Future<Map<String, dynamic>> googleSignIn({
-    required String idToken,
-    String? email,
-    String? displayName,
-    String? googleId,
-  }) async {
-    final body = {
-      'idToken': idToken,
-      if (email != null) 'email': email,
-      if (displayName != null) 'name': displayName,
-      if (googleId != null) 'googleId': googleId,
-    };
-
+  /// Sync Clerk user with backend DB — call once right after Clerk sign-in.
+  /// Sends the Clerk session token as a Bearer token so the backend's
+  /// `protect` middleware recognises it via `getAuth(req).userId`.
+  Future<Map<String, dynamic>> syncClerkUser(String clerkToken) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/users/auth/google'),
-      headers: _getHeaders(),
-      body: jsonEncode(body),
-    );
-    final data = _handleResponse(response);
-    if (data['token'] != null) {
-      await _saveToken(data['token']);
-    }
-    return data;
-  }
-
-  /// Forgot password — sends reset token to user (backend returns token for now)
-  Future<Map<String, dynamic>> forgotPassword({required String email}) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/users/forgot-password'),
-      headers: _getHeaders(),
-      body: jsonEncode({'email': email}),
-    );
-    return _handleResponse(response);
-  }
-
-  /// Reset password using token received from forgot-password
-  Future<Map<String, dynamic>> resetPassword({
-    required String token,
-    required String newPassword,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/users/reset-password'),
-      headers: _getHeaders(),
-      body: jsonEncode({'token': token, 'newPassword': newPassword}),
+      Uri.parse('$baseUrl/api/users/sync'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $clerkToken',
+      },
     );
     return _handleResponse(response);
   }

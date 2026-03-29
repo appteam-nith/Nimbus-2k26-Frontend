@@ -42,4 +42,6 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    <!-- Required by clerk_flutter for WebView-based OAuth -->
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

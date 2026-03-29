@@ -4,6 +4,7 @@ import '../app_colors.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_widgets.dart';
 import 'signup_screen.dart';
+import 'clerk_sign_in_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -164,17 +165,19 @@ class _LoginView extends StatelessWidget {
                     const OrDivider(),
                     const SizedBox(height: 16),
 
-                    // Social row — Google only
+                    // Social row — Google (powered by Clerk)
                     SocialButton(
                       label: 'Continue with Google',
                       icon: _googleIcon(),
                       onPressed: isLoading
                           ? null
-                          : () async {
-                              final ok = await auth.googleSignIn();
-                              if (ok && context.mounted) {
-                                Navigator.pushReplacementNamed(context, '/home');
-                              }
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ClerkSignInScreen(),
+                                ),
+                              );
                             },
                     ),
                     const SizedBox(height: 24),

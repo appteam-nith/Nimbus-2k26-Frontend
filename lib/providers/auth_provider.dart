@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_model.dart';
 import '../services/api_service.dart';
@@ -8,11 +7,10 @@ enum AuthStatus { idle, loading, success, error }
 
 class AuthProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId:
-        '646738-duygsdhasbdja.apps.googleusercontent.com', // Use full client ID for web
-    scopes: ['email', 'profile'],
-  );
+
+  // Whether a Clerk → backend sync is currently in progress.
+  bool _clerkSyncInProgress = false;
+  bool get isClerkSyncInProgress => _clerkSyncInProgress;
 
   // ── state ─────────────────────────────────────────────────────────
   AuthStatus _status = AuthStatus.idle;
@@ -90,19 +88,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Saves token + user info to SharedPreferences and local state.
-  Future<void> _saveUserData(String token, String? name, String? email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-    if (name != null && name.isNotEmpty) {
-      _userName = name;
-      await prefs.setString('user_name', name);
-    }
-    if (email != null && email.isNotEmpty) {
-      _userEmail = email;
-      await prefs.setString('user_email', email);
-    }
-  }
 
   /// Push real user name from AuthProvider into ProfileModel.
   /// Called by AuthWrapper on every build when authenticated.
@@ -258,55 +243,46 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Google Sign-In ─────────────────────────────────────────────────
-  Future<bool> googleSignIn() async {
-    _setStatus(AuthStatus.loading);
+  // ── Clerk Sign-In (Google OAuth via Clerk) ────────────────────────
+  /// Called by [AuthWrapper]'s ClerkAuthBuilder after a Clerk session is
+  /// detected (on app start or after Google OAuth via [ClerkSignInScreen]).
+  ///
+  /// Posts to POST /api/users/sync with the Clerk session token so the
+  /// backend creates / updates the DB record, then marks the user authenticated.
+  Future<void> handleClerkSignIn(String clerkToken) async {
+    // Guard against concurrent or repeated calls.
+    if (_isAuthenticated || _clerkSyncInProgress) return;
+    _clerkSyncInProgress = true;
+
     try {
-      final account = await _googleSignIn.signIn();
+      _apiService.setToken(clerkToken);
 
-      if (account == null) {
-        _setStatus(AuthStatus.error, error: 'Google sign-in was cancelled');
-        return false;
+      // Persist token so protected API calls work after rebuild.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', clerkToken);
+
+      // Sync Clerk user → backend DB (creates/updates record).
+      final syncData = await _apiService.syncClerkUser(clerkToken);
+      final user = syncData['user'] as Map<String, dynamic>?;
+      final name = (user?['full_name'] as String?) ?? '';
+      final email = (user?['email'] as String?) ?? '';
+
+      if (name.isNotEmpty) {
+        _userName = name;
+        await prefs.setString('user_name', name);
+      }
+      if (email.isNotEmpty) {
+        _userEmail = email;
+        await prefs.setString('user_email', email);
       }
 
-      // Get authentication token
-      // On mobile: use idToken
-      // On web: idToken may be null, use accessToken instead
-      final googleAuth = await account.authentication;
-      final token = googleAuth.idToken ?? googleAuth.accessToken;
-
-      if (token == null) {
-        _setStatus(
-          AuthStatus.error,
-          error: 'Failed to authenticate with Google. Please try again.',
-        );
-        return false;
-      }
-
-      // Send to backend with user info
-      final response = await _apiService.googleSignIn(
-        idToken: token,
-        email: account.email,
-        displayName: account.displayName,
-        googleId: account.id,
-      );
-      final jwtToken = response['token'] as String;
-      final user = response['user'] as Map<String, dynamic>?;
-      final name =
-          user?['full_name'] as String? ?? account.displayName ?? 'User';
-      final email = user?['email'] as String? ?? account.email;
-
-      await _saveUserData(jwtToken, name, email);
-      _apiService.setToken(jwtToken);
       _isAuthenticated = true;
       _setStatus(AuthStatus.success);
-      return true;
     } catch (e) {
-      final msg = e.toString().contains('User cancelled')
-          ? 'Sign-in cancelled'
-          : _cleanError(e.toString());
-      _setStatus(AuthStatus.error, error: msg);
-      return false;
+      debugPrint('[AuthProvider] Clerk sync failed: $e');
+      // Don't crash the app — sync failure is non-fatal.
+    } finally {
+      _clerkSyncInProgress = false;
     }
   }
 
