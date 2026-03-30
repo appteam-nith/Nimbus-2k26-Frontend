@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="nimbus_2k26_frontend"
+        android:label="Nimbus 2K26"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

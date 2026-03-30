@@ -41,11 +41,118 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         useMaterial3: true,
       ),
-      home: const AuthWrapper(),
+      home: const AppBootstrapScreen(),
       routes: {
         '/home': (context) => const MainNavigationScreen(),
         '/login': (context) => const LoginScreen(),
       },
+    );
+  }
+}
+
+class AppBootstrapScreen extends StatefulWidget {
+  const AppBootstrapScreen({super.key});
+
+  @override
+  State<AppBootstrapScreen> createState() => _AppBootstrapScreenState();
+}
+
+class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
+  var _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startBootstrap();
+  }
+
+  Future<void> _startBootstrap() async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    setState(() {
+      _ready = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ready) {
+      return const AuthWrapper();
+    }
+
+    return const AppInitScreen();
+  }
+}
+
+class AppInitScreen extends StatelessWidget {
+  const AppInitScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF07142E),
+              Color(0xFF0D235A),
+              Color(0xFF153A9B),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 124,
+                height: 124,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color(0x14FFFFFF),
+                    borderRadius: BorderRadius.all(Radius.circular(28)),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Image(
+                      image: AssetImage('assets/images/nimbus_logo.webp'),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 28),
+              Text(
+                'Nimbus 2k26',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Initializing app...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+              SizedBox(height: 22),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.6,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
