@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.appteam.nimbus_2k26_frontend"
+    namespace = "com.appteam.nimbus_2k26_frontend_frontend"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
