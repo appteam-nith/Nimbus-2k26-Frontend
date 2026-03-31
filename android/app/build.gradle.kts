@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.appteam.nimbus_2k26_frontend"
+    namespace = "com.appteam.nimbus_2k26_frontend_frontend"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,12 +29,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.nimbus_2k26_frontend"
+        applicationId = "com.appteam.nimbus_2k26_frontend"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders += mapOf("appAuthRedirectScheme" to "com.example.nimbus_2k26_frontend")
+        manifestPlaceholders += mapOf("appAuthRedirectScheme" to "com.appteam.nimbus_2k26_frontend")
     }
 
     buildTypes {

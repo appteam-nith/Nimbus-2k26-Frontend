@@ -1,0 +1,123 @@
+Privacy Policy for Nimbus 2k26
+
+Last updated: March 31, 2026
+
+Nimbus 2k26 ("we", "our", or "us") operates the Nimbus 2k26 mobile application (the "Service"). This page informs users regarding our policies with the collection, use, and disclosure of Personal Information for users of the Service.
+
+By using Nimbus 2k26, you agree to the collection and use of information in accordance with this Privacy Policy.
+
+1. Information We Collect
+
+a) Personal Information
+
+Nimbus 2k26 provides login functionality using Firebase OAuth 2.0. When you sign in, we may collect:
+
+- Name
+- Email address
+- Profile picture (if provided by OAuth provider)
+- Unique user ID
+
+This information is used solely for authentication and app functionality.
+
+b) Usage Data
+
+We may automatically collect certain information including:
+
+- Device type and model
+- Operating system version
+- App version
+- Login timestamps
+- Crash logs and diagnostics
+
+This information helps us improve performance and reliability.
+
+c) Permissions
+
+Nimbus 2k26 currently does not request any sensitive device permissions such as:
+
+- Location
+- Camera
+- Microphone
+- Storage
+
+If permissions are required in future updates, this Privacy Policy will be updated accordingly.
+
+2. How We Use Your Information
+
+We use the collected data to:
+
+- Provide login and authentication
+- Maintain user sessions
+- Improve app functionality
+- Fix bugs and crashes
+- Ensure security and prevent misuse
+- Provide technical support
+
+We do not sell, rent, or trade user data.
+
+3. Third-Party Services
+
+Nimbus 2k26 uses trusted third-party services for authentication and backend functionality:
+
+- Firebase Authentication (OAuth 2.0)
+- Google Firebase Services
+
+These services may collect information in accordance with their own privacy policies.
+Google Privacy Policy: https://policies.google.com/privacy
+
+4. Data Sharing and Disclosure
+
+We do not share user personal information except:
+
+- When required by law
+- To protect security of the application
+- To prevent fraud or abuse
+- With Firebase services necessary for authentication and backend operations
+
+We do not share data with advertisers or marketing companies.
+
+5. Data Security
+
+We value your trust in providing your information. We use industry-standard security measures including:
+
+- Secure HTTPS communication
+- Firebase secure authentication
+- Encrypted data transmission
+
+However, no method of transmission over the internet is completely secure.
+
+6. Data Retention
+
+We retain user data only as long as necessary to provide the Service.
+Users may request deletion of their account and associated data at any time by contacting us.
+
+7. Children's Privacy
+
+Nimbus 2k26 is not intended for children under the age of 13.
+We do not knowingly collect personal information from children under 13.
+
+If we discover such data, it will be deleted immediately.
+
+8. Your Privacy Rights
+
+You have the right to:
+
+- Request access to your data
+- Request correction of your data
+- Request deletion of your data
+- Withdraw consent
+
+To exercise these rights, contact us using the email below.
+
+9. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time.
+Any changes will be posted on this page with an updated revision date.
+
+10. Contact Us
+
+If you have any questions about this Privacy Policy, contact us:
+
+App Name: Nimbus 2k26
+Developer: Nimbus 2k26 Team
+Email: appteam.nith@gmail.com
