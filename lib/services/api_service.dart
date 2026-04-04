@@ -138,6 +138,16 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// Permanently delete the current user's account and all their data
+  Future<void> deleteAccount() async {
+    await _loadToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/users/profile'),
+      headers: _getHeaders(requiresAuth: true),
+    ).timeout(const Duration(seconds: 30));
+    _handleResponse(response);
+  }
+
   /// Update virtual balance
   Future<Map<String, dynamic>> updateBalance({required double money}) async {
     await _loadToken();

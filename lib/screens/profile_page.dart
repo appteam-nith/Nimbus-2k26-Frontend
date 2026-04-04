@@ -128,14 +128,11 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
-        // ── Pull real data from Google Sign-In via AuthProvider ──────────
-        final user = auth.user; // FirebaseUser / GoogleSignInAccount
+        final user = auth.user;
         final displayName =
             auth.userName ?? user?.displayName ?? 'Nimbus User';
         final email = auth.userEmail ?? user?.email ?? '';
         final photoUrl = user?.photoURL;
-
-        // Derive username handle from email (e.g. "ayush.sharma" from ayush.sharma@nith.ac.in)
         final handle = email.isNotEmpty
             ? '@${email.split('@').first}'
             : '@nith_user';
@@ -165,7 +162,9 @@ class ProfilePage extends StatelessWidget {
                     _buildPointsCard(),
                     const SizedBox(height: 24),
                     _buildLogoutButton(context, auth),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+                    _buildDeleteAccountButton(context, auth),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -811,6 +810,121 @@ class ProfilePage extends StatelessWidget {
               Icon(Icons.logout, size: 20),
               SizedBox(width: 8),
               Text('Logout',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Delete Account Button ──────────────────────────────────────────────────
+  Widget _buildDeleteAccountButton(BuildContext context, AuthProvider auth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          foregroundColor: const Color(0xFF7F1D1D),
+          backgroundColor: const Color(0xFFFEF2F2),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () async {
+          // Step 1 — initial warning
+          final step1 = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Color(0xFFDC2626), size: 22),
+                  SizedBox(width: 8),
+                  Text('Delete Account',
+                      style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827))),
+                ],
+              ),
+              content: const Text(
+                'This will permanently delete your account and all your data '
+                '(profile, points, registrations). This cannot be undone.',
+                style: TextStyle(fontSize: 14, height: 1.5),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Continue',
+                      style: TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          );
+          if (step1 != true) return;
+          if (!context.mounted) return;
+
+          // Step 2 — final confirmation
+          final step2 = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Are you absolutely sure?',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFDC2626))),
+              content: const Text(
+                'Your account and all data will be deleted immediately and '
+                'cannot be recovered.',
+                style: TextStyle(fontSize: 13, height: 1.5),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Go Back'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Delete My Account'),
+                ),
+              ],
+            ),
+          );
+          if (step2 != true) return;
+          if (!context.mounted) return;
+
+          final deleted = await auth.deleteAccount();
+          if (!context.mounted) return;
+
+          if (deleted) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/login', (route) => false);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      auth.errorMessage ?? 'Failed to delete account.')),
+            );
+          }
+        },
+        child: const Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.delete_forever_outlined, size: 20),
+              SizedBox(width: 8),
+              Text('Delete Account',
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),

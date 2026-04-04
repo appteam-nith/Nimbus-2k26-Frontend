@@ -250,6 +250,43 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteAccount() async {
+    _setStatus(AuthStatus.loading);
+    try {
+      await _apiService.deleteAccount();
+
+      // Sign out of Firebase and Google
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (_) {}
+      try {
+        await GoogleSignIn.instance.disconnect();
+      } catch (_) {
+        try {
+          await GoogleSignIn.instance.signOut();
+        } catch (_) {}
+      }
+
+      // Clear all local state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_name');
+      await prefs.remove('user_email');
+      await prefs.remove('auth_token');
+      await _apiService.clearToken();
+
+      _isAuthenticated = false;
+      _userName = null;
+      _userEmail = null;
+      _errorMessage = null;
+      _status = AuthStatus.idle;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _googleInitFuture;
 
