@@ -1,0 +1,42 @@
+﻿|-- models
+|   |-- club_models.dart
+|   |-- profile_model.dart
+|-- providers
+|   |-- auth_provider.dart
+|-- screens
+|   |-- clubs_list_screen.dart
+|   |-- club_showcase_screen.dart
+|   |-- home_screen.dart
+|   |-- login_screen.dart
+|   |-- otp_screen.dart
+|   |-- profile_page.dart
+|   |-- profile_screen.dart.bak
+|-- services
+|   |-- api_service.dart
+|-- timeline
+|   |-- controller
+|   |   |-- timeline_controller.dart
+|   |-- models
+|   |   |-- timeline_event.dart
+|   |-- screens
+|   |   |-- timeline_screen.dart
+|   |-- services
+|   |   |-- timeline_api.dart
+|   |-- widgets
+|   |   |-- event_card.dart
+|-- widgets
+|   |-- auth_widgets.dart
+|   |-- bottom_nav.dart
+|   |-- event_card.dart
+|   |-- header.dart
+|   |-- search_bar_widget.dart
+|   |-- top_performers.dart
+|-- app_colors.dart
+|-- club_cards.dart
+|-- core_clubs_page.dart
+|-- core_club_card.dart
+|-- departmental_clubs_page.dart
+|-- events_page.dart
+|-- main.dart
+|-- theme.dart
+|-- tree_lib.txt
