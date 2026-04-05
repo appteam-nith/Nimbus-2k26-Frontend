@@ -111,9 +111,12 @@ class _LobbyScreenState extends State<LobbyScreen>
       }
     });
 
-    // game-started → let GameController take over navigation
-    _startSub = _pusher.onPhaseResolved.listen((_) {
-      // Phase resolved means game has kicked off — GameController handles routing
+    // game-started → GameController takes over and navigates to role screen
+    _startSub = _pusher.onGameStarted.listen((data) async {
+      if (!mounted || _roomCode == null || _myUserId == null) return;
+      final gc = context.read<GameController>();
+      // init() fetches room state, connects Pusher fully, then routes to /mafia/role
+      await gc.init(_roomCode!, _myUserId!);
     });
   }
 
@@ -181,11 +184,9 @@ class _LobbyScreenState extends State<LobbyScreen>
     });
     try {
       await _api.startGame(_roomCode!);
-      // game-started Pusher event triggers GameController → navigates to role screen
-      if (mounted && _myUserId != null) {
-        final gc = context.read<GameController>();
-        await gc.init(_roomCode!, _myUserId!);
-      }
+      // The backend broadcasts 'game-started' via Pusher.
+      // _startSub in _subscribeLobbyEvents handles navigation for ALL players
+      // (including the host), so nothing more to do here.
     } on GameApiException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {

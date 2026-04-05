@@ -33,6 +33,8 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _gameEndedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _gameStartedController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _voteController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _playerJoinedController =
@@ -45,6 +47,7 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onPhaseResolved => _phaseController.stream;
   Stream<Map<String, dynamic>> get onRoleAssigned => _roleController.stream;
   Stream<Map<String, dynamic>> get onGameEnded => _gameEndedController.stream;
+  Stream<Map<String, dynamic>> get onGameStarted => _gameStartedController.stream;
   Stream<Map<String, dynamic>> get onVoteUpdated => _voteController.stream;
   Stream<Map<String, dynamic>> get onPlayerJoined =>
       _playerJoinedController.stream;
@@ -141,6 +144,9 @@ class PusherService extends ChangeNotifier {
     debugPrint('[Pusher] \${event.eventName}: \$data');
 
     switch (event.eventName) {
+      case 'game-started':
+        _gameStartedController.add(data);
+        break;
       case 'phase-resolved':
         _phaseController.add(data);
         break;
@@ -192,6 +198,7 @@ class PusherService extends ChangeNotifier {
     _phaseController.close();
     _roleController.close();
     _gameEndedController.close();
+    _gameStartedController.close();
     _voteController.close();
     _playerJoinedController.close();
     _chatController.close();

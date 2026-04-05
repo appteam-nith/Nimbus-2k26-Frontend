@@ -182,6 +182,7 @@ class AuthProvider extends ChangeNotifier {
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
+      final userId = userData['user_id'] as String?;
 
       final prefs = await SharedPreferences.getInstance();
       if (_userName != null) {
@@ -189,6 +190,9 @@ class AuthProvider extends ChangeNotifier {
       }
       if (_userEmail != null) {
         await prefs.setString('user_email', _userEmail!);
+      }
+      if (userId != null) {
+        await prefs.setString('user_id', userId);
       }
       await prefs.setString('auth_token', token);
 
