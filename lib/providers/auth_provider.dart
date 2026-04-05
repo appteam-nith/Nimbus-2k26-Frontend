@@ -171,14 +171,28 @@ class AuthProvider extends ChangeNotifier {
         throw Exception('Firebase sign-in failed.');
       }
 
-      final firebaseIdToken = await firebaseUser.getIdToken();
-      if (firebaseIdToken == null) {
+      final firebaseIdToken = await firebaseUser.getIdToken(true); // forceRefresh=true
+      if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
         throw Exception('Failed to generate Firebase ID token.');
+      }
+      // Sanity check: a Firebase JWT always starts with "eyJ"
+      debugPrint('[Auth] Firebase ID token prefix: ${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}...');
+      if (!firebaseIdToken.startsWith('eyJ')) {
+        throw Exception('Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}');
       }
 
       final response = await _apiService.googleSignIn(firebaseIdToken);
-      final token = response['token'] as String;
-      final userData = response['user'] as Map<String, dynamic>;
+
+      // ── Defensive extraction — never hard-cast from API responses ──
+      final token = response['token'] as String?;
+      if (token == null || token.isEmpty) {
+        throw Exception('Backend did not return a token. Check server logs.');
+      }
+
+      final userData = response['user'] as Map<String, dynamic>?;
+      if (userData == null) {
+        throw Exception('Backend did not return user data.');
+      }
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
@@ -213,6 +227,8 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       final errorMsg = _cleanError(e.toString());
+      // Always log to console so devs can see the real error in flutter logs
+      debugPrint('[AuthProvider] signInWithGoogle error: $e');
       try {
         await GoogleSignIn.instance.signOut();
       } catch (_) {}

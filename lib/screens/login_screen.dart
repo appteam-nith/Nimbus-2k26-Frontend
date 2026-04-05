@@ -186,17 +186,12 @@ class LoginScreen extends StatelessWidget {
                                   width: double.infinity,
                                   height: 54,
                                   child: OutlinedButton(
-                                    onPressed: auth.status == AuthStatus.loading
+                                            onPressed: auth.status == AuthStatus.loading
                                         ? null
                                         : () async {
-                                            final success = await auth.signInWithGoogle();
-                                            if (success && context.mounted) {
-                                              Navigator.pushNamedAndRemoveUntil(
-                                                context,
-                                                '/home',
-                                                (route) => false,
-                                              );
-                                            }
+                                            await auth.signInWithGoogle();
+                                            // Navigation is handled automatically by AuthWrapper
+                                            // which watches isAuthenticated and rebuilds the tree.
                                           },
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: Colors.white,
