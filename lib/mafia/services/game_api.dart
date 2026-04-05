@@ -12,13 +12,14 @@ class GameApi {
 
   static const String _baseUrl =
       String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'https://nimbus-2k26-backend.onrender.com');
+          defaultValue: 'https://nimbus-2k26-backend-2.onrender.com');
 
   // ─── TOKEN ──────────────────────────────────────────────────────────────────
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('jwt_token');
+    // AuthProvider saves the token with key 'auth_token'
+    return prefs.getString('auth_token');
   }
 
   Map<String, String> _headers(String token) => {
@@ -48,6 +49,70 @@ class GameApi {
     } else {
       final body = _tryDecodeError(response.body);
       throw GameApiException(body, response.statusCode);
+    }
+  }
+
+  // ─── ROOM APIs (Dev 2) ───────────────────────────────────────────────────────
+
+  /// POST /api/game/rooms
+  /// [roomSize] must be "FIVE", "EIGHT", or "TWELVE".
+  /// Returns the room code.
+  Future<String> createRoom(String roomSize) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode({'room_size': roomSize}),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return json['roomCode'] as String;
+    }
+    throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+  }
+
+  /// POST /api/game/rooms/join
+  /// [roomCode] is the 6-character room code.
+  Future<void> joinRoom(String roomCode) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms/join');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode({'room_code': roomCode}),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
+  /// POST /api/game/start — host only.
+  Future<void> startGame(String roomCode) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/start');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode({'room_code': roomCode}),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
     }
   }
 

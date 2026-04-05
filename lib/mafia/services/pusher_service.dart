@@ -21,7 +21,7 @@ class PusherService extends ChangeNotifier {
       String.fromEnvironment('PUSHER_CLUSTER', defaultValue: 'ap2');
   static const String _baseUrl =
       String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'https://nimbus-2k26-backend.onrender.com');
+          defaultValue: 'https://nimbus-2k26-backend-2.onrender.com');
 
   final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
 
@@ -73,7 +73,7 @@ class PusherService extends ChangeNotifier {
     await disconnect();
 
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token') ?? '';
+    final token = prefs.getString('auth_token') ?? ''; // AuthProvider uses 'auth_token'
 
     try {
       await _pusher.init(

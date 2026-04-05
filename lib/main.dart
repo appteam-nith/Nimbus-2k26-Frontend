@@ -13,8 +13,9 @@ import 'events_page.dart';
 import 'departmental_clubs_page.dart';
 import 'widgets/bottom_nav.dart';
 
-// ── Mafia game (Dev 5) ────────────────────────────────────────────────────────
+// ── Mafia game ──────────────────────────────────────────────────────
 import 'mafia/controller/game_controller.dart';
+import 'mafia/screens/lobby_screen.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
@@ -63,7 +64,7 @@ class MyApp extends StatelessWidget {
         '/mafia/night': (_) => const _MafiaPlaceholder(label: 'Night — Dev 4'),
         '/mafia/discussion': (_) => const _MafiaPlaceholder(label: 'Discussion — Dev 3'),
         '/mafia/voting': (_) => const _MafiaPlaceholder(label: 'Voting — Dev 4'),
-        '/mafia/lobby': (_) => const _MafiaPlaceholder(label: 'Lobby — Dev 2'),
+        '/mafia/lobby': (_) => const LobbyScreen(),      // Dev 2 ✅
       },
     );
   }
