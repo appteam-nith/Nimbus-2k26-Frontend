@@ -15,6 +15,8 @@ class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   String? _userName;
   String? _userEmail;
+  int? _mafiaPoints;
+  int? _mafiaRank;
 
   late final Future<void> _googleInitFuture;
   late final Future<void> _backendWarmupFuture;
@@ -24,6 +26,8 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
+  int? get mafiaPoints => _mafiaPoints;
+  int? get mafiaRank => _mafiaRank;
   User? get user => FirebaseAuth.instance.currentUser;
 
   AuthProvider() {
@@ -65,6 +69,16 @@ class AuthProvider extends ChangeNotifier {
       final userData = profileData['user'] as Map<String, dynamic>?;
       final name = (userData?['full_name'] ?? userData?['name']) as String?;
       final email = userData?['email'] as String?;
+      final pointsCandidate =
+          profileData['points'] ??
+          profileData['mafia_points'] ??
+          userData?['points'] ??
+          userData?['mafia_points'];
+      final rankCandidate =
+          profileData['rank'] ??
+          profileData['mafia_rank'] ??
+          userData?['rank'] ??
+          userData?['mafia_rank'];
 
       if (name != null && name.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
@@ -74,19 +88,17 @@ class AuthProvider extends ChangeNotifier {
         }
         _userName = name;
         _userEmail = email;
-        notifyListeners();
       }
+
+      if (pointsCandidate != null) {
+        _mafiaPoints = int.tryParse(pointsCandidate.toString());
+      }
+      if (rankCandidate != null) {
+        _mafiaRank = int.tryParse(rankCandidate.toString());
+      }
+      notifyListeners();
     } catch (_) {
       // Ignore background refresh errors.
-    }
-  }
-
-  void syncProfile(ProfileModel profileModel) {
-    if (_userName != null && _userName!.isNotEmpty) {
-      profileModel.updateName(_userName!);
-    }
-    if (_userEmail != null && _userEmail!.isNotEmpty) {
-      profileModel.updateBio(_userEmail!);
     }
   }
 
@@ -190,8 +202,9 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
       final firebaseUser = userCredential.user;
       if (firebaseUser == null) {
         throw Exception('Firebase sign-in failed.');
@@ -205,7 +218,9 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}…)');
       if (!firebaseIdToken.startsWith('eyJ')) {
-        throw Exception('Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}');
+        throw Exception(
+          'Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}',
+        );
       }
 
       debugPrint('[Auth] Step 8: Sending Firebase ID token to backend…');

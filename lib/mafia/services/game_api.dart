@@ -52,6 +52,32 @@ class GameApi {
     }
   }
 
+  // ─── GAME ACTIONS (Dev 3) ───────────────────────────────────────────────────
+
+  /// POST /api/game/vote
+  /// Sends a game action (Vote, Kill, Save, etc.) to the backend.
+  Future<void> postAction(String roomCode, String targetId, String actionType) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/vote');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode({
+            'room_code': roomCode,
+            'target_id': targetId,
+            'vote_type': actionType,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
   // ─── ROOM APIs (Dev 2) ───────────────────────────────────────────────────────
 
   /// POST /api/game/rooms
@@ -97,6 +123,26 @@ class GameApi {
     }
   }
 
+  /// POST /api/game/rooms/leave
+  /// [roomCode] is the 6-character room code.
+  Future<void> leaveRoom(String roomCode) async {
+    final token = await _getToken();
+    if (token == null) return; // Ignore if not authenticated
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms/leave');
+    try {
+      await http
+          .post(
+            uri,
+            headers: _headers(token),
+            body: jsonEncode({'room_code': roomCode}),
+          )
+          .timeout(const Duration(seconds: 15));
+    } catch (_) {
+      // Best effort when leaving
+    }
+  }
+
   /// POST /api/game/start — host only.
   Future<void> startGame(String roomCode) async {
     final token = await _getToken();
@@ -113,6 +159,48 @@ class GameApi {
 
     if (response.statusCode != 200) {
       throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
+  // ─── GAME ACTIONS (Dev 4) ───────────────────────────────────────────────────
+
+  /// POST /api/vote
+  /// Optional arrays for Hitman or other complex actions.
+  Future<String?> submitVote(String roomCode, String voteType, {
+    List<String>? targets,
+    List<String>? roles,
+  }) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'vote_type': voteType,
+    };
+
+    if (targets != null && targets.isNotEmpty) {
+      payload['targets'] = targets;
+    }
+    
+    if (roles != null && roles.isNotEmpty) {
+      payload['roles'] = roles;
+    }
+
+    final uri = Uri.parse('$_baseUrl/api/vote');
+    final response = await http
+        .post(uri, headers: _headers(token), body: jsonEncode(payload))
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      // The backend may return 'investigation_result' for Cop/Reporter
+      return json['investigation_result'] as String?;
+    } catch (_) {
+      return null;
     }
   }
 

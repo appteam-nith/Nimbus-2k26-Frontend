@@ -221,6 +221,14 @@ class _RoleScreenState extends State<RoleScreen>
         return const Color(0xFF22C55E);
       case GameRole.COP:
         return const Color(0xFF3B82F6);
+      case GameRole.HITMAN:
+        return const Color(0xFFFF6B00);
+      case GameRole.BOUNTY_HUNTER:
+        return const Color(0xFFF59E0B);
+      case GameRole.REPORTER:
+        return const Color(0xFF8B5CF6);
+      case GameRole.PROPHET:
+        return const Color(0xFF06B6D4);
       case GameRole.CITIZEN:
         return const Color(0xFF9CA3AF);
     }

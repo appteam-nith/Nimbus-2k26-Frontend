@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import '../models/profile_model.dart';
 import '../providers/auth_provider.dart';
 
 // ── Nimbus color tokens ──────────────────────────────────────────────────────
@@ -7,15 +12,6 @@ class NimbusColors {
   static const blue = Color(0xFF2D5BE3);
   static const blueLight = Color(0xFFEFF4FF);
   static const blueDark = Color(0xFF1A3BB3);
-  static const gold = Color(0xFFF59E0B);
-  static const goldLight = Color(0xFFFEF3C7);
-  static const green = Color(0xFF10B981);
-  static const greenLight = Color(0xFFECFDF5);
-  static const red = Color(0xFFEF4444);
-  static const purple = Color(0xFF8B5CF6);
-  static const purpleLight = Color(0xFFF5F3FF);
-  static const orange = Color(0xFFF97316);
-  static const orangeLight = Color(0xFFFFF7ED);
   static const textPrimary = Color(0xFF111827);
   static const textSecondary = Color(0xFF6B7280);
   static const textMuted = Color(0xFF9CA3AF);
@@ -23,386 +19,251 @@ class NimbusColors {
   static const cardBg = Color(0xFFF5F6FA);
 }
 
-// ── Data models ──────────────────────────────────────────────────────────────
-class BadgeItem {
-  final String emoji;
-  final String label;
-  final Color bg;
-  const BadgeItem({required this.emoji, required this.label, required this.bg});
-}
-
-class RegisteredEvent {
-  final String emoji;
-  final Color thumbGradientStart;
-  final Color thumbGradientEnd;
-  final String name;
-  final String meta;
-  final String tag;
-  final Color tagBg;
-  final Color tagText;
-  const RegisteredEvent({
-    required this.emoji,
-    required this.thumbGradientStart,
-    required this.thumbGradientEnd,
-    required this.name,
-    required this.meta,
-    required this.tag,
-    required this.tagBg,
-    required this.tagText,
-  });
-}
-
-class PointsActivity {
-  final String activity;
-  final String date;
-  final int points;
-  const PointsActivity(
-      {required this.activity, required this.date, required this.points});
-}
-
-// ── Profile Page ─────────────────────────────────────────────────────────────
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
-  static const _badges = [
-    BadgeItem(emoji: '🏅', label: 'Top Performer', bg: NimbusColors.goldLight),
-    BadgeItem(emoji: '💻', label: 'Hackathon Pro', bg: NimbusColors.blueLight),
-    BadgeItem(emoji: '🎤', label: 'Speaker', bg: NimbusColors.purpleLight),
-    BadgeItem(emoji: '🌱', label: 'Early Bird', bg: NimbusColors.greenLight),
-    BadgeItem(emoji: '🔥', label: 'On a Streak', bg: NimbusColors.orangeLight),
-  ];
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
 
-  static const _events = [
-    RegisteredEvent(
-      emoji: '🤖',
-      thumbGradientStart: NimbusColors.blueDark,
-      thumbGradientEnd: NimbusColors.blue,
-      name: 'AI & Future Tech',
-      meta: 'Oct 24 · Lecture Hall A',
-      tag: 'Workshop',
-      tagBg: NimbusColors.blueLight,
-      tagText: NimbusColors.blue,
-    ),
-    RegisteredEvent(
-      emoji: '⚔️',
-      thumbGradientStart: Color(0xFF92400E),
-      thumbGradientEnd: NimbusColors.gold,
-      name: 'RoboWars Qualifiers',
-      meta: 'Oct 24 · Main Ground',
-      tag: 'Competitive',
-      tagBg: NimbusColors.goldLight,
-      tagText: Color(0xFF92400E),
-    ),
-    RegisteredEvent(
-      emoji: '🔐',
-      thumbGradientStart: Color(0xFF4C1D95),
-      thumbGradientEnd: NimbusColors.purple,
-      name: 'CyberSec Seminar',
-      meta: 'Oct 25 · Lab 2',
-      tag: 'Talk',
-      tagBg: NimbusColors.purpleLight,
-      tagText: NimbusColors.purple,
-    ),
-    RegisteredEvent(
-      emoji: '💡',
-      thumbGradientStart: NimbusColors.blueDark,
-      thumbGradientEnd: NimbusColors.blue,
-      name: 'Mega Hackathon 2024',
-      meta: 'Oct 25 · CS Lab 1',
-      tag: 'Hackathon',
-      tagBg: NimbusColors.goldLight,
-      tagText: Color(0xFF92400E),
-    ),
-  ];
-
-  static const _pointsActivities = [
-    PointsActivity(
-        activity: 'Hackathon Finalist', date: 'Oct 24', points: 800),
-    PointsActivity(
-        activity: 'Workshop Attended', date: 'Oct 23', points: 150),
-    PointsActivity(activity: 'Quiz Winner', date: 'Oct 22', points: 300),
-    PointsActivity(activity: 'Event Cancelled', date: 'Oct 20', points: -50),
-  ];
+class _ProfilePageState extends State<ProfilePage> {
+  String? _selectedImagePath;
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
+    return Consumer2<AuthProvider, ProfileModel>(
+      builder: (context, auth, profile, _) {
         final user = auth.user;
-        final displayName =
-            auth.userName ?? user?.displayName ?? 'Nimbus User';
+        final displayName = auth.userName ?? user?.displayName ?? 'Nimbus User';
         final email = auth.userEmail ?? user?.email ?? '';
-        final photoUrl = user?.photoURL;
         final handle = email.isNotEmpty
             ? '@${email.split('@').first}'
-            : '@nith_user';
+            : '@nimbus_user';
+        final avatarUrl = profile.avatarPath.isNotEmpty
+            ? profile.avatarPath
+            : user?.photoURL;
+        final initials = displayName
+            .split(' ')
+            .where((part) => part.isNotEmpty)
+            .take(2)
+            .map((part) => part[0].toUpperCase())
+            .join();
 
         return Scaffold(
           backgroundColor: NimbusColors.cardBg,
-          body: CustomScrollView(
-            slivers: [
-              _buildSliverAppBar(context),
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    _buildAvatarSection(
-                      context: context,
-                      auth: auth,
-                      displayName: displayName,
-                      handle: handle,
-                      photoUrl: photoUrl,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildRankCard(),
-                    const SizedBox(height: 8),
-                    _buildBadgesCard(),
-                    const SizedBox(height: 8),
-                    _buildEventsCard(),
-                    const SizedBox(height: 8),
-                    _buildPointsCard(),
-                    const SizedBox(height: 24),
-                    _buildLogoutButton(context, auth),
-                    const SizedBox(height: 12),
-                    _buildDeleteAccountButton(context, auth),
-                    const SizedBox(height: 32),
-                  ],
+          appBar: AppBar(
+            backgroundColor: NimbusColors.blue,
+            elevation: 0,
+            centerTitle: true,
+            title: const Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [NimbusColors.blueDark, NimbusColors.blue],
                 ),
               ),
-            ],
+            ),
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                _buildProfileCard(
+                  context,
+                  auth,
+                  profile,
+                  displayName,
+                  handle,
+                  email,
+                  avatarUrl,
+                  initials,
+                ),
+                const SizedBox(height: 20),
+                _buildLeaderboardCard(auth),
+                const SizedBox(height: 24),
+                _buildActionButtons(context, auth),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  // ── Sliver App Bar ─────────────────────────────────────────────────────────
-  SliverAppBar _buildSliverAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 110,
-      pinned: true,
-      backgroundColor: NimbusColors.blue,
-      leading: Padding(
-        padding: const EdgeInsets.all(8),
-        child: GestureDetector(
-          onTap: () => Navigator.maybePop(context),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
+  Widget _buildProfileCard(
+    BuildContext context,
+    AuthProvider auth,
+    ProfileModel profile,
+    String displayName,
+    String handle,
+    String email,
+    String? avatarUrl,
+    String initials,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 12),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 16),
-          ),
+          ],
         ),
-      ),
-      title: const Text(
-        'Profile',
-        style: TextStyle(
-            color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-      ),
-      centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.edit_outlined, color: Colors.white, size: 16),
-          ),
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                NimbusColors.blueDark,
-                NimbusColors.blue,
-                Color(0xFF4169E1),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Avatar + Info + Stats ──────────────────────────────────────────────────
-  Widget _buildAvatarSection({
-    required BuildContext context,
-    required AuthProvider auth,
-    required String displayName,
-    required String handle,
-    String? photoUrl,
-  }) {
-    // Derive initials for fallback avatar
-    final initials = displayName
-        .split(' ')
-        .where((w) => w.isNotEmpty)
-        .take(2)
-        .map((w) => w[0].toUpperCase())
-        .join();
-
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Transform.translate(
-                offset: const Offset(0, -24),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Profile photo from Google, fallback to initials
-                    Container(
-                      width: 72,
-                      height: 72,
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFB8B6FF), Color(0xFF5668FF)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 16,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: DecoratedBox(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: _selectedImagePath != null
+                              ? Image.file(
+                                  File(_selectedImagePath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      _initialsAvatar(initials),
+                                )
+                              : (avatarUrl != null && avatarUrl.isNotEmpty
+                                    ? _buildAvatarImage(avatarUrl, initials)
+                                    : _initialsAvatar(initials)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _pickProfileImage(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
+                        color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(
+                          color: NimbusColors.blue,
+                          width: 1.7,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 8,
-                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: photoUrl != null && photoUrl.isNotEmpty
-                            ? Image.network(
-                                photoUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) =>
-                                    _initialsAvatar(initials),
-                              )
-                            : _initialsAvatar(initials),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: NimbusColors.blue,
+                        size: 18,
                       ),
                     ),
-                    // Crown badge
-                    Positioned(
-                      bottom: 2,
-                      right: 2,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: NimbusColors.gold,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Center(
-                          child: Text('👑', style: TextStyle(fontSize: 10)),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: NimbusColors.textPrimary,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: ElevatedButton(
-                  onPressed: () => _showEditProfileDialog(
-                    context,
-                    auth,
-                    currentName: displayName,
+              const SizedBox(height: 4),
+              Text(
+                handle,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: NimbusColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: NimbusColors.blueLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  email,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: NimbusColors.blue,
+                    fontWeight: FontWeight.w600,
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: NimbusColors.blue,
-                    foregroundColor: Colors.white,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    elevation: 0,
-                    textStyle: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  child: const Text('Edit Profile'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                profile.bio.isNotEmpty
+                    ? profile.bio
+                    : 'Tell the community a little about yourself. Tap edit to add your bio.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: NimbusColors.textSecondary,
+                  height: 1.6,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
-          // Name from Google account
-          Text(
-            displayName,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: NimbusColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            handle,
-            style: const TextStyle(fontSize: 12, color: NimbusColors.textMuted),
-          ),
-          const SizedBox(height: 6),
-          // NITH chip
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: NimbusColors.blueLight,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.school_outlined, size: 12, color: NimbusColors.blue),
-                SizedBox(width: 4),
-                Text(
-                  'NIT Hamirpur',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: NimbusColors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Divider(color: NimbusColors.border, height: 1),
-          const SizedBox(height: 12),
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                _statItem('4500', 'Points', valueColor: NimbusColors.blue),
-                _verticalDivider(),
-                _statItem('#2', 'Rank'),
-                _verticalDivider(),
-                _statItem('12', 'Events'),
-                _verticalDivider(),
-                _statItem('5', 'Badges'),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// Gradient initials avatar (fallback when no photo URL)
   Widget _initialsAvatar(String initials) {
     return Container(
       color: Colors.transparent,
       child: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFF093FB), Color(0xFFF5576C)],
+            colors: [Color(0xFFEF7DFF), Color(0xFF7C5CFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -411,8 +272,8 @@ class ProfilePage extends StatelessWidget {
           child: Text(
             initials,
             style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
               color: Colors.white,
             ),
           ),
@@ -421,573 +282,812 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _statItem(String value, String label,
-      {Color valueColor = NimbusColors.textPrimary}) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: valueColor)),
-          const SizedBox(height: 2),
-          Text(label.toUpperCase(),
-              style: const TextStyle(
-                  fontSize: 9,
-                  color: NimbusColors.textMuted,
-                  letterSpacing: 0.5)),
-        ],
-      ),
+  Widget _buildAvatarImage(String avatarUrl, String initials) {
+    final uri = Uri.tryParse(avatarUrl);
+    final isNetwork = uri?.scheme == 'http' || uri?.scheme == 'https';
+
+    if (isNetwork) {
+      return Image.network(
+        avatarUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+      );
+    }
+
+    return Image.file(
+      File(avatarUrl),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _initialsAvatar(initials),
     );
   }
 
-  Widget _verticalDivider() => Container(
-        width: 1,
-        color: NimbusColors.border,
-        margin: const EdgeInsets.symmetric(vertical: 4),
-      );
+  Widget _buildLeaderboardCard(AuthProvider auth) {
+    final points = auth.mafiaPoints;
+    final rank = auth.mafiaRank;
 
-  // ── Rank card ──────────────────────────────────────────────────────────────
-  Widget _buildRankCard() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [NimbusColors.blueDark, NimbusColors.blue],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text('🏆', style: TextStyle(fontSize: 24)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('CURRENT RANK',
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.white60,
-                          letterSpacing: 0.6,
-                          fontWeight: FontWeight.w500)),
-                  SizedBox(height: 2),
-                  Text('#2 Overall',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          height: 1.2)),
-                  SizedBox(height: 2),
-                  Text('Top 1% of all participants',
-                      style:
-                          TextStyle(fontSize: 11, color: Colors.white70)),
-                ],
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: NimbusColors.gold,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text('Gold',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ── Badges card ────────────────────────────────────────────────────────────
-  Widget _buildBadgesCard() {
-    return _sectionCard(
-      title: 'Badges Earned',
-      trailing: 'View All',
-      onTrailingTap: () {},
-      child: SizedBox(
-        height: 80,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          itemCount: _badges.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 12),
-          itemBuilder: (_, i) {
-            final b = _badges[i];
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: b.bg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(b.emoji,
-                        style: const TextStyle(fontSize: 22)),
-                  ),
-                ),
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: 50,
-                  child: Text(b.label,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 9,
-                          color: NimbusColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2)),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // ── Registered events card ─────────────────────────────────────────────────
-  Widget _buildEventsCard() {
-    return _sectionCard(
-      title: 'Registered Events',
-      trailing: 'View All',
-      onTrailingTap: () {},
-      child: Column(
-        children: _events
-            .map((e) => _eventRow(e, isLast: e == _events.last))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _eventRow(RegisteredEvent e, {bool isLast = false}) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: LinearGradient(
-                    colors: [e.thumbGradientStart, e.thumbGradientEnd],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Text(e.emoji, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(e.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: NimbusColors.textPrimary)),
-                    const SizedBox(height: 2),
-                    Text(e.meta,
-                        style: const TextStyle(
-                            fontSize: 10,
-                            color: NimbusColors.textMuted)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: e.tagBg,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(e.tag,
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: e.tagText)),
-              ),
-            ],
-          ),
-        ),
-        if (!isLast)
-          const Divider(
-              height: 1,
-              indent: 14,
-              endIndent: 14,
-              color: NimbusColors.border),
-      ],
-    );
-  }
-
-  // ── Points activity card ───────────────────────────────────────────────────
-  Widget _buildPointsCard() {
-    return _sectionCard(
-      title: 'Points Activity',
-      trailing: 'History',
-      onTrailingTap: () {},
-      child: Column(
-        children: _pointsActivities
-            .map((p) =>
-                _pointsRow(p, isLast: p == _pointsActivities.last))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _pointsRow(PointsActivity p, {bool isLast = false}) {
-    final isPositive = p.points >= 0;
-    final color = isPositive ? NimbusColors.green : NimbusColors.red;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                width: 9,
-                height: 9,
-                decoration:
-                    BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(p.activity,
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: NimbusColors.textPrimary)),
-                    Text(p.date,
-                        style: const TextStyle(
-                            fontSize: 10,
-                            color: NimbusColors.textMuted)),
-                  ],
-                ),
-              ),
-              Text(
-                '${isPositive ? '+' : ''}${p.points}',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: color),
-              ),
-            ],
-          ),
-        ),
-        if (!isLast)
-          const Divider(
-              height: 1,
-              indent: 14,
-              endIndent: 14,
-              color: NimbusColors.border),
-      ],
-    );
-  }
-
-  // ── Section card wrapper ───────────────────────────────────────────────────
-  Widget _sectionCard({
-    required String title,
-    required String trailing,
-    required VoidCallback onTrailingTap,
-    required Widget child,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(title,
-                    style: const TextStyle(
+              Row(
+                children: const [
+                  Icon(Icons.emoji_events_outlined, color: NimbusColors.blue),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Leaderboard stats are loaded from the Mafia game backend.',
+                      style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: NimbusColors.textPrimary)),
-                GestureDetector(
-                  onTap: onTrailingTap,
-                  child: Text(trailing,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: NimbusColors.blue)),
+                        color: NimbusColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: _statItem(
+                      points != null ? points.toString() : '--',
+                      'POINTS',
+                    ),
+                  ),
+                  Container(width: 1, height: 54, color: NimbusColors.border),
+                  Expanded(
+                    child: _statItem(rank != null ? '#$rank' : '--', 'RANK'),
+                  ),
+                ],
+              ),
+              if (points == null || rank == null)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text(
+                    'Join the Mafia game to unlock your leaderboard score.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: NimbusColors.textMuted,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statItem(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: NimbusColors.blueDark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            letterSpacing: 1.0,
+            color: NimbusColors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, AuthProvider auth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          ElevatedButton.icon(
+            icon: const Icon(Icons.edit, size: 20),
+            onPressed: () {
+              final profile = context.read<ProfileModel>();
+              _showEditProfileDialog(
+                context,
+                auth,
+                profile,
+                currentName:
+                    auth.userName ?? auth.user?.displayName ?? 'Nimbus User',
+                currentBio: profile.bio,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              backgroundColor: const Color.fromARGB(255, 244, 245, 247),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              side: const BorderSide(color: NimbusColors.blue),
+              elevation: 2,
+            ),
+            label: const Text(
+              'Edit Profile',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: NimbusColors.blue,
+              ),
             ),
           ),
-          const Divider(height: 1, color: NimbusColors.border),
-          child,
+          const SizedBox(height: 14),
+          OutlinedButton(
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Log Out'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm != true || !context.mounted) return;
+              await auth.logout();
+              if (!context.mounted) return;
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              side: const BorderSide(color: NimbusColors.blue),
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: NimbusColors.blue,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextButton(
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Account'),
+                  content: const Text(
+                    'This will delete your account permanently and cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm != true || !context.mounted) return;
+              final deleted = await auth.deleteAccount();
+              if (!context.mounted) return;
+              if (deleted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      auth.errorMessage ?? 'Failed to delete account.',
+                    ),
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFB91C1C),
+              minimumSize: const Size.fromHeight(52),
+            ),
+            child: const Text(
+              'Delete Account',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ── Logout Button ──────────────────────────────────────────────────────────
-  Widget _buildLogoutButton(BuildContext context, AuthProvider auth) {
+  Future<void> _pickProfileImage(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (bottomContext) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  height: 4,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: NimbusColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Choose Profile Image',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: NimbusColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildImagePickerOption(
+                icon: Icons.image,
+                label: 'Photo Gallery',
+                onTap: () async {
+                  print('DEBUG: Photo Gallery tapped');
+                  Navigator.pop(bottomContext);
+                  print(
+                    'DEBUG: Bottom sheet closed, calling _pickImageFromGallery',
+                  );
+                  await _pickImageFromGallery();
+                },
+              ),
+              const SizedBox(height: 10),
+              _buildImagePickerOption(
+                icon: Icons.folder,
+                label: 'Files',
+                onTap: () async {
+                  print('DEBUG: Files tapped');
+                  Navigator.pop(bottomContext);
+                  print(
+                    'DEBUG: Bottom sheet closed, calling _pickImageFromFiles',
+                  );
+                  await _pickImageFromFiles();
+                },
+              ),
+              const SizedBox(height: 10),
+              _buildImagePickerOption(
+                icon: Icons.close,
+                label: 'Cancel',
+                onTap: () => Navigator.pop(bottomContext),
+                isCancel: true,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildImagePickerOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isCancel = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TextButton(
-        style: TextButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-          foregroundColor: Colors.red,
-          backgroundColor: Colors.red.withOpacity(0.05),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
-        ),
-        onPressed: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Log Out'),
-              content: const Text(
-                  'Are you sure you want to exit your account?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isCancel ? Colors.red : NimbusColors.blue,
+                  size: 24,
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Logout',
-                      style: TextStyle(color: Colors.red)),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isCancel ? Colors.red : NimbusColors.textPrimary,
+                  ),
                 ),
               ],
             ),
-          );
-
-          if (confirm == true) {
-            if (!context.mounted) return;
-            await auth.logout();
-            if (!context.mounted) return;
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/login', (route) => false);
-          }
-        },
-        child: const Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.logout, size: 20),
-              SizedBox(width: 8),
-              Text('Logout',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
           ),
         ),
       ),
     );
   }
 
-  // ── Delete Account Button ──────────────────────────────────────────────────
-  Widget _buildDeleteAccountButton(BuildContext context, AuthProvider auth) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TextButton(
-        style: TextButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-          foregroundColor: const Color(0xFF7F1D1D),
-          backgroundColor: const Color(0xFFFEF2F2),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+  Future<void> _pickImageFromGallery() async {
+    try {
+      print('DEBUG: _pickImageFromGallery called');
+      final status = await _requestPhotoPermission();
+      print('DEBUG: Permission status = $status');
+
+      if (!status.isGranted) {
+        print('DEBUG: Permission denied');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo library permission is required.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      print('DEBUG: Permission granted, opening image picker');
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      print('DEBUG: Image picked: ${pickedFile?.path}');
+
+      if (pickedFile != null && mounted) {
+        final profile = context.read<ProfileModel>();
+        await profile.updateAvatar(pickedFile.path);
+        setState(() {
+          _selectedImagePath = pickedFile.path;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile image updated!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        print('DEBUG: No image selected or widget not mounted');
+      }
+    } catch (e) {
+      print('DEBUG: Error in _pickImageFromGallery: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: ${e.toString()}'),
+          duration: const Duration(seconds: 2),
         ),
-        onPressed: () async {
-          // Step 1 — initial warning
-          final step1 = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: Color(0xFFDC2626), size: 22),
-                  SizedBox(width: 8),
-                  Text('Delete Account',
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827))),
-                ],
-              ),
-              content: const Text(
-                'This will permanently delete your account and all your data '
-                '(profile, points, registrations). This cannot be undone.',
-                style: TextStyle(fontSize: 14, height: 1.5),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Continue',
-                      style: TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-          );
-          if (step1 != true) return;
-          if (!context.mounted) return;
+      );
+    }
+  }
 
-          // Step 2 — final confirmation
-          final step2 = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Are you absolutely sure?',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFDC2626))),
-              content: const Text(
-                'Your account and all data will be deleted immediately and '
-                'cannot be recovered.',
-                style: TextStyle(fontSize: 13, height: 1.5),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Go Back'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDC2626),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                  ),
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Delete My Account'),
-                ),
-              ],
-            ),
-          );
-          if (step2 != true) return;
-          if (!context.mounted) return;
+  Future<void> _pickImageFromFiles() async {
+    try {
+      print('DEBUG: _pickImageFromFiles called');
+      final status = await _requestStoragePermission();
+      print('DEBUG: Permission status = $status');
 
-          final deleted = await auth.deleteAccount();
-          if (!context.mounted) return;
+      if (!status.isGranted) {
+        print('DEBUG: Permission denied');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('File access permission is required.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
 
-          if (deleted) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/login', (route) => false);
-          } else {
+      print('DEBUG: Permission granted, opening file picker');
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: false,
+      );
+
+      print('DEBUG: File picked: ${result?.files.firstOrNull?.path}');
+
+      if (result != null && result.files.isNotEmpty && mounted) {
+        final filePath = result.files.single.path;
+        if (filePath != null) {
+          final profile = context.read<ProfileModel>();
+          await profile.updateAvatar(filePath);
+          setState(() {
+            _selectedImagePath = filePath;
+          });
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(
-                      auth.errorMessage ?? 'Failed to delete account.')),
+              const SnackBar(
+                content: Text('Profile image updated!'),
+                duration: Duration(seconds: 2),
+              ),
             );
           }
-        },
-        child: const Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.delete_forever_outlined, size: 20),
-              SizedBox(width: 8),
-              Text('Delete Account',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
+        }
+      } else {
+        print('DEBUG: No file selected or widget not mounted');
+      }
+    } catch (e) {
+      print('DEBUG: Error in _pickImageFromFiles: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking file: ${e.toString()}'),
+          duration: const Duration(seconds: 2),
         ),
-      ),
-    );
+      );
+    }
+  }
+
+  Future<PermissionStatus> _requestPhotoPermission() async {
+    try {
+      print('DEBUG: _requestPhotoPermission called');
+      // permission_handler automatically handles Android 13+ vs older versions
+      final status = await Permission.photos.request();
+      print('DEBUG: Permission.photos result: $status');
+      return status;
+    } catch (e) {
+      print('DEBUG: Error in _requestPhotoPermission: $e');
+      rethrow;
+    }
+  }
+
+  Future<PermissionStatus> _requestStoragePermission() async {
+    try {
+      print('DEBUG: _requestStoragePermission called');
+      // permission_handler automatically handles Android 13+ vs older versions
+      final status = await Permission.photos.request();
+      print('DEBUG: Permission.photos result: $status');
+      return status;
+    } catch (e) {
+      print('DEBUG: Error in _requestStoragePermission: $e');
+      rethrow;
+    }
   }
 
   Future<void> _showEditProfileDialog(
     BuildContext context,
-    AuthProvider auth, {
+    AuthProvider auth,
+    ProfileModel profile, {
     required String currentName,
+    required String currentBio,
   }) async {
-    final controller = TextEditingController(text: currentName);
-    final messenger = ScaffoldMessenger.of(context);
+    final nameController = TextEditingController(text: currentName);
+    final bioController = TextEditingController(text: currentBio);
 
-    final newName = await showDialog<String>(
+    await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Edit Profile'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Display name',
-              hintText: 'Enter your name',
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 580),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [NimbusColors.blueDark, NimbusColors.blue],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, color: Colors.white, size: 24),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Edit Profile',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Display Name Field
+                          _buildEditField(
+                            controller: nameController,
+                            label: 'Display Name',
+                            hint: 'Your name',
+                            icon: Icons.person,
+                            maxLines: 1,
+                          ),
+                          const SizedBox(height: 16),
+                          // Bio Field
+                          _buildEditField(
+                            controller: bioController,
+                            label: 'Bio',
+                            hint: 'Tell community about yourself',
+                            icon: Icons.description,
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 16),
+                          // Info Text
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: NimbusColors.blueLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: NimbusColors.blue,
+                                  size: 18,
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Profile image is picked from your device.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: NimbusColors.blue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Actions
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: NimbusColors.border)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: NimbusColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final newName = nameController.text.trim();
+                            final newBio = bioController.text.trim();
+                            Navigator.pop(dialogContext);
+
+                            await _saveProfileChanges(
+                              context,
+                              auth,
+                              profile,
+                              newName,
+                              newBio,
+                              currentName,
+                              currentBio,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: NimbusColors.blue,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, controller.text.trim()),
-              child: const Text('Save'),
-            ),
-          ],
         );
       },
     );
 
-    controller.dispose();
+    nameController.dispose();
+    bioController.dispose();
+  }
 
-    if (newName == null || newName.isEmpty) {
+  Widget _buildEditField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: NimbusColors.blue, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: NimbusColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: NimbusColors.textMuted),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: NimbusColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: NimbusColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: NimbusColors.blue, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+          ),
+          style: const TextStyle(fontSize: 14, color: NimbusColors.textPrimary),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _saveProfileChanges(
+    BuildContext context,
+    AuthProvider auth,
+    ProfileModel profile,
+    String newName,
+    String newBio,
+    String currentName,
+    String currentBio,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (newName.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Please enter a display name.')),
+      );
       return;
     }
 
-    final updated = await auth.updateDisplayName(newName);
+    try {
+      // Update display name if changed
+      if (newName != currentName) {
+        final updated = await auth.updateDisplayName(newName);
+        if (!updated && auth.errorMessage != null) {
+          messenger.showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+          return;
+        }
+        await profile.updateName(newName);
+      }
 
-    if (!context.mounted) return;
+      // Update bio if changed
+      if (newBio != currentBio) {
+        await profile.updateBio(newBio);
+      }
 
-    if (updated) {
+      if (!context.mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully.')),
+        const SnackBar(
+          content: Text('Profile updated successfully!'),
+          duration: Duration(seconds: 2),
+        ),
       );
-    } else if (auth.errorMessage != null) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
+    } catch (e) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 }

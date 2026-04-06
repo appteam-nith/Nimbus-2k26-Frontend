@@ -180,13 +180,17 @@ class _RoleBadge extends StatelessWidget {
     switch (role) {
       case GameRole.MAFIA:
       case GameRole.MAFIA_HELPER:
+      case GameRole.HITMAN:
         return const Color(0xFFEF4444);
       case GameRole.DOCTOR:
       case GameRole.NURSE:
         return const Color(0xFF22C55E);
       case GameRole.COP:
+      case GameRole.REPORTER:
+      case GameRole.BOUNTY_HUNTER:
         return const Color(0xFF3B82F6);
       case GameRole.CITIZEN:
+      case GameRole.PROPHET:
         return const Color(0xFF9CA3AF);
     }
   }

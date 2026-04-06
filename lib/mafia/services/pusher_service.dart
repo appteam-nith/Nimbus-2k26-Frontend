@@ -15,6 +15,7 @@ class PusherService extends ChangeNotifier {
   PusherService._();
   static final PusherService instance = PusherService._();
 
+  bool get isConnected => _connected;
   static const String _appKey =
       String.fromEnvironment('PUSHER_APP_KEY', defaultValue: '');
   static const String _cluster =
@@ -39,6 +40,8 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _playerJoinedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _playerLeftController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _chatController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _investigationController =
@@ -51,6 +54,8 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onVoteUpdated => _voteController.stream;
   Stream<Map<String, dynamic>> get onPlayerJoined =>
       _playerJoinedController.stream;
+  Stream<Map<String, dynamic>> get onPlayerLeft =>
+      _playerLeftController.stream;
   Stream<Map<String, dynamic>> get onChatMessage => _chatController.stream;
 
   /// Cop only — private investigation result
@@ -159,6 +164,9 @@ class PusherService extends ChangeNotifier {
       case 'player-joined':
         _playerJoinedController.add(data);
         break;
+      case 'player-left':
+        _playerLeftController.add(data);
+        break;
       case 'chat-message':
         _chatController.add(data);
         break;
@@ -201,6 +209,7 @@ class PusherService extends ChangeNotifier {
     _gameStartedController.close();
     _voteController.close();
     _playerJoinedController.close();
+    _playerLeftController.close();
     _chatController.close();
     _investigationController.close();
     super.dispose();

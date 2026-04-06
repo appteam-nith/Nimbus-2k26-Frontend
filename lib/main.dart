@@ -19,6 +19,9 @@ import 'mafia/screens/lobby_screen.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
+import 'mafia/screens/discussion_screen.dart';
+import 'mafia/screens/night_screen.dart';
+import 'mafia/screens/voting_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,10 +63,10 @@ class MyApp extends StatelessWidget {
         '/mafia/role': (_) => const RoleScreen(),
         '/mafia/reveal': (_) => const RevealScreen(),
         '/mafia/game-over': (_) => const GameOverScreen(),
-        // Placeholder routes for screens built by other devs
-        '/mafia/night': (_) => const _MafiaPlaceholder(label: 'Night — Dev 4'),
-        '/mafia/discussion': (_) => const _MafiaPlaceholder(label: 'Discussion — Dev 3'),
-        '/mafia/voting': (_) => const _MafiaPlaceholder(label: 'Voting — Dev 4'),
+        // Real game screens
+        '/mafia/night': (_) => const NightScreen(),
+        '/mafia/discussion': (_) => const DiscussionScreen(),
+        '/mafia/voting': (_) => const VotingScreen(),
         '/mafia/lobby': (_) => const LobbyScreen(),      // Dev 2 ✅
       },
     );
@@ -87,7 +90,21 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
   }
 
   Future<void> _startBootstrap() async {
+    
+    // DEV 3: Reconnect Check
+    final auth = context.read<AuthProvider>();
+    final game = context.read<GameController>();
+
     await Future.delayed(const Duration(seconds: 1));
+    
+    if (auth.isAuthenticated) {
+      // Attempt to jump back into an active game session
+      // Use the 'uid' from the 'user' getter already in AuthProvider
+      if (auth.user != null) {
+      await game.tryReconnect(auth.user!.uid);
+     }
+    }
+
     if (!mounted) return;
     setState(() {
       _ready = true;
@@ -191,10 +208,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final authProvider = context.watch<AuthProvider>();
 
     if (authProvider.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        authProvider.syncProfile(context.read<ProfileModel>());
-      });
       return const MainNavigationScreen();
     }
     

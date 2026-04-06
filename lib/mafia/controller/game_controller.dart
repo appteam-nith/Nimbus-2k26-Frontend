@@ -17,8 +17,8 @@ final GlobalKey<NavigatorState> mafiaNavKey = GlobalKey<NavigatorState>();
 /// Central state manager for the Mafia game.
 ///
 /// Lifecycle:
-///   [init]        → call when entering game (from lobby or reconnect)
-///   [dispose]     → call when leaving game (home, game over)
+///   [init]         → call when entering game (from lobby or reconnect)
+///   [dispose]      → call when leaving game (home, game over)
 ///
 /// All Pusher events are handled here and translated into state + navigation.
 class GameController extends ChangeNotifier {
@@ -33,6 +33,7 @@ class GameController extends ChangeNotifier {
   bool isReconnecting = false;
   bool isLoading = false;
   String? error;
+  DateTime? get phaseEndsAt => _phaseEndsAt;
 
   /// The player eliminated this round — set during REVEAL phase.
   PlayerModel? revealedPlayer;
@@ -43,6 +44,9 @@ class GameController extends ChangeNotifier {
   /// Whether the local role card reveal animation has been shown.
   bool roleCardSeen = false;
 
+  /// The player the current user has selected to vote for.
+  String? myVoteTarget;
+
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -51,6 +55,7 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _roleSub;
   StreamSubscription<Map<String, dynamic>>? _gameEndSub;
   StreamSubscription<Map<String, dynamic>>? _voteSub;
+  StreamSubscription<Map<String, dynamic>>? _chatSub; // NEW
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -144,10 +149,12 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
+    _chatSub = _pusher.onChatMessage.listen((_) => notifyListeners()); // NEW
     _voteSub = _pusher.onVoteUpdated.listen((data) {
       // Vote count updates are handled by screens directly;
       // controller just notifies for state rebuild.
@@ -189,6 +196,9 @@ class GameController extends ChangeNotifier {
       (s) => s.name == phase,
       orElse: () => status,
     );
+
+    // Reset local vote target when phase changes
+    myVoteTarget = null;
 
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
@@ -291,11 +301,75 @@ class GameController extends ChangeNotifier {
 
   // ─── ACTIONS ────────────────────────────────────────────────────────────────
 
+  /// Sends a lynch vote or a special action (kill/save) to the API.
+  Future<void> performAction(String targetId) async {
+    String actionType = (status == GameStatus.VOTING) ? "VOTE" : "KILL";
+    try {
+      await _api.postAction(roomCode!, targetId, actionType);
+    } catch (e) {
+      debugPrint("Action Failed: $e");
+    }
+  }
+
   /// Mark role card as seen — call from RoleScreen's "Tap to continue".
   void markRoleCardSeen() {
     roleCardSeen = true;
     notifyListeners();
     _navigate('/mafia/night');
+  }
+
+  /// Sets the local user's selected voting target.
+  void setVoteTarget(String? userId) {
+    if (myVoteTarget == userId) {
+      myVoteTarget = null; // Map tap again to deselect
+    } else {
+      myVoteTarget = userId;
+    }
+    notifyListeners();
+  }
+
+  /// Submits the vote via the API.
+  /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
+  Future<String?> submitVote(
+    String voteType, {
+    bool isSkip = false,
+    List<String>? overrideTargets,
+    List<String>? overrideRoles,
+  }) async {
+    if (roomCode == null) return null;
+    
+    List<String>? targets = overrideTargets;
+    if (targets == null && !isSkip) {
+      if (myVoteTarget != null) {
+        targets = [myVoteTarget!];
+      } else {
+        error = 'Please select a player first.';
+        notifyListeners();
+        return null;
+      }
+    }
+
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await _api.submitVote(
+        roomCode!, 
+        voteType,
+        targets: targets,
+        roles: overrideRoles,
+      );
+      
+      isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      return null;
+    }
   }
 
   /// Full cleanup — call when player leaves game or hits Home.
@@ -305,6 +379,7 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -314,6 +389,7 @@ class GameController extends ChangeNotifier {
     winner = null;
     roomCode = null;
     roleCardSeen = false;
+    myVoteTarget = null;
     notifyListeners();
   }
 
@@ -324,6 +400,7 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
     super.dispose();
   }
 }
