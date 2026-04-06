@@ -245,7 +245,7 @@ class AuthTextField extends StatelessWidget {
                 color: AppColors.mid,
               ),
             ),
-            if (trailingWidget != null) trailingWidget!,
+            ?trailingWidget,
           ],
         ),
         const SizedBox(height: 6),

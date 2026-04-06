@@ -44,6 +44,9 @@ class GameController extends ChangeNotifier {
   /// Whether the local role card reveal animation has been shown.
   bool roleCardSeen = false;
 
+  /// The player the current user has selected to vote for.
+  String? myVoteTarget;
+
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -194,6 +197,9 @@ class GameController extends ChangeNotifier {
       orElse: () => status,
     );
 
+    // Reset local vote target when phase changes
+    myVoteTarget = null;
+
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
     notifyListeners();
@@ -312,6 +318,60 @@ class GameController extends ChangeNotifier {
     _navigate('/mafia/night');
   }
 
+  /// Sets the local user's selected voting target.
+  void setVoteTarget(String? userId) {
+    if (myVoteTarget == userId) {
+      myVoteTarget = null; // Map tap again to deselect
+    } else {
+      myVoteTarget = userId;
+    }
+    notifyListeners();
+  }
+
+  /// Submits the vote via the API.
+  /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
+  Future<String?> submitVote(
+    String voteType, {
+    bool isSkip = false,
+    List<String>? overrideTargets,
+    List<String>? overrideRoles,
+  }) async {
+    if (roomCode == null) return null;
+    
+    List<String>? targets = overrideTargets;
+    if (targets == null && !isSkip) {
+      if (myVoteTarget != null) {
+        targets = [myVoteTarget!];
+      } else {
+        error = 'Please select a player first.';
+        notifyListeners();
+        return null;
+      }
+    }
+
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await _api.submitVote(
+        roomCode!, 
+        voteType,
+        targets: targets,
+        roles: overrideRoles,
+      );
+      
+      isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
   /// Full cleanup — call when player leaves game or hits Home.
   Future<void> leaveGame() async {
     _stopCountdown();
@@ -329,6 +389,7 @@ class GameController extends ChangeNotifier {
     winner = null;
     roomCode = null;
     roleCardSeen = false;
+    myVoteTarget = null;
     notifyListeners();
   }
 

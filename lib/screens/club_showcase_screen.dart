@@ -239,7 +239,7 @@ class _ClubImage extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _letterPlaceholder(),
+        errorBuilder: (_, _, _) => _letterPlaceholder(),
       );
     }
     if (club.imageUrl != null) {
@@ -248,7 +248,7 @@ class _ClubImage extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _letterPlaceholder(),
+        errorBuilder: (_, _, _) => _letterPlaceholder(),
       );
     }
     return _letterPlaceholder();

@@ -142,6 +142,48 @@ class GameApi {
     }
   }
 
+  // ─── GAME ACTIONS (Dev 4) ───────────────────────────────────────────────────
+
+  /// POST /api/vote
+  /// Optional arrays for Hitman or other complex actions.
+  Future<String?> submitVote(String roomCode, String voteType, {
+    List<String>? targets,
+    List<String>? roles,
+  }) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'vote_type': voteType,
+    };
+
+    if (targets != null && targets.isNotEmpty) {
+      payload['targets'] = targets;
+    }
+    
+    if (roles != null && roles.isNotEmpty) {
+      payload['roles'] = roles;
+    }
+
+    final uri = Uri.parse('$_baseUrl/api/vote');
+    final response = await http
+        .post(uri, headers: _headers(token), body: jsonEncode(payload))
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      // The backend may return 'investigation_result' for Cop/Reporter
+      return json['investigation_result'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ─── ACTIVE ROOM PERSISTENCE ────────────────────────────────────────────────
 
   /// Persists the room code so reconnect works on app relaunch.

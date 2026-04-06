@@ -701,7 +701,7 @@ class _LobbyScreenState extends State<LobbyScreen>
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _players.length,
-        separatorBuilder: (_, __) =>
+        separatorBuilder: (_, _) =>
             const Divider(height: 1, color: _border),
         itemBuilder: (_, i) {
           final p = _players[i];

@@ -19,7 +19,12 @@ import 'mafia/screens/lobby_screen.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
+<<<<<<< Updated upstream
 import 'mafia/screens/discussion_screen.dart'; // NEW import
+=======
+import 'mafia/screens/night_screen.dart';
+import 'mafia/screens/voting_screen.dart';
+>>>>>>> Stashed changes
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,9 +67,15 @@ class MyApp extends StatelessWidget {
         '/mafia/reveal': (_) => const RevealScreen(),
         '/mafia/game-over': (_) => const GameOverScreen(),
         // Placeholder routes for screens built by other devs
+<<<<<<< Updated upstream
         '/mafia/night': (_) => const _MafiaPlaceholder(label: 'Night — Dev 4'),
         '/mafia/discussion': (_) => const DiscussionScreen(), // Updated ✅
         '/mafia/voting': (_) => const _MafiaPlaceholder(label: 'Voting — Dev 4'),
+=======
+        '/mafia/night': (_) => const NightScreen(),
+        '/mafia/discussion': (_) => const _MafiaPlaceholder(label: 'Discussion — Dev 3'),
+        '/mafia/voting': (_) => const VotingScreen(),
+>>>>>>> Stashed changes
         '/mafia/lobby': (_) => const LobbyScreen(),      // Dev 2 ✅
       },
     );
@@ -206,10 +217,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final authProvider = context.watch<AuthProvider>();
 
     if (authProvider.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        authProvider.syncProfile(context.read<ProfileModel>());
-      });
       return const MainNavigationScreen();
     }
     

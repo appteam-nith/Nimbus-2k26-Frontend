@@ -270,7 +270,7 @@ class _PlayerRoster extends StatelessWidget {
 
     return ListView.separated(
       itemCount: sorted.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
         final player = sorted[i];
         final isMe = player.userId == myUserId;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'models/club_models.dart';
 import 'app_colors.dart';
 import 'club_cards.dart';
 

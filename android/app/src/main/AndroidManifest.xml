@@ -44,4 +44,9 @@
     </queries>
     <!-- Required by clerk_flutter for WebView-based OAuth -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for image picker and file permissions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>
