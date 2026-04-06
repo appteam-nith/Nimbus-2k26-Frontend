@@ -54,6 +54,9 @@ class GameController extends ChangeNotifier {
   /// Whether the Reporter has already used their one-time broadcast ability.
   bool reporterUsed = false;
 
+  /// Whether the game is running in developer mode (bots fill empty slots, all roles visible).
+  bool devMode = false;
+
   /// Deaths reported at the start of DISCUSSION (from NIGHT resolution).
   List<DeathEvent> nightDeaths = [];
 
@@ -159,6 +162,7 @@ class GameController extends ChangeNotifier {
     timeRemaining = room.timeRemaining ?? 0;
     nurseMet = room.nurseMet;
     reporterUsed = room.reporterUsed;
+    devMode = room.devMode;
   }
 
   // ─── PUSHER SUBSCRIPTIONS ───────────────────────────────────────────────────

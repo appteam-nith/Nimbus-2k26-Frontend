@@ -7,6 +7,7 @@ import '../models/room_model.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
 import '../widgets/phase_timer.dart';
+import '../widgets/dev_role_board.dart';
 
 class NightScreen extends StatefulWidget {
   const NightScreen({super.key});
@@ -182,7 +183,9 @@ class _NightScreenState extends State<NightScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                
+                // ── DevRoleBoard (dev mode only) ──────────────────────────
+                // Injected below; the actual widget is in the Positioned overlay
+
                 // Timer
                 if (controller.timeRemaining > 0)
                   PhaseTimer(
@@ -348,6 +351,12 @@ class _NightScreenState extends State<NightScreen> {
                 controller.hitmanStrikeEvent = null;
                 controller.notifyListeners();
               },
+            ),
+          // ── Dev Mode Role Board overlay ────────────────────────────
+          if (controller.devMode)
+            DevRoleBoard(
+              players: controller.players,
+              myUserId: controller.myUserId,
             ),
         ],
       ),

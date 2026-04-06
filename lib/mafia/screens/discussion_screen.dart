@@ -5,6 +5,7 @@ import '../controller/game_controller.dart';
 import '../models/death_event.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/chat_widget.dart';
+import '../widgets/dev_role_board.dart';
 import '../services/pusher_service.dart';
 
 class DiscussionScreen extends StatefulWidget {
@@ -237,6 +238,13 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                   });
                 },
               ),
+            ),
+
+          // ── Dev Mode Role Board overlay ────────────────────────────────────
+          if (game.devMode)
+            DevRoleBoard(
+              players: game.players,
+              myUserId: game.myUserId,
             ),
         ],
       ),

@@ -52,6 +52,9 @@ class _LobbyScreenState extends State<LobbyScreen>
   List<Map<String, dynamic>> _openRooms = [];
   bool _roomsLoading = false;
 
+  // Developer Mode
+  bool _devMode = false;
+
   StreamSubscription<Map<String, dynamic>>? _joinSub;
   StreamSubscription<Map<String, dynamic>>? _leaveSub;
   StreamSubscription<Map<String, dynamic>>? _startSub;
@@ -249,7 +252,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       _error = null;
     });
     try {
-      await _api.startGame(_roomCode!);
+      await _api.startGame(_roomCode!, devMode: _devMode);
       // The backend broadcasts 'game-started' via Pusher.
       // _startSub in _subscribeLobbyEvents handles navigation for ALL players
       // (including the host), so nothing more to do here.
@@ -667,6 +670,100 @@ class _LobbyScreenState extends State<LobbyScreen>
             ],
           ),
           const SizedBox(height: 20),
+          // ── Developer Mode toggle ─────────────────────────────────────────
+          GestureDetector(
+            onTap: () => setState(() => _devMode = !_devMode),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: _devMode
+                    ? const Color(0xFFF59E0B).withOpacity(0.08)
+                    : _surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _devMode
+                      ? const Color(0xFFF59E0B).withOpacity(0.4)
+                      : _border,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: _devMode
+                          ? const Color(0xFFF59E0B).withOpacity(0.15)
+                          : _border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.bug_report_outlined,
+                      size: 18,
+                      color: _devMode
+                          ? const Color(0xFFF59E0B)
+                          : _textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Developer Mode',
+                              style: TextStyle(
+                                color: _devMode
+                                    ? const Color(0xFFF59E0B)
+                                    : _textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (_devMode) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF59E0B)
+                                      .withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text('⚡ DEV',
+                                    style: TextStyle(
+                                        color: Color(0xFFF59E0B),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Fill empty slots with bots. All roles visible.',
+                          style: TextStyle(
+                            color: _devMode
+                                ? const Color(0xFFF59E0B).withOpacity(0.7)
+                                : _textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _devMode,
+                    onChanged: (v) => setState(() => _devMode = v),
+                    activeColor: const Color(0xFFF59E0B),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           _PrimaryButton(
             label: 'Create Room',
             icon: Icons.add,
@@ -846,6 +943,24 @@ class _LobbyScreenState extends State<LobbyScreen>
                   child: const Text('HOST',
                       style: TextStyle(
                           color: _accentGlow,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8)),
+                ),
+              if (_devMode)
+                Container(
+                  margin: const EdgeInsets.only(left: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                  ),
+                  child: const Text('⚡ DEV',
+                      style: TextStyle(
+                          color: Color(0xFFF59E0B),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8)),
@@ -1041,9 +1156,15 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildStartButton() {
-    final canStart = _roomFull && !_loading;
+    // In dev mode: can always start (bots will fill remaining slots)
+    // Normal mode: need a full room
+    final canStart = (_roomFull || _devMode) && !_loading;
+    final roomMax = _roomSize == 'FIVE' ? 5 : _roomSize == 'EIGHT' ? 8 : 12;
+    final label = _devMode
+        ? (_roomFull ? 'Start Game' : 'Start with Bots (${_players.length}/$roomMax)')
+        : (_roomFull ? 'Start Game' : 'Waiting for players...');
     return _PrimaryButton(
-      label: _roomFull ? 'Start Game' : 'Waiting for players...',
+      label: label,
       icon: Icons.play_arrow_rounded,
       loading: _loading,
       onTap: canStart ? _startGame : null,

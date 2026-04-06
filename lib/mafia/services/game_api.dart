@@ -166,7 +166,7 @@ class GameApi {
   }
 
   /// POST /api/game/start — host only.
-  Future<void> startGame(String roomCode) async {
+  Future<void> startGame(String roomCode, {bool devMode = false}) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
@@ -175,7 +175,7 @@ class GameApi {
         .post(
           uri,
           headers: _headers(token),
-          body: jsonEncode({'room_code': roomCode}),
+          body: jsonEncode({'room_code': roomCode, 'dev_mode': devMode}),
         )
         .timeout(const Duration(seconds: 15));
 
