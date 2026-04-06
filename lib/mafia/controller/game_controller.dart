@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/room_model.dart';
 import '../models/player_model.dart';
+import '../models/death_event.dart';
 import '../services/game_api.dart';
 import '../services/pusher_service.dart';
 
@@ -35,7 +36,16 @@ class GameController extends ChangeNotifier {
   String? error;
 
   /// The player eliminated this round — set during REVEAL phase.
+  /// Kept for backward compat with single-death RevealScreen.
   PlayerModel? revealedPlayer;
+
+  /// All deaths that occurred during the night/day (0–N entries).
+  /// Powers the morning reveal multi-card carousel.
+  List<DeathEvent> morningDeaths = [];
+
+  /// Set when a `reporter-broadcast` event fires. Cleared by the overlay
+  /// after the player dismisses it.
+  ReporterBroadcast? pendingBroadcast;
 
   /// Timer countdown in seconds (mirrors backend phaseEndsAt).
   int timeRemaining = 0;
@@ -43,7 +53,7 @@ class GameController extends ChangeNotifier {
   /// Whether the local role card reveal animation has been shown.
   bool roleCardSeen = false;
 
-  // ── Private ─────────────────────────────────────────────────────────────────
+  // ─ Private ──────────────────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
 
@@ -51,6 +61,8 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _roleSub;
   StreamSubscription<Map<String, dynamic>>? _gameEndSub;
   StreamSubscription<Map<String, dynamic>>? _voteSub;
+  StreamSubscription<Map<String, dynamic>>? _reporterSub;
+  StreamSubscription<Map<String, dynamic>>? _hitmanSub;
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -144,15 +156,18 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _reporterSub?.cancel();
+    _hitmanSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
     _voteSub = _pusher.onVoteUpdated.listen((data) {
-      // Vote count updates are handled by screens directly;
-      // controller just notifies for state rebuild.
       notifyListeners();
     });
+    _reporterSub =
+        _pusher.onReporterBroadcast.listen(_handleReporterBroadcast);
+    _hitmanSub = _pusher.onHitmanStrike.listen(_handleHitmanStrike);
   }
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
@@ -165,25 +180,54 @@ class GameController extends ChangeNotifier {
     _phaseEndsAt =
         phaseEndsAtRaw != null ? DateTime.tryParse(phaseEndsAtRaw) : null;
 
-    // Update revealed player from eliminatedPlayerId
+    // ─ Parse multi-death array (new format) ─────────────────────────────────────
+    final rawDeaths = data['deaths'] as List<dynamic>?;
+    if (rawDeaths != null && rawDeaths.isNotEmpty) {
+      morningDeaths = rawDeaths
+          .map((d) => DeathEvent.fromJson(
+              d as Map<String, dynamic>, players))
+          .toList();
+      // Mark eliminated players
+      final deadIds = morningDeaths.map((d) => d.player.userId).toSet();
+      players = players.map((p) {
+        if (deadIds.contains(p.userId)) {
+          return p.copyWith(status: PlayerStatus.ELIMINATED);
+        }
+        return p;
+      }).toList();
+    } else {
+      // ─ Backward compat: single killedPlayerId ─────────────────────────────────
+      final killedId = data['killedPlayerId'] as String?;
+      if (killedId != null) {
+        players = players.map((p) {
+          if (p.userId == killedId) {
+            return p.copyWith(status: PlayerStatus.ELIMINATED);
+          }
+          return p;
+        }).toList();
+        final dead = players.firstWhere(
+          (p) => p.userId == killedId,
+          orElse: () => PlayerModel(
+              userId: killedId, name: '?', status: PlayerStatus.ELIMINATED),
+        );
+        morningDeaths = [
+          DeathEvent(player: dead, cause: DeathCause.MAFIA_KILL)
+        ];
+      } else {
+        morningDeaths = [];
+      }
+    }
+
+    // Legacy single-player compat
     final eliminatedId = data['eliminatedPlayerId'] as String?;
     revealedPlayer = eliminatedId != null
         ? players.cast<PlayerModel?>().firstWhere(
             (p) => p?.userId == eliminatedId,
             orElse: () => null,
           )
-        : null;
-
-    // Update a killed player from night resolution
-    final killedId = data['killedPlayerId'] as String?;
-    if (killedId != null) {
-      players = players.map((p) {
-        if (p.userId == killedId) {
-          return p.copyWith(status: PlayerStatus.ELIMINATED);
-        }
-        return p;
-      }).toList();
-    }
+        : morningDeaths.isNotEmpty
+            ? morningDeaths.first.player
+            : null;
 
     status = GameStatus.values.firstWhere(
       (s) => s.name == phase,
@@ -219,6 +263,8 @@ class GameController extends ChangeNotifier {
         .map((p) => PlayerModel.fromJson(p as Map<String, dynamic>))
         .toList();
 
+    morningDeaths = [];
+    pendingBroadcast = null;
     _stopCountdown();
     notifyListeners();
 
@@ -226,6 +272,45 @@ class GameController extends ChangeNotifier {
     _api.clearActiveRoom();
 
     _navigate('/mafia/game-over');
+  }
+
+  // ─ Reporter Broadcast ────────────────────────────────────────────────────────────
+
+  void _handleReporterBroadcast(Map<String, dynamic> data) {
+    final playerName = data['playerName'] as String? ?? '?';
+    final roleStr = data['role'] as String? ?? '';
+    final role = GameRole.values.firstWhere(
+      (r) => r.name == roleStr,
+      orElse: () => GameRole.CITIZEN,
+    );
+    pendingBroadcast = ReporterBroadcast(playerName: playerName, role: role);
+    notifyListeners();
+  }
+
+  /// Call from the overlay widget once the broadcast has been shown.
+  void dismissBroadcast() {
+    pendingBroadcast = null;
+    notifyListeners();
+  }
+
+  // ─ Hitman Strike ───────────────────────────────────────────────────────────────────
+
+  void _handleHitmanStrike(Map<String, dynamic> data) {
+    // hitman-strike fires at T-5s; earlyDeaths are added to morningDeaths
+    // when phase-resolved fires at T-0. Here we just update player statuses.
+    final rawKilled = data['killed'] as List<dynamic>? ?? [];
+    for (final entry in rawKilled) {
+      final id = entry is Map ? entry['playerId'] as String? : entry as String?;
+      if (id != null) {
+        players = players.map((p) {
+          if (p.userId == id) {
+            return p.copyWith(status: PlayerStatus.ELIMINATED);
+          }
+          return p;
+        }).toList();
+      }
+    }
+    notifyListeners();
   }
 
   // ─── ROUTING ────────────────────────────────────────────────────────────────
@@ -305,6 +390,8 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _reporterSub?.cancel();
+    _hitmanSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -314,6 +401,8 @@ class GameController extends ChangeNotifier {
     winner = null;
     roomCode = null;
     roleCardSeen = false;
+    morningDeaths = [];
+    pendingBroadcast = null;
     notifyListeners();
   }
 
@@ -324,6 +413,21 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _reporterSub?.cancel();
+    _hitmanSub?.cancel();
     super.dispose();
   }
+}
+
+// ─── REPORTER BROADCAST DATA ──────────────────────────────────────────────────
+
+/// Immutable data object set on [GameController.pendingBroadcast] when
+/// a `reporter-broadcast` Pusher event arrives.
+/// The [ReporterBroadcastOverlay] widget reads this and calls
+/// [GameController.dismissBroadcast] once shown.
+class ReporterBroadcast {
+  final String playerName;
+  final GameRole role;
+
+  const ReporterBroadcast({required this.playerName, required this.role});
 }

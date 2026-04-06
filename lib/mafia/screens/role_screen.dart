@@ -2,7 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
+import '../models/player_model.dart';
 import '../widgets/role_card.dart';
+
+
 
 /// Cinematic role reveal screen.
 ///
@@ -222,6 +225,14 @@ class _RoleScreenState extends State<RoleScreen>
         return const Color(0xFF3B82F6);
       case GameRole.CITIZEN:
         return const Color(0xFF9CA3AF);
+      case GameRole.HITMAN:
+        return const Color(0xFFF97316);
+      case GameRole.BOUNTY_HUNTER:
+        return const Color(0xFFF59E0B);
+      case GameRole.PROPHET:
+        return const Color(0xFFA855F7);
+      case GameRole.REPORTER:
+        return const Color(0xFF06B6D4);
     }
   }
 }

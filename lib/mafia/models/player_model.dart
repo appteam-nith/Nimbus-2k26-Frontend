@@ -59,7 +59,11 @@ enum GameRole {
   CITIZEN,
   DOCTOR,
   COP,
-  NURSE;
+  NURSE,
+  HITMAN,
+  BOUNTY_HUNTER,
+  PROPHET,
+  REPORTER;
 
   /// Human-readable name for display
   String get displayName {
@@ -76,6 +80,14 @@ enum GameRole {
         return 'Cop';
       case GameRole.NURSE:
         return 'Nurse';
+      case GameRole.HITMAN:
+        return 'Hitman';
+      case GameRole.BOUNTY_HUNTER:
+        return 'Bounty Hunter';
+      case GameRole.PROPHET:
+        return 'Prophet';
+      case GameRole.REPORTER:
+        return 'Reporter';
     }
   }
 
@@ -94,9 +106,23 @@ enum GameRole {
         return 'Each night, investigate one player — learn if they are Mafia.';
       case GameRole.NURSE:
         return 'Find the Doctor. Once you meet, the Doctor gains extra protection.';
+      case GameRole.HITMAN:
+        return 'At T-5s each night, guess 2 players and their roles. Kill both if correct — but you cannot target the Cop.';
+      case GameRole.BOUNTY_HUNTER:
+        return 'Night 1: pick your VIP. If your VIP dies, your kill button unlocks — use it wisely.';
+      case GameRole.PROPHET:
+        return 'You can see one step into the future. Your visions override the final death list.';
+      case GameRole.REPORTER:
+        return 'Once per game, broadcast a player\'s true role to the entire town. Use it to expose — or mislead.';
     }
   }
 
   bool get isMafia =>
       this == GameRole.MAFIA || this == GameRole.MAFIA_HELPER;
+
+  bool get isSpecial =>
+      this == GameRole.HITMAN ||
+      this == GameRole.BOUNTY_HUNTER ||
+      this == GameRole.PROPHET ||
+      this == GameRole.REPORTER;
 }

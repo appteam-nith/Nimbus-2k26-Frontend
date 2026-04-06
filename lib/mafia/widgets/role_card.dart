@@ -192,22 +192,38 @@ Color _glowColor(GameRole role) {
       return const Color(0xFF3B82F6);
     case GameRole.CITIZEN:
       return const Color(0xFF9CA3AF);
+    case GameRole.HITMAN:
+      return const Color(0xFFF97316); // orange
+    case GameRole.BOUNTY_HUNTER:
+      return const Color(0xFFF59E0B); // amber
+    case GameRole.PROPHET:
+      return const Color(0xFFA855F7); // purple
+    case GameRole.REPORTER:
+      return const Color(0xFF06B6D4); // cyan
   }
 }
 
 String _roleEmoji(GameRole role) {
   switch (role) {
     case GameRole.MAFIA:
-      return '🔫';
+      return '\uD83D\uDD2B'; // 🔫
     case GameRole.MAFIA_HELPER:
-      return '🗡️';
+      return '\uD83D\uDDE1\uFE0F'; // 🗡️
     case GameRole.DOCTOR:
-      return '💉';
+      return '\uD83D\uDC89'; // 💉
     case GameRole.NURSE:
-      return '🩺';
+      return '\uD83E\uDE7A'; // 🩺
     case GameRole.COP:
-      return '🔍';
+      return '\uD83D\uDD0D'; // 🔍
     case GameRole.CITIZEN:
-      return '👤';
+      return '\uD83D\uDC64'; // 👤
+    case GameRole.HITMAN:
+      return '\uD83D\uDDE1\uFE0F'; // 🗡️
+    case GameRole.BOUNTY_HUNTER:
+      return '\uD83C\uDFAF'; // 🎯
+    case GameRole.PROPHET:
+      return '\uD83D\uDD2E'; // 🔮
+    case GameRole.REPORTER:
+      return '\uD83D\uDCF0'; // 📰
   }
 }

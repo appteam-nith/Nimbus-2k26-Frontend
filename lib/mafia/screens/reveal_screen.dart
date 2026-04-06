@@ -2,20 +2,19 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
+import '../models/death_event.dart';
 import '../models/player_model.dart';
+import '../models/room_model.dart';
 import '../widgets/phase_timer.dart';
 
-
-/// Reveal Screen — shown after voting when a player is eliminated.
+/// Morning Reveal Screen — shown after NIGHT phase ends.
 ///
-/// Duration: 3 seconds (matches backend PHASE_DURATION.REVEAL = 3000ms).
-/// The backend drives the next phase transition — this screen just animates.
+/// Supports 0–N deaths in a staggered card carousel:
+///   • Hitman + Mafia kills → multiple cards
+///   • No deaths → peaceful morning card
 ///
-/// Shows:
-///   • Eliminated player name + avatar
-///   • Role unmasking animation (blurred → clear + role badge)
-///   • 3s countdown ring
-///   • "No one was eliminated" state for tie votes
+/// Each card shows: player avatar → role reveal → cause of death badge.
+/// Cards stagger in one by one with a blur-unmasking animation.
 class RevealScreen extends StatefulWidget {
   const RevealScreen({super.key});
 
@@ -24,279 +23,456 @@ class RevealScreen extends StatefulWidget {
 }
 
 class _RevealScreenState extends State<RevealScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _unmaskController;
-  late Animation<double> _blurAnim;
-  late Animation<double> _scaleAnim;
-  late Animation<double> _fadeAnim;
+    with TickerProviderStateMixin {
+  final List<AnimationController> _cardControllers = [];
+  final List<Animation<double>> _blurAnims = [];
+  final List<Animation<double>> _scaleAnims = [];
+  final List<Animation<double>> _fadeAnims = [];
+  final List<Animation<Offset>> _slideAnims = [];
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gc = context.read<GameController>();
+    _buildAnimations(gc.morningDeaths.length);
+  }
 
-    _unmaskController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+  void _buildAnimations(int count) {
+    // Dispose old controllers
+    for (final c in _cardControllers) {
+      c.dispose();
+    }
+    _cardControllers.clear();
+    _blurAnims.clear();
+    _scaleAnims.clear();
+    _fadeAnims.clear();
+    _slideAnims.clear();
 
-    _blurAnim = Tween<double>(begin: 20, end: 0).animate(
-      CurvedAnimation(parent: _unmaskController, curve: Curves.easeOut),
-    );
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _unmaskController, curve: Curves.easeOut),
-    );
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _unmaskController,
-        curve: const Interval(0.5, 1.0, curve: Curves.easeIn),
-      ),
-    );
+    for (int i = 0; i < count; i++) {
+      final ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      );
+      _cardControllers.add(ctrl);
 
-    // Start unmask after brief delay
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) _unmaskController.forward();
-    });
+      _blurAnims.add(Tween<double>(begin: 18, end: 0).animate(
+        CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
+      ));
+      _scaleAnims.add(Tween<double>(begin: 0.88, end: 1.0).animate(
+        CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
+      ));
+      _fadeAnims.add(Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+            parent: ctrl, curve: const Interval(0.4, 1.0, curve: Curves.easeIn)),
+      ));
+      _slideAnims.add(
+        Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
+          CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
+        ),
+      );
+
+      // Stagger start
+      Future.delayed(Duration(milliseconds: 300 + i * 500), () {
+        if (mounted) ctrl.forward();
+      });
+    }
   }
 
   @override
   void dispose() {
-    _unmaskController.dispose();
+    for (final c in _cardControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final gc = context.watch<GameController>();
-    final eliminated = gc.revealedPlayer;
+    final deaths = gc.morningDeaths;
     final phaseEndsAt = gc.status == GameStatus.REVEAL && gc.timeRemaining > 0
         ? DateTime.now().add(Duration(seconds: gc.timeRemaining))
-        : DateTime.now().add(const Duration(seconds: 3));
+        : DateTime.now().add(const Duration(seconds: 6));
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D121B),
       body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Phase label
-              Text(
-                'R O U N D   ${gc.round}',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  letterSpacing: 3,
-                  color: Colors.white.withOpacity(0.35),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                eliminated != null ? 'VOTE RESULT' : 'NO CONSENSUS',
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 48),
+        child: Column(
+          children: [
+            const SizedBox(height: 32),
 
-              if (eliminated != null) ...[
-                // Unmasking animation
-                AnimatedBuilder(
-                  animation: _unmaskController,
-                  builder: (context, _) {
-                    return Column(
-                      children: [
-                        // Blurred → clear avatar
-                        Transform.scale(
-                          scale: _scaleAnim.value,
-                          child: ImageFiltered(
-                            imageFilter: _buildBlur(_blurAnim.value),
-                            child: _EliminatedAvatar(player: eliminated),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Name appears as blur clears
-                        Opacity(
-                          opacity: (1.0 - (_blurAnim.value / 20)).clamp(0, 1),
-                          child: Text(
-                            eliminated.name,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Role badge fades in after unmask
-                        FadeTransition(
-                          opacity: _fadeAnim,
-                          child: eliminated.role != null
-                              ? _RoleRevealBadge(role: eliminated.role!)
-                              : Opacity(
-                                  opacity: 0.4,
-                                  child: const Text(
-                                    'Role hidden',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ] else ...[
-                // No elimination (tie)
-                const Text('🤝', style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 20),
-                Text(
-                  'The town could not agree.',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.6),
+            // ── Header ─────────────────────────────────────────────────────────
+            Text(
+              'R O U N D   ${gc.round}',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                letterSpacing: 3,
+                color: Colors.white.withOpacity(0.35),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              deaths.isEmpty
+                  ? 'PEACEFUL MORNING'
+                  : deaths.length == 1
+                      ? 'ONE FALLEN'
+                      : '${deaths.length} HAVE FALLEN',
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              deaths.isEmpty
+                  ? 'The town wakes undisturbed.'
+                  : 'The night claimed its victims.',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.45),
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ── Death cards / peaceful state ────────────────────────────────────
+            Expanded(
+              child: deaths.isEmpty
+                  ? _PeacefulMorning()
+                  : _DeathCardList(
+                      deaths: deaths,
+                      cardControllers: _cardControllers,
+                      blurAnims: _blurAnims,
+                      scaleAnims: _scaleAnims,
+                      fadeAnims: _fadeAnims,
+                      slideAnims: _slideAnims,
+                    ),
+            ),
+
+            // ── Countdown ───────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 28),
+              child: Column(
+                children: [
+                  PhaseTimer(
+                    endTime: phaseEndsAt,
+                    size: 56,
+                    strokeWidth: 4,
+                    textStyle: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Discussion begins soon',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── PEACEFUL MORNING ─────────────────────────────────────────────────────────
+
+class _PeacefulMorning extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('🌅', style: TextStyle(fontSize: 72)),
+          const SizedBox(height: 20),
+          Text(
+            'No one was harmed.',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.75),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Day breaks peacefully…',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              color: Colors.white.withOpacity(0.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── SCROLLABLE DEATH CARD LIST ───────────────────────────────────────────────
+
+class _DeathCardList extends StatelessWidget {
+  final List<DeathEvent> deaths;
+  final List<AnimationController> cardControllers;
+  final List<Animation<double>> blurAnims;
+  final List<Animation<double>> scaleAnims;
+  final List<Animation<double>> fadeAnims;
+  final List<Animation<Offset>> slideAnims;
+
+  const _DeathCardList({
+    required this.deaths,
+    required this.cardControllers,
+    required this.blurAnims,
+    required this.scaleAnims,
+    required this.fadeAnims,
+    required this.slideAnims,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: deaths.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, i) {
+        if (i >= cardControllers.length) {
+          // Safety: controller not yet built
+          return _DeathCard(death: deaths[i], animation: null);
+        }
+        return AnimatedBuilder(
+          animation: cardControllers[i],
+          builder: (context, _) {
+            return SlideTransition(
+              position: slideAnims[i],
+              child: Transform.scale(
+                scale: scaleAnims[i].value,
+                child: ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(
+                    sigmaX: blurAnims[i].value,
+                    sigmaY: blurAnims[i].value,
+                  ),
+                  child: _DeathCard(
+                    death: deaths[i],
+                    animation: fadeAnims[i],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Night falls again…',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.white.withOpacity(0.4),
-                  ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ─── SINGLE DEATH CARD ────────────────────────────────────────────────────────
+
+class _DeathCard extends StatelessWidget {
+  final DeathEvent death;
+  final Animation<double>? animation;
+
+  const _DeathCard({required this.death, required this.animation});
+
+  @override
+  Widget build(BuildContext context) {
+    final role = death.player.role;
+    final causeColor = _causeColor(death.cause);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1C2333),
+            causeColor.withOpacity(0.08),
+          ],
+        ),
+        border: Border.all(
+          color: causeColor.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: causeColor.withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: causeColor.withOpacity(0.5),
+                width: 2.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: causeColor.withOpacity(0.2),
+                  blurRadius: 12,
+                  spreadRadius: 2,
                 ),
               ],
-
-              const SizedBox(height: 56),
-
-              // 3s countdown ring
-              PhaseTimer(
-                endTime: phaseEndsAt,
-                size: 60,
-                strokeWidth: 4,
-                textStyle: const TextStyle(
+              color: const Color(0xFF0D121B),
+            ),
+            child: Center(
+              child: Text(
+                death.player.name.isNotEmpty
+                    ? death.player.name[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 18,
+                  fontSize: 26,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Next phase soon',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.3),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
+          const SizedBox(width: 16),
 
-  ui.ImageFilter _buildBlur(double sigma) =>
-      ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
-}
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  death.player.name,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
 
-// ─── ELIMINATED AVATAR ───────────────────────────────────────────────────────
+                // Cause badge
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: causeColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${death.cause.emoji}  ${death.cause.label}',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: causeColor,
+                    ),
+                  ),
+                ),
 
-class _EliminatedAvatar extends StatelessWidget {
-  final PlayerModel player;
-  const _EliminatedAvatar({required this.player});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      height: 110,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: const Color(0xFFEF4444).withOpacity(0.6),
-          width: 3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEF4444).withOpacity(0.25),
-            blurRadius: 24,
-            spreadRadius: 4,
+                // Role reveal — fades in
+                if (role != null) ...[
+                  const SizedBox(height: 8),
+                  FadeTransition(
+                    opacity: animation ?? const AlwaysStoppedAnimation(1.0),
+                    child: _RoleRevealBadge(role: role),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
-        color: const Color(0xFF1C2333),
-      ),
-      child: Center(
-        child: Text(
-          player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 44,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
       ),
     );
   }
+
+  Color _causeColor(DeathCause cause) {
+    switch (cause) {
+      case DeathCause.MAFIA_KILL:
+        return const Color(0xFFEF4444);
+      case DeathCause.HITMAN_KILL:
+        return const Color(0xFFF97316);
+      case DeathCause.BOUNTY_KILL:
+        return const Color(0xFFF59E0B);
+      case DeathCause.VOTE_ELIMINATION:
+        return const Color(0xFF8B5CF6);
+    }
+  }
 }
 
-// ─── ROLE REVEAL BADGE ───────────────────────────────────────────────────────
+// ─── ROLE REVEAL BADGE ────────────────────────────────────────────────────────
 
 class _RoleRevealBadge extends StatelessWidget {
   final GameRole role;
   const _RoleRevealBadge({required this.role});
 
-  static const _roleColors = {
+  static final _roleColors = {
     GameRole.MAFIA: Color(0xFFEF4444),
     GameRole.MAFIA_HELPER: Color(0xFFEF4444),
     GameRole.DOCTOR: Color(0xFF22C55E),
     GameRole.NURSE: Color(0xFF34D399),
     GameRole.COP: Color(0xFF3B82F6),
     GameRole.CITIZEN: Color(0xFF9CA3AF),
+    GameRole.HITMAN: Color(0xFFF97316),
+    GameRole.BOUNTY_HUNTER: Color(0xFFF59E0B),
+    GameRole.PROPHET: Color(0xFFA855F7),
+    GameRole.REPORTER: Color(0xFF06B6D4),
   };
 
-  static const _roleEmojis = {
+  static final _roleEmojis = {
     GameRole.MAFIA: '🔫',
     GameRole.MAFIA_HELPER: '🗡️',
     GameRole.DOCTOR: '💉',
     GameRole.NURSE: '🩺',
     GameRole.COP: '🔍',
     GameRole.CITIZEN: '👤',
+    GameRole.HITMAN: '🗡️',
+    GameRole.BOUNTY_HUNTER: '🎯',
+    GameRole.PROPHET: '🔮',
+    GameRole.REPORTER: '📰',
   };
 
   @override
   Widget build(BuildContext context) {
     final color = _roleColors[role] ?? const Color(0xFF9CA3AF);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.4), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(_roleEmojis[role] ?? '?',
-              style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 8),
+              style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 6),
           Text(
             'Was the ${role.displayName}',
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 15,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -306,4 +482,3 @@ class _RoleRevealBadge extends StatelessWidget {
     );
   }
 }
-

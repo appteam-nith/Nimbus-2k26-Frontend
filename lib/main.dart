@@ -18,6 +18,7 @@ import 'mafia/controller/game_controller.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
+import 'mafia/screens/reporter_broadcast_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,13 +57,13 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MainNavigationScreen(),
         '/login': (context) => const LoginScreen(),
         // ── Mafia game screens (Dev 5 owns) ─────────────────────────────────
-        '/mafia/role': (_) => const RoleScreen(),
-        '/mafia/reveal': (_) => const RevealScreen(),
+        '/mafia/role': (_) => ReporterBroadcastListener(child: const RoleScreen()),
+        '/mafia/reveal': (_) => ReporterBroadcastListener(child: const RevealScreen()),
         '/mafia/game-over': (_) => const GameOverScreen(),
         // Placeholder routes for screens built by other devs
-        '/mafia/night': (_) => const _MafiaPlaceholder(label: 'Night — Dev 4'),
-        '/mafia/discussion': (_) => const _MafiaPlaceholder(label: 'Discussion — Dev 3'),
-        '/mafia/voting': (_) => const _MafiaPlaceholder(label: 'Voting — Dev 4'),
+        '/mafia/night': (_) => ReporterBroadcastListener(child: const _MafiaPlaceholder(label: 'Night — Dev 4')),
+        '/mafia/discussion': (_) => ReporterBroadcastListener(child: const _MafiaPlaceholder(label: 'Discussion — Dev 3')),
+        '/mafia/voting': (_) => ReporterBroadcastListener(child: const _MafiaPlaceholder(label: 'Voting — Dev 4')),
         '/mafia/lobby': (_) => const _MafiaPlaceholder(label: 'Lobby — Dev 2'),
       },
     );
@@ -86,7 +87,27 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
   }
 
   Future<void> _startBootstrap() async {
+    // Splash delay so the logo has time to render
     await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+
+    // ── Reconnect: check if there is an active game session ──────────────────
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.isAuthenticated) {
+      final gc = context.read<GameController>();
+      // Use Firebase UID as the userId. If null (edge case), tryReconnect
+      // still runs — it reads the persisted room code and guards internally.
+      final userId = authProvider.user?.uid ?? '';
+      if (userId.isNotEmpty) {
+        final reconnected = await gc.tryReconnect(userId);
+        if (reconnected) {
+          // GameController._routeToCurrentPhase already navigated;
+          // no further action needed here.
+          return;
+        }
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       _ready = true;

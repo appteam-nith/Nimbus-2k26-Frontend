@@ -41,6 +41,10 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _investigationController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _reporterBroadcastController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _hitmanStrikeController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onPhaseResolved => _phaseController.stream;
   Stream<Map<String, dynamic>> get onRoleAssigned => _roleController.stream;
@@ -53,6 +57,14 @@ class PusherService extends ChangeNotifier {
   /// Cop only — private investigation result
   Stream<Map<String, dynamic>> get onInvestigationResult =>
       _investigationController.stream;
+
+  /// Reporter broadcast — public, all players see it
+  Stream<Map<String, dynamic>> get onReporterBroadcast =>
+      _reporterBroadcastController.stream;
+
+  /// Hitman has struck early — players in the hitman kill are eliminated
+  Stream<Map<String, dynamic>> get onHitmanStrike =>
+      _hitmanStrikeController.stream;
 
   bool _connected = false;
   String? _currentRoomCode;
@@ -156,6 +168,12 @@ class PusherService extends ChangeNotifier {
       case 'chat-message':
         _chatController.add(data);
         break;
+      case 'reporter-broadcast':
+        _reporterBroadcastController.add(data);
+        break;
+      case 'hitman-strike':
+        _hitmanStrikeController.add(data);
+        break;
     }
   }
 
@@ -196,6 +214,8 @@ class PusherService extends ChangeNotifier {
     _playerJoinedController.close();
     _chatController.close();
     _investigationController.close();
+    _reporterBroadcastController.close();
+    _hitmanStrikeController.close();
     super.dispose();
   }
 }
