@@ -88,6 +88,7 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
   }
 
   Future<void> _startBootstrap() async {
+    
     // DEV 3: Reconnect Check
     final auth = context.read<AuthProvider>();
     final game = context.read<GameController>();
