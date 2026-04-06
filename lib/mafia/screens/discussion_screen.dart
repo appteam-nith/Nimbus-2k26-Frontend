@@ -1,19 +1,114 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
+import '../models/death_event.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/chat_widget.dart';
-import '../services/pusher_service.dart'; // NEW: For connection status
+import '../services/pusher_service.dart';
 
-class DiscussionScreen extends StatelessWidget {
+class DiscussionScreen extends StatefulWidget {
   const DiscussionScreen({super.key});
+
+  @override
+  State<DiscussionScreen> createState() => _DiscussionScreenState();
+}
+
+class _DiscussionScreenState extends State<DiscussionScreen>
+    with SingleTickerProviderStateMixin {
+  // Morning reveal overlay state
+  bool _showMorningReveal = false;
+  bool _showReporterOverlay = false;
+  List<DeathEvent> _localDeaths = [];
+  Map<String, dynamic>? _localReporterData;
+
+  late AnimationController _overlayFade;
+  Timer? _autoDismissTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _overlayFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    // Show overlays after the frame renders (data already on controller)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverlays());
+  }
+
+  @override
+  void dispose() {
+    _autoDismissTimer?.cancel();
+    _overlayFade.dispose();
+    super.dispose();
+  }
+
+  void _checkOverlays() {
+    if (!mounted) return;
+    final gc = context.read<GameController>();
+
+    // Morning death reveal
+    if (gc.nightDeaths.isNotEmpty) {
+      setState(() {
+        _localDeaths = gc.nightDeaths;
+        _showMorningReveal = true;
+      });
+      _overlayFade.forward();
+      _autoDismissTimer = Timer(const Duration(seconds: 5), () {
+        if (!mounted) return;
+        // If reporter data also present, chain to that overlay
+        if (gc.reporterBroadcast != null) {
+          _dismissMorning(thenShowReporter: true);
+        } else {
+          _dismissMorning(thenShowReporter: false);
+        }
+      });
+    } else if (gc.reporterBroadcast != null) {
+      _showReporter(gc.reporterBroadcast!);
+    }
+  }
+
+  void _dismissMorning({required bool thenShowReporter}) {
+    _overlayFade.reverse().then((_) {
+      if (!mounted) return;
+      setState(() => _showMorningReveal = false);
+      if (thenShowReporter && mounted) {
+        final gc = context.read<GameController>();
+        if (gc.reporterBroadcast != null) {
+          _showReporter(gc.reporterBroadcast!);
+        }
+      }
+    });
+  }
+
+  void _showReporter(Map<String, dynamic> data) {
+    setState(() {
+      _localReporterData = data;
+      _showReporterOverlay = true;
+    });
+    _overlayFade.forward(from: 0);
+    _autoDismissTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      _overlayFade.reverse().then((_) {
+        if (mounted) setState(() => _showReporterOverlay = false);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    
-    // DEV 3: Connection check to show if Pusher is live
-    final isConnected = PusherService.instance.isConnected; 
+    final isConnected = PusherService.instance.isConnected;
+    final myRole = game.myRole;
+
+    // Determine if player can access team chat
+    final bool hasMafiaChat =
+        myRole?.name == 'MAFIA' || myRole?.name == 'MAFIA_HELPER';
+    // (Hitman gets mafia chat only after meeting — backend enforces, show tab anyway)
+    final bool hasHitmanMafiaChat = myRole?.name == 'HITMAN';
+    final bool hasDocChat =
+        myRole?.name == 'DOCTOR' || myRole?.name == 'NURSE';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D121B),
@@ -22,23 +117,37 @@ class DiscussionScreen extends StatelessWidget {
         elevation: 0,
         title: Column(
           children: [
-            const Text("DISCUSSION", 
-              style: TextStyle(color: Colors.white, letterSpacing: 2, fontWeight: FontWeight.bold)),
-            // Connection Dot
+            const Text(
+              'DISCUSSION',
+              style: TextStyle(
+                color: Colors.white,
+                letterSpacing: 2,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Inter',
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 2),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   decoration: BoxDecoration(
                     color: isConnected ? Colors.green : Colors.red,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text(isConnected ? "LIVE" : "RECONNECTING...", 
-                  style: TextStyle(color: isConnected ? Colors.green : Colors.red, fontSize: 10)),
+                Text(
+                  isConnected ? 'LIVE' : 'RECONNECTING...',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: isConnected ? Colors.green : Colors.red,
+                    fontSize: 10,
+                  ),
+                ),
               ],
             ),
           ],
@@ -47,37 +156,396 @@ class DiscussionScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
+          // ── Main content ──────────────────────────────────────────────────
           Column(
             children: [
-              const SizedBox(height: 20),
-              // SYNCED TIMER: Uses the public getter we just added to GameController
+              const SizedBox(height: 8),
+
+              // Synced phase timer
               Center(
                 child: PhaseTimer(
-                  endTime: game.phaseEndsAt ?? DateTime.now().add(const Duration(seconds: 30)),
-                  size: 100,
+                  endTime: game.phaseEndsAt ??
+                      DateTime.now().add(const Duration(seconds: 30)),
+                  size: 90,
                 ),
               ),
+
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 child: Text(
-                  game.status.name == "DISCUSSION" 
-                      ? "Who is the Mafia? Convince the others!" 
-                      : "Waiting for next phase...",
-                  style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+                  game.status.name == 'DISCUSSION'
+                      ? 'Who is the Mafia? Convince the others!'
+                      : 'Waiting for next phase...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: Colors.white.withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-              // THE REALTIME CHAT
-              const Expanded(child: ChatWidget()),
+
+              // ── Chat tabs ───────────────────────────────────────────────
+              if (hasMafiaChat || hasDocChat || hasHitmanMafiaChat)
+                _TeamChatBanner(
+                  role: myRole?.name ?? '',
+                  hasMafiaChat: hasMafiaChat || hasHitmanMafiaChat,
+                  hasDocChat: hasDocChat,
+                ),
+              Expanded(child: const ChatWidget()),
             ],
           ),
-          
-          // DEV 3: Loading overlay if the game is processing a transition
+
+          // ── Loading overlay ───────────────────────────────────────────────
           if (game.isLoading)
             Container(
               color: Colors.black54,
               child: const Center(child: CircularProgressIndicator()),
             ),
+
+          // ── Morning Death Reveal Overlay ──────────────────────────────────
+          if (_showMorningReveal)
+            FadeTransition(
+              opacity: _overlayFade,
+              child: _MorningRevealOverlay(
+                deaths: _localDeaths,
+                players: game.players,
+                onDismiss: () {
+                  _autoDismissTimer?.cancel();
+                  final gc = context.read<GameController>();
+                  if (gc.reporterBroadcast != null) {
+                    _dismissMorning(thenShowReporter: true);
+                  } else {
+                    _dismissMorning(thenShowReporter: false);
+                  }
+                },
+              ),
+            ),
+
+          // ── Reporter BREAKING NEWS Overlay ────────────────────────────────
+          if (_showReporterOverlay && _localReporterData != null)
+            FadeTransition(
+              opacity: _overlayFade,
+              child: _ReporterOverlay(
+                data: _localReporterData!,
+                onDismiss: () {
+                  _autoDismissTimer?.cancel();
+                  _overlayFade.reverse().then((_) {
+                    if (mounted) setState(() => _showReporterOverlay = false);
+                  });
+                },
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── TEAM CHAT BANNER ────────────────────────────────────────────────────────
+
+class _TeamChatBanner extends StatelessWidget {
+  final String role;
+  final bool hasMafiaChat;
+  final bool hasDocChat;
+
+  const _TeamChatBanner({
+    required this.role,
+    required this.hasMafiaChat,
+    required this.hasDocChat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = hasMafiaChat
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF22C55E);
+    final label = hasMafiaChat
+        ? '🔫 You also have access to the Mafia private chat during NIGHT'
+        : '💉 You also have access to the Doctor–Nurse private chat during NIGHT';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 11,
+          color: color.withOpacity(0.8),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── MORNING REVEAL OVERLAY ──────────────────────────────────────────────────
+
+class _MorningRevealOverlay extends StatelessWidget {
+  final List<DeathEvent> deaths;
+  final List<dynamic> players; // List<PlayerModel>
+  final VoidCallback onDismiss;
+
+  const _MorningRevealOverlay({
+    required this.deaths,
+    required this.players,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onDismiss,
+      child: Container(
+        color: const Color(0xFF0D121B).withOpacity(0.96),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                '🌅  MORNING REPORT',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  letterSpacing: 3,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                deaths.isEmpty
+                    ? 'No one died tonight'
+                    : deaths.length == 1
+                        ? 'One soul was lost in the night'
+                        : '${deaths.length} souls were lost in the night',
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              if (deaths.isEmpty)
+                const Text('😴', style: TextStyle(fontSize: 64))
+              else
+                ...deaths.map((d) => _DeathCard(death: d, players: players)),
+              const SizedBox(height: 40),
+              Text(
+                'Tap to continue',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.25),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeathCard extends StatelessWidget {
+  final DeathEvent death;
+  final List<dynamic> players;
+
+  const _DeathCard({required this.death, required this.players});
+
+  @override
+  Widget build(BuildContext context) {
+    // Look up player name from players list
+    String name = 'Unknown';
+    try {
+      final p = players.firstWhere((p) => p.userId == death.userId);
+      name = p.name ?? 'Unknown';
+    } catch (_) {}
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C2333),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFEF4444).withOpacity(0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4444).withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Emoji
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                death.killedByEmoji,
+                style: const TextStyle(fontSize: 26),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  death.killedByLabel,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: const Color(0xFFEF4444).withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── REPORTER OVERLAY ────────────────────────────────────────────────────────
+
+class _ReporterOverlay extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final VoidCallback onDismiss;
+
+  const _ReporterOverlay({required this.data, required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final exposedRole = data['exposedRole'] as String? ?? '???';
+    final targetUserId = data['targetUserId'] as String? ?? '';
+
+    // Try to get the name from the game controller's player list
+    String targetName = 'Someone';
+    try {
+      final gc = context.read<GameController>();
+      final p = gc.players.firstWhere((p) => p.userId == targetUserId);
+      targetName = p.name;
+    } catch (_) {}
+
+    return GestureDetector(
+      onTap: onDismiss,
+      child: Container(
+        color: const Color(0xFF0D121B).withOpacity(0.97),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Breaking news badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD946EF),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    '📰  BREAKING NEWS',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  targetName,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'has been identified as',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 28, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD946EF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                        color: const Color(0xFFD946EF).withOpacity(0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFD946EF).withOpacity(0.2),
+                        blurRadius: 30,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    exposedRole.replaceAll('_', ' '),
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFD946EF),
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+                Text(
+                  'Tap to dismiss',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.25),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

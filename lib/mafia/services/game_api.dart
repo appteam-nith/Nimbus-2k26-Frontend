@@ -204,6 +204,34 @@ class GameApi {
     }
   }
 
+  // ─── CHAT ───────────────────────────────────────────────────────────────────
+
+  /// POST /api/game/chat
+  /// [channel] is one of: null (global), 'mafia', 'doc'
+  Future<void> sendChat(String roomCode, String message, {String? channel}) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'message': message,
+      if (channel != null) 'channel': channel,
+    };
+
+    final uri = Uri.parse('$_baseUrl/api/game/chat');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 8));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
   // ─── ACTIVE ROOM PERSISTENCE ────────────────────────────────────────────────
 
   /// Persists the room code so reconnect works on app relaunch.
