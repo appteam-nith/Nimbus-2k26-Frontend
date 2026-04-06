@@ -48,6 +48,12 @@ class GameController extends ChangeNotifier {
   /// The player the current user has selected to vote for.
   String? myVoteTarget;
 
+  /// Whether the Nurse has found the Doctor yet (used to update Nurse UI).
+  bool nurseMet = false;
+
+  /// Whether the Reporter has already used their one-time broadcast ability.
+  bool reporterUsed = false;
+
   /// Deaths reported at the start of DISCUSSION (from NIGHT resolution).
   List<DeathEvent> nightDeaths = [];
 
@@ -151,6 +157,8 @@ class GameController extends ChangeNotifier {
     revealedPlayer = room.eliminatedPlayer;
     _phaseEndsAt = room.phaseEndsAt;
     timeRemaining = room.timeRemaining ?? 0;
+    nurseMet = room.nurseMet;
+    reporterUsed = room.reporterUsed;
   }
 
   // ─── PUSHER SUBSCRIPTIONS ───────────────────────────────────────────────────
@@ -426,6 +434,8 @@ class GameController extends ChangeNotifier {
     nightDeaths = [];
     reporterBroadcast = null;
     hitmanStrikeEvent = null;
+    nurseMet = false;
+    reporterUsed = false;
     notifyListeners();
   }
 

@@ -43,6 +43,10 @@ class _NightScreenState extends State<NightScreen> {
 
     // Hitman Lockout (T-5s)
     final hitmanLocked = myRole == GameRole.HITMAN && controller.timeRemaining <= 5;
+    // Single-use lock: seed from controller on first build (covers reconnect)
+    if (!_hasLockedAction && controller.reporterUsed && myRole == GameRole.REPORTER) {
+      _hasLockedAction = true;
+    }
     // General vote prevention
     final canVote = isNight && !hasVoted && isAlive && !hitmanLocked && !_hasLockedAction;
 
@@ -88,10 +92,12 @@ class _NightScreenState extends State<NightScreen> {
           break;
         case GameRole.NURSE:
           title = 'Find the Doctor';
-          subtitle = 'If you select the Doctor, they become empowered.';
+          subtitle = controller.nurseMet
+              ? 'You have found the Doctor. Assist them each night to keep them safe.'
+              : 'If you select the Doctor, they become empowered.';
           themeColor = const Color(0xFF10B981);
           hasAction = true;
-          actionLabel = 'Assist Player';
+          actionLabel = controller.nurseMet ? 'Assist Doctor' : 'Assist Player';
           voteType = 'NURSE_SUPPORT';
           break;
         case GameRole.BOUNTY_HUNTER:
