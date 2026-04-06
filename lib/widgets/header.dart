@@ -59,14 +59,14 @@ class _HeaderWidgetState extends State<HeaderWidget> {
               fit: BoxFit.cover,
               width: 48,
               height: 48,
-              errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+              errorBuilder: (_, e2, err) => _initialsAvatar(initials),
             )
           : Image.file(
               File(avatarUrl),
               fit: BoxFit.cover,
               width: 48,
               height: 48,
-              errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+              errorBuilder: (_, e2, err) => _initialsAvatar(initials),
             ),
     );
   }

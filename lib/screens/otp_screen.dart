@@ -304,10 +304,10 @@ class _OtpScreenState extends State<OtpScreen> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.red.withOpacity(0.08),
+                          color: AppColors.red.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.red.withOpacity(0.25),
+                            color: AppColors.red.withValues(alpha: 0.25),
                           ),
                         ),
                         child: Text(

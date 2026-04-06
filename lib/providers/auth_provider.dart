@@ -200,7 +200,7 @@ class AuthProvider extends ChangeNotifier {
       final clientAuth =
           await googleUser.authorizationClient.authorizationForScopes(scopes) ??
           await googleUser.authorizationClient.authorizeScopes(scopes);
-      debugPrint('[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken?.length})');
+      debugPrint('[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken.length})');
 
       debugPrint('[Auth] Step 6: Signing into Firebase with credential…');
       final credential = GoogleAuthProvider.credential(

@@ -41,16 +41,16 @@ class _FullCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             const Color(0xFF1C2333),
-            glowColor.withOpacity(0.12),
+            glowColor.withValues(alpha: 0.12),
           ],
         ),
         border: Border.all(
-          color: glowColor.withOpacity(0.5),
+          color: glowColor.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withOpacity(0.25),
+            color: glowColor.withValues(alpha: 0.25),
             blurRadius: 40,
             spreadRadius: 4,
           ),
@@ -65,8 +65,8 @@ class _FullCard extends StatelessWidget {
             height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: glowColor.withOpacity(0.12),
-              border: Border.all(color: glowColor.withOpacity(0.4), width: 2),
+              color: glowColor.withValues(alpha: 0.12),
+              border: Border.all(color: glowColor.withValues(alpha: 0.4), width: 2),
             ),
             child: Center(
               child: Text(
@@ -82,7 +82,7 @@ class _FullCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 6),
@@ -100,7 +100,7 @@ class _FullCard extends StatelessWidget {
           // Divider
           Container(
             height: 1,
-            color: glowColor.withOpacity(0.2),
+            color: glowColor.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 20),
           // Description
@@ -111,7 +111,7 @@ class _FullCard extends StatelessWidget {
               fontFamily: 'Inter',
               fontSize: 14,
               height: 1.6,
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
           if (role.isMafia) ...[
@@ -119,10 +119,10 @@ class _FullCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withOpacity(0.1),
+                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: const Color(0xFFEF4444).withOpacity(0.3)),
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
               ),
               child: const Text(
                 '⚠️ Do not reveal your role.',
@@ -152,9 +152,9 @@ class _CompactCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: glowColor.withOpacity(0.1),
+        color: glowColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: glowColor.withOpacity(0.35)),
+        border: Border.all(color: glowColor.withValues(alpha: 0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

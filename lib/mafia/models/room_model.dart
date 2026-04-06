@@ -1,5 +1,7 @@
 import 'player_model.dart';
 
+// ignore_for_file: constant_identifier_names
+
 /// Full room snapshot returned by GET /api/game/rooms/:code
 class RoomModel {
   final String roomCode;

@@ -315,7 +315,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                    color: _accent.withOpacity(0.4),
+                    color: _accent.withValues(alpha: 0.4),
                     blurRadius: 20,
                     spreadRadius: 2),
               ],
@@ -354,7 +354,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.15),
+                  color: _accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.add_circle_outline,
@@ -433,7 +433,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _gold.withOpacity(0.12),
+                  color: _gold.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.login_rounded, color: _gold, size: 22),
@@ -585,7 +585,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _accent.withOpacity(0.15),
+                    color: _accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text('HOST',
@@ -618,7 +618,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   colors: [Color(0xFF1E1040), Color(0xFF2D1A5E)],
                 ),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _accent.withOpacity(0.4)),
+                border: Border.all(color: _accent.withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -681,7 +681,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _gold.withOpacity(0.12),
+              color: _gold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text('FULL',
@@ -841,9 +841,9 @@ class _LobbyScreenState extends State<LobbyScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _red.withOpacity(0.1),
+        color: _red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _red.withOpacity(0.3)),
+        border: Border.all(color: _red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -905,7 +905,7 @@ class _SizeChip extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? _accent.withOpacity(0.15) : _surface,
+            color: selected ? _accent.withValues(alpha: 0.15) : _surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? _accentGlow : _border,
@@ -923,7 +923,7 @@ class _SizeChip extends StatelessWidget {
               const SizedBox(height: 2),
               Text(sublabel,
                   style: TextStyle(
-                    color: selected ? _accentGlow.withOpacity(0.7) : _textSecondary,
+                    color: selected ? _accentGlow.withValues(alpha: 0.7) : _textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   )),
@@ -969,7 +969,7 @@ class _PrimaryButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                      color: _accent.withOpacity(0.35),
+                      color: _accent.withValues(alpha: 0.35),
                       blurRadius: 14,
                       offset: const Offset(0, 4))
                 ]
@@ -1111,7 +1111,7 @@ class _JoinCodeButton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                          color: _accent.withOpacity(0.35),
+                          color: _accent.withValues(alpha: 0.35),
                           blurRadius: 14,
                           offset: const Offset(0, 4))
                     ],

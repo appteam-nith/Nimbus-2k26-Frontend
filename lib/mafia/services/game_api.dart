@@ -215,6 +215,7 @@ class GameApi {
     final payload = <String, dynamic>{
       'room_code': roomCode,
       'message': message,
+      // ignore: use_null_aware_elements
       if (channel != null) 'channel': channel,
     };
 

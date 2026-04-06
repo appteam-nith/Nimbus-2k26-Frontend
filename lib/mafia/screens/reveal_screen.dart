@@ -87,7 +87,7 @@ class _RevealScreenState extends State<RevealScreen>
                   fontFamily: 'Inter',
                   fontSize: 11,
                   letterSpacing: 3,
-                  color: Colors.white.withOpacity(0.35),
+                  color: Colors.white.withValues(alpha: 0.35),
                 ),
               ),
               const SizedBox(height: 12),
@@ -163,7 +163,7 @@ class _RevealScreenState extends State<RevealScreen>
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -173,7 +173,7 @@ class _RevealScreenState extends State<RevealScreen>
                     fontFamily: 'Inter',
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -198,7 +198,7 @@ class _RevealScreenState extends State<RevealScreen>
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ),
             ],
@@ -226,12 +226,12 @@ class _EliminatedAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFEF4444).withOpacity(0.6),
+          color: const Color(0xFFEF4444).withValues(alpha: 0.6),
           width: 3,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEF4444).withOpacity(0.25),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.25),
             blurRadius: 24,
             spreadRadius: 4,
           ),
@@ -283,9 +283,9 @@ class _RoleRevealBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

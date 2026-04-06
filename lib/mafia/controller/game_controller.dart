@@ -368,6 +368,11 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearHitmanStrike() {
+    hitmanStrikeEvent = null;
+    notifyListeners();
+  }
+
   /// Submits the vote via the API.
   /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
   Future<String?> submitVote(

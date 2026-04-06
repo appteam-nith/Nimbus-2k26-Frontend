@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /// Lightweight payload from the `vote-updated` Pusher event.
 /// The backend intentionally broadcasts WHO voted but NOT who they targeted —
 /// only that an action was taken. This allows the UI to show "3/5 voted" etc.

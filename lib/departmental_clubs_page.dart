@@ -144,7 +144,7 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
         const SizedBox(height: 8),
         Container(
           height: 3,
-          color: AppColors.primaryBlue.withOpacity(0.2),
+          color: AppColors.primaryBlue.withValues(alpha: 0.2),
           child: AnimatedAlign(
             alignment: Alignment.lerp(
               Alignment.topLeft,

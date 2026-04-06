@@ -163,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? Image.file(
                                   File(_selectedImagePath!),
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
+                                  errorBuilder: (_, e2, err) =>
                                       _initialsAvatar(initials),
                                 )
                               : (avatarUrl != null && avatarUrl.isNotEmpty
@@ -291,14 +291,14 @@ class _ProfilePageState extends State<ProfilePage> {
       return Image.network(
         avatarUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+        errorBuilder: (_, e2, err) => _initialsAvatar(initials),
       );
     }
 
     return Image.file(
       File(avatarUrl),
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+      errorBuilder: (_, e2, err) => _initialsAvatar(initials),
     );
   }
 
@@ -576,9 +576,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.image,
                 label: 'Photo Gallery',
                 onTap: () async {
-                  print('DEBUG: Photo Gallery tapped');
+                  debugPrint('DEBUG: Photo Gallery tapped');
                   Navigator.pop(bottomContext);
-                  print(
+                  debugPrint(
                     'DEBUG: Bottom sheet closed, calling _pickImageFromGallery',
                   );
                   await _pickImageFromGallery();
@@ -589,9 +589,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.folder,
                 label: 'Files',
                 onTap: () async {
-                  print('DEBUG: Files tapped');
+                  debugPrint('DEBUG: Files tapped');
                   Navigator.pop(bottomContext);
-                  print(
+                  debugPrint(
                     'DEBUG: Bottom sheet closed, calling _pickImageFromFiles',
                   );
                   await _pickImageFromFiles();
@@ -653,12 +653,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImageFromGallery() async {
     try {
-      print('DEBUG: _pickImageFromGallery called');
+      debugPrint('DEBUG: _pickImageFromGallery called');
       final status = await _requestPhotoPermission();
-      print('DEBUG: Permission status = $status');
+      debugPrint('DEBUG: Permission status = $status');
 
       if (!status.isGranted) {
-        print('DEBUG: Permission denied');
+        debugPrint('DEBUG: Permission denied');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -669,7 +669,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      print('DEBUG: Permission granted, opening image picker');
+      debugPrint('DEBUG: Permission granted, opening image picker');
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
@@ -678,7 +678,7 @@ class _ProfilePageState extends State<ProfilePage> {
         imageQuality: 85,
       );
 
-      print('DEBUG: Image picked: ${pickedFile?.path}');
+      debugPrint('DEBUG: Image picked: ${pickedFile?.path}');
 
       if (pickedFile != null && mounted) {
         final profile = context.read<ProfileModel>();
@@ -695,10 +695,10 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         }
       } else {
-        print('DEBUG: No image selected or widget not mounted');
+        debugPrint('DEBUG: No image selected or widget not mounted');
       }
     } catch (e) {
-      print('DEBUG: Error in _pickImageFromGallery: $e');
+      debugPrint('DEBUG: Error in _pickImageFromGallery: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -711,12 +711,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImageFromFiles() async {
     try {
-      print('DEBUG: _pickImageFromFiles called');
+      debugPrint('DEBUG: _pickImageFromFiles called');
       final status = await _requestStoragePermission();
-      print('DEBUG: Permission status = $status');
+      debugPrint('DEBUG: Permission status = $status');
 
       if (!status.isGranted) {
-        print('DEBUG: Permission denied');
+        debugPrint('DEBUG: Permission denied');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -727,14 +727,14 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      print('DEBUG: Permission granted, opening file picker');
+      debugPrint('DEBUG: Permission granted, opening file picker');
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
         withData: false,
       );
 
-      print('DEBUG: File picked: ${result?.files.firstOrNull?.path}');
+      debugPrint('DEBUG: File picked: ${result?.files.firstOrNull?.path}');
 
       if (result != null && result.files.isNotEmpty && mounted) {
         final filePath = result.files.single.path;
@@ -754,10 +754,10 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         }
       } else {
-        print('DEBUG: No file selected or widget not mounted');
+        debugPrint('DEBUG: No file selected or widget not mounted');
       }
     } catch (e) {
-      print('DEBUG: Error in _pickImageFromFiles: $e');
+      debugPrint('DEBUG: Error in _pickImageFromFiles: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -770,26 +770,26 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<PermissionStatus> _requestPhotoPermission() async {
     try {
-      print('DEBUG: _requestPhotoPermission called');
+      debugPrint('DEBUG: _requestPhotoPermission called');
       // permission_handler automatically handles Android 13+ vs older versions
       final status = await Permission.photos.request();
-      print('DEBUG: Permission.photos result: $status');
+      debugPrint('DEBUG: Permission.photos result: $status');
       return status;
     } catch (e) {
-      print('DEBUG: Error in _requestPhotoPermission: $e');
+      debugPrint('DEBUG: Error in _requestPhotoPermission: $e');
       rethrow;
     }
   }
 
   Future<PermissionStatus> _requestStoragePermission() async {
     try {
-      print('DEBUG: _requestStoragePermission called');
+      debugPrint('DEBUG: _requestStoragePermission called');
       // permission_handler automatically handles Android 13+ vs older versions
       final status = await Permission.photos.request();
-      print('DEBUG: Permission.photos result: $status');
+      debugPrint('DEBUG: Permission.photos result: $status');
       return status;
     } catch (e) {
-      print('DEBUG: Error in _requestStoragePermission: $e');
+      debugPrint('DEBUG: Error in _requestStoragePermission: $e');
       rethrow;
     }
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
 import '../models/player_model.dart';
-import '../widgets/player_grid.dart';
 import '../widgets/role_card.dart';
 
 /// Game Over Screen — shown when `game-ended` Pusher event fires.
@@ -113,7 +112,7 @@ class _GameOverScreenState extends State<GameOverScreen>
                       fontFamily: 'Inter',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(0.45),
+                      color: Colors.white.withValues(alpha: 0.45),
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -132,7 +131,7 @@ class _GameOverScreenState extends State<GameOverScreen>
                             child: Text(
                               'No player data',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                               ),
                             ),
                           ),
@@ -210,14 +209,14 @@ class _WinnerBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color.withOpacity(0.18),
+            color.withValues(alpha: 0.18),
             const Color(0xFF1C2333),
           ],
         ),
-        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 32,
             offset: const Offset(0, 8),
           ),
@@ -242,7 +241,7 @@ class _WinnerBanner extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14,
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withValues(alpha: 0.55),
             ),
           ),
         ],
@@ -296,7 +295,7 @@ class _RosterTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: isMe
             ? Border.all(
-                color: const Color(0xFF135BEC).withOpacity(0.4), width: 1.5)
+                color: const Color(0xFF135BEC).withValues(alpha: 0.4), width: 1.5)
             : null,
       ),
       child: Row(
@@ -306,7 +305,7 @@ class _RosterTile extends StatelessWidget {
             radius: 20,
             backgroundColor: isEliminated
                 ? const Color(0xFF374151)
-                : const Color(0xFF135BEC).withOpacity(0.3),
+                : const Color(0xFF135BEC).withValues(alpha: 0.3),
             child: Text(
               player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
               style: TextStyle(
@@ -342,7 +341,7 @@ class _RosterTile extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11,
-                      color: const Color(0xFFEF4444).withOpacity(0.7),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.7),
                     ),
                   ),
               ],
@@ -399,8 +398,8 @@ class _ActionButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white.withOpacity(0.6),
-        side: BorderSide(color: Colors.white.withOpacity(0.15)),
+        foregroundColor: Colors.white.withValues(alpha: 0.6),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
         padding: const EdgeInsets.symmetric(vertical: 16),
         textStyle: const TextStyle(
           fontFamily: 'Inter',
@@ -454,7 +453,6 @@ class _ParticlePainter extends CustomPainter {
     final cy = size.height * 0.28;
 
     for (int i = 0; i < _count; i++) {
-      final angle = (i / _count) * 2 * 3.14159;
       final speed = 120.0 + (i % 4) * 40;
       final dist = speed * progress;
       final x = cx + dist * 1.6 * (i % 2 == 0 ? 1 : -1) * (i / _count);
@@ -466,8 +464,8 @@ class _ParticlePainter extends CustomPainter {
               ? color
               : i % 3 == 1
                   ? Colors.white
-                  : color.withOpacity(0.6))
-          .withOpacity(opacity);
+                  : color.withValues(alpha: 0.6))
+          .withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }

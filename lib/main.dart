@@ -251,27 +251,4 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
-}
-
-// ─── Mafia placeholder (replaced by other devs' screens) ─────────────────────
-class _MafiaPlaceholder extends StatelessWidget {
-  final String label;
-  const _MafiaPlaceholder({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D121B),
-      body: Center(
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            color: Colors.white38,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
-  }
-}
+}

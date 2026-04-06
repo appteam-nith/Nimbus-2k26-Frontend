@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /// Mirrors the backend GamePlayer shape returned by getRoomState.
 /// [role] is only populated for the calling player themselves,
 /// or for ALL players once the game has ENDED.

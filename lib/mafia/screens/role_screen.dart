@@ -118,7 +118,7 @@ class _RoleScreenState extends State<RoleScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          _roleGlow(role).withOpacity(0.15 * _glowAnim.value),
+                          _roleGlow(role).withValues(alpha: 0.15 * _glowAnim.value),
                           Colors.transparent,
                         ],
                       ),
@@ -138,7 +138,7 @@ class _RoleScreenState extends State<RoleScreen>
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -179,7 +179,7 @@ class _RoleScreenState extends State<RoleScreen>
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.35),
+                            color: Colors.white.withValues(alpha: 0.35),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -191,9 +191,9 @@ class _RoleScreenState extends State<RoleScreen>
                             builder: (context, _) => LinearProgressIndicator(
                               value: 1.0 - _autoNavController.value,
                               backgroundColor:
-                                  Colors.white.withOpacity(0.08),
+                                  Colors.white.withValues(alpha: 0.08),
                               valueColor: AlwaysStoppedAnimation(
-                                  _roleGlow(role).withOpacity(0.6)),
+                                  _roleGlow(role).withValues(alpha: 0.6)),
                               minHeight: 2,
                               borderRadius: BorderRadius.circular(2),
                             ),
@@ -251,7 +251,7 @@ class _CardBack extends StatelessWidget {
           colors: [Color(0xFF1A2544), Color(0xFF0D121B)],
         ),
         border: Border.all(
-          color: const Color(0xFF135BEC).withOpacity(0.3),
+          color: const Color(0xFF135BEC).withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
