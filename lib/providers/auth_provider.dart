@@ -344,9 +344,6 @@ class AuthProvider extends ChangeNotifier {
     if (raw.startsWith('Exception: ')) {
       return raw.substring(11);
     }
-    if (raw.contains('Only @nith.ac.in')) {
-      return 'Only @nith.ac.in email addresses are allowed.';
-    }
     return raw;
   }
 }
