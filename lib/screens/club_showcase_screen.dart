@@ -108,7 +108,6 @@ class _ClubShowcaseScreenState extends State<ClubShowcaseScreen>
           ],
         ),
       ),
-      bottomNavigationBar: _JoinBar(club: club),
     );
   }
 }
@@ -240,7 +239,7 @@ class _ClubImage extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _letterPlaceholder(),
+        errorBuilder: (_, __, ___) => _letterPlaceholder(),
       );
     }
     if (club.imageUrl != null) {
@@ -249,7 +248,7 @@ class _ClubImage extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _letterPlaceholder(),
+        errorBuilder: (_, __, ___) => _letterPlaceholder(),
       );
     }
     return _letterPlaceholder();
@@ -339,7 +338,7 @@ class _ProjectsTab extends StatelessWidget {
       );
     }
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: club.projects.length,
       itemBuilder: (ctx, i) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -537,7 +536,7 @@ class _AchievementsTab extends StatelessWidget {
       );
     }
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: club.achievements.length,
       itemBuilder: (_, i) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
@@ -623,7 +622,7 @@ class _AboutTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -780,229 +779,6 @@ class _TechChip extends StatelessWidget {
           color: Color(0xFF135BEC),
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Join bottom bar
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _JoinBar extends StatelessWidget {
-  final Club club;
-
-  const _JoinBar({required this.club});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-          16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 8,
-              offset: Offset(0, -2)),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x4D135BEC),
-                blurRadius: 15,
-                offset: Offset(0, 10),
-                spreadRadius: -3,
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => _JoinSheet(club: club),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF135BEC),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Apply to Join',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Join bottom sheet
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _JoinSheet extends StatelessWidget {
-  final Club club;
-
-  const _JoinSheet({required this.club});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(12),
-      padding: EdgeInsets.fromLTRB(
-          24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Apply to join ${club.name}',
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Fill in your details and the club coordinator will get back to you.',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: Color(0xFF64748B),
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _SheetField(label: 'Full Name', placeholder: 'Your full name'),
-          const SizedBox(height: 12),
-          _SheetField(label: 'Roll Number', placeholder: 'e.g. CS21B1234'),
-          const SizedBox(height: 12),
-          _SheetField(
-            label: 'Why do you want to join?',
-            placeholder: 'Tell us briefly...',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF135BEC),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Submit Application',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetField extends StatelessWidget {
-  final String label;
-  final String placeholder;
-  final int maxLines;
-
-  const _SheetField({
-    required this.label,
-    required this.placeholder,
-    this.maxLines = 1,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              color: Color(0xFF374151),
-            )),
-        const SizedBox(height: 6),
-        TextField(
-          maxLines: maxLines,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: Color(0xFF0F172A),
-          ),
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: Color(0xFF9CA3AF),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFF135BEC), width: 1.5),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
