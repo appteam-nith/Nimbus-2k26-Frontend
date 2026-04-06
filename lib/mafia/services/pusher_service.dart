@@ -51,6 +51,11 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _hitmanStrikeController =
       StreamController<Map<String, dynamic>>.broadcast();
+  // Global room list events (for the browse rooms screen)
+  final _roomOpenedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _roomClosedController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onPhaseResolved => _phaseController.stream;
   Stream<Map<String, dynamic>> get onRoleAssigned => _roleController.stream;
@@ -64,6 +69,8 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onChatMessage => _chatController.stream;
   Stream<Map<String, dynamic>> get onHitmanStrike =>
       _hitmanStrikeController.stream;
+  Stream<Map<String, dynamic>> get onRoomOpened => _roomOpenedController.stream;
+  Stream<Map<String, dynamic>> get onRoomClosed => _roomClosedController.stream;
 
   /// Cop only — private investigation result
   Stream<Map<String, dynamic>> get onInvestigationResult =>
@@ -111,10 +118,17 @@ class PusherService extends ChangeNotifier {
 
       await _pusher.connect();
 
-      // ── Public room channel ──────────────────────────────────────────────
+      // ── Public room channel (game events: phase-resolved etc) ──────────────
       await _pusher.subscribe(
         channelName: 'game-$roomCode',
         onEvent: _onRoomEvent,
+      );
+
+      // ── Lobby room channel (join/leave/start during LOBBY phase) ────────────
+      // Backend fires player-joined, player-left, game-started on room-{code}
+      await _pusher.subscribe(
+        channelName: 'room-$roomCode',
+        onEvent: _onLobbyEvent,
       );
 
       // ── Private player channel ───────────────────────────────────────────
@@ -180,6 +194,7 @@ class PusherService extends ChangeNotifier {
     try {
       if (_currentRoomCode != null) {
         await _pusher.unsubscribe(channelName: 'game-$_currentRoomCode');
+        await _pusher.unsubscribe(channelName: 'room-$_currentRoomCode');
       }
       if (_currentUserId != null) {
         await _pusher.unsubscribe(channelName: 'private-$_currentUserId');
@@ -196,6 +211,28 @@ class PusherService extends ChangeNotifier {
     _connected = false;
     _currentRoomCode = null;
     _currentUserId = null;
+  }
+
+  // ─── GLOBAL ROOMS CHANNEL ───────────────────────────────────────────────────
+
+  /// Subscribe to the global 'rooms' Pusher channel to get real-time
+  /// room open/close events for the browse screen. Call on lobby entry.
+  Future<void> subscribeRoomsChannel() async {
+    if (!_connected) return;
+    try {
+      await _pusher.subscribe(
+        channelName: 'rooms',
+        onEvent: _onGlobalRoomsEvent,
+      );
+    } catch (e) {
+      debugPrint('[Pusher] Failed to subscribe to rooms channel: $e');
+    }
+  }
+
+  Future<void> unsubscribeRoomsChannel() async {
+    try {
+      await _pusher.unsubscribe(channelName: 'rooms');
+    } catch (_) {}
   }
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
@@ -230,6 +267,44 @@ class PusherService extends ChangeNotifier {
         break;
       case 'hitman-strike':
         _hitmanStrikeController.add(data);
+        break;
+    }
+  }
+
+  /// Handles lobby-phase room channel events (room-{code}).
+  /// Backend fires: player-joined, player-left, game-started here.
+  void _onLobbyEvent(PusherEvent event) {
+    final data = _decode(event.data);
+    if (data == null) return;
+
+    debugPrint('[Pusher][lobby] ${event.eventName}: $data');
+
+    switch (event.eventName) {
+      case 'player-joined':
+        _playerJoinedController.add(data);
+        break;
+      case 'player-left':
+        _playerLeftController.add(data);
+        break;
+      case 'game-started':
+        _gameStartedController.add(data);
+        break;
+    }
+  }
+
+  /// Handles global rooms channel events (rooms).
+  void _onGlobalRoomsEvent(PusherEvent event) {
+    final data = _decode(event.data);
+    if (data == null) return;
+
+    debugPrint('[Pusher][rooms] ${event.eventName}: $data');
+
+    switch (event.eventName) {
+      case 'room-opened':
+        _roomOpenedController.add(data);
+        break;
+      case 'room-closed':
+        _roomClosedController.add(data);
         break;
     }
   }
@@ -287,6 +362,8 @@ class PusherService extends ChangeNotifier {
     _chatController.close();
     _investigationController.close();
     _hitmanStrikeController.close();
+    _roomOpenedController.close();
+    _roomClosedController.close();
     super.dispose();
   }
 }

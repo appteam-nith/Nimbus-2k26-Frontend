@@ -52,6 +52,28 @@ class GameApi {
     }
   }
 
+  // ─── LIST OPEN ROOMS ─────────────────────────────────────────────────────────
+
+  /// GET /api/game/rooms — returns all LOBBY rooms for the browse screen.
+  Future<List<Map<String, dynamic>>> listRooms() async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms');
+    final response = await http
+        .get(uri, headers: _headers(token))
+        .timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return (json['rooms'] as List<dynamic>? ?? [])
+          .map((r) => r as Map<String, dynamic>)
+          .toList();
+    } else {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
   // ─── GAME ACTIONS (Dev 3) ───────────────────────────────────────────────────
 
   /// POST /api/game/vote
