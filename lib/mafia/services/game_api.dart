@@ -52,6 +52,32 @@ class GameApi {
     }
   }
 
+  // ─── GAME ACTIONS (Dev 3) ───────────────────────────────────────────────────
+
+  /// POST /api/game/vote
+  /// Sends a game action (Vote, Kill, Save, etc.) to the backend.
+  Future<void> postAction(String roomCode, String targetId, String actionType) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/vote');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode({
+            'room_code': roomCode,
+            'target_id': targetId,
+            'vote_type': actionType,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+    }
+  }
+
   // ─── ROOM APIs (Dev 2) ───────────────────────────────────────────────────────
 
   /// POST /api/game/rooms

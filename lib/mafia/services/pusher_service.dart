@@ -15,6 +15,7 @@ class PusherService extends ChangeNotifier {
   PusherService._();
   static final PusherService instance = PusherService._();
 
+  bool get isConnected => _connected;
   static const String _appKey =
       String.fromEnvironment('PUSHER_APP_KEY', defaultValue: '');
   static const String _cluster =

@@ -19,6 +19,7 @@ import 'mafia/screens/lobby_screen.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
+import 'mafia/screens/discussion_screen.dart'; // NEW import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +63,7 @@ class MyApp extends StatelessWidget {
         '/mafia/game-over': (_) => const GameOverScreen(),
         // Placeholder routes for screens built by other devs
         '/mafia/night': (_) => const _MafiaPlaceholder(label: 'Night — Dev 4'),
-        '/mafia/discussion': (_) => const _MafiaPlaceholder(label: 'Discussion — Dev 3'),
+        '/mafia/discussion': (_) => const DiscussionScreen(), // Updated ✅
         '/mafia/voting': (_) => const _MafiaPlaceholder(label: 'Voting — Dev 4'),
         '/mafia/lobby': (_) => const LobbyScreen(),      // Dev 2 ✅
       },
@@ -87,7 +88,20 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
   }
 
   Future<void> _startBootstrap() async {
+    // DEV 3: Reconnect Check
+    final auth = context.read<AuthProvider>();
+    final game = context.read<GameController>();
+
     await Future.delayed(const Duration(seconds: 1));
+    
+    if (auth.isAuthenticated) {
+      // Attempt to jump back into an active game session
+      // Use the 'uid' from the 'user' getter already in AuthProvider
+      if (auth.user != null) {
+      await game.tryReconnect(auth.user!.uid);
+     }
+    }
+
     if (!mounted) return;
     setState(() {
       _ready = true;

@@ -17,8 +17,8 @@ final GlobalKey<NavigatorState> mafiaNavKey = GlobalKey<NavigatorState>();
 /// Central state manager for the Mafia game.
 ///
 /// Lifecycle:
-///   [init]        → call when entering game (from lobby or reconnect)
-///   [dispose]     → call when leaving game (home, game over)
+///   [init]         → call when entering game (from lobby or reconnect)
+///   [dispose]      → call when leaving game (home, game over)
 ///
 /// All Pusher events are handled here and translated into state + navigation.
 class GameController extends ChangeNotifier {
@@ -33,6 +33,7 @@ class GameController extends ChangeNotifier {
   bool isReconnecting = false;
   bool isLoading = false;
   String? error;
+  DateTime? get phaseEndsAt => _phaseEndsAt;
 
   /// The player eliminated this round — set during REVEAL phase.
   PlayerModel? revealedPlayer;
@@ -51,6 +52,7 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _roleSub;
   StreamSubscription<Map<String, dynamic>>? _gameEndSub;
   StreamSubscription<Map<String, dynamic>>? _voteSub;
+  StreamSubscription<Map<String, dynamic>>? _chatSub; // NEW
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -144,10 +146,12 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
+    _chatSub = _pusher.onChatMessage.listen((_) => notifyListeners()); // NEW
     _voteSub = _pusher.onVoteUpdated.listen((data) {
       // Vote count updates are handled by screens directly;
       // controller just notifies for state rebuild.
@@ -291,6 +295,16 @@ class GameController extends ChangeNotifier {
 
   // ─── ACTIONS ────────────────────────────────────────────────────────────────
 
+  /// Sends a lynch vote or a special action (kill/save) to the API.
+  Future<void> performAction(String targetId) async {
+    String actionType = (status == GameStatus.VOTING) ? "VOTE" : "KILL";
+    try {
+      await _api.postAction(roomCode!, targetId, actionType);
+    } catch (e) {
+      debugPrint("Action Failed: $e");
+    }
+  }
+
   /// Mark role card as seen — call from RoleScreen's "Tap to continue".
   void markRoleCardSeen() {
     roleCardSeen = true;
@@ -305,6 +319,7 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -324,6 +339,7 @@ class GameController extends ChangeNotifier {
     _roleSub?.cancel();
     _gameEndSub?.cancel();
     _voteSub?.cancel();
+    _chatSub?.cancel();
     super.dispose();
   }
 }
