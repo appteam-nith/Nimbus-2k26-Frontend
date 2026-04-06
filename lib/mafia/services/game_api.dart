@@ -123,6 +123,26 @@ class GameApi {
     }
   }
 
+  /// POST /api/game/rooms/leave
+  /// [roomCode] is the 6-character room code.
+  Future<void> leaveRoom(String roomCode) async {
+    final token = await _getToken();
+    if (token == null) return; // Ignore if not authenticated
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms/leave');
+    try {
+      await http
+          .post(
+            uri,
+            headers: _headers(token),
+            body: jsonEncode({'room_code': roomCode}),
+          )
+          .timeout(const Duration(seconds: 15));
+    } catch (_) {
+      // Best effort when leaving
+    }
+  }
+
   /// POST /api/game/start — host only.
   Future<void> startGame(String roomCode) async {
     final token = await _getToken();
@@ -181,6 +201,34 @@ class GameApi {
       return json['investigation_result'] as String?;
     } catch (_) {
       return null;
+    }
+  }
+
+  // ─── CHAT ───────────────────────────────────────────────────────────────────
+
+  /// POST /api/game/chat
+  /// [channel] is one of: null (global), 'mafia', 'doc'
+  Future<void> sendChat(String roomCode, String message, {String? channel}) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'message': message,
+      if (channel != null) 'channel': channel,
+    };
+
+    final uri = Uri.parse('$_baseUrl/api/game/chat');
+    final response = await http
+        .post(
+          uri,
+          headers: _headers(token),
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 8));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
     }
   }
 

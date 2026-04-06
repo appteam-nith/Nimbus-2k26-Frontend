@@ -48,6 +48,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   String? _error;
 
   StreamSubscription<Map<String, dynamic>>? _joinSub;
+  StreamSubscription<Map<String, dynamic>>? _leaveSub;
   StreamSubscription<Map<String, dynamic>>? _startSub;
 
   final GameApi _api = GameApi.instance;
@@ -80,6 +81,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   @override
   void dispose() {
     _joinSub?.cancel();
+    _leaveSub?.cancel();
     _startSub?.cancel();
     _pulseController.dispose();
     super.dispose();
@@ -89,6 +91,7 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   void _subscribeLobbyEvents() {
     _joinSub?.cancel();
+    _leaveSub?.cancel();
     _startSub?.cancel();
 
     // player-joined → add to list
@@ -109,6 +112,19 @@ class _LobbyScreenState extends State<LobbyScreen>
           ];
         });
       }
+    });
+
+    // player-left → remove from list
+    _leaveSub = _pusher.onPlayerLeft.listen((data) {
+      final userId = data['userId'] as String?;
+      final newHostId = data['newHostId'] as String?;
+      if (userId == null) return;
+      setState(() {
+        _players.removeWhere((p) => p.userId == userId);
+        if (newHostId != null && newHostId == _myUserId) {
+          _isHost = true;
+        }
+      });
     });
 
     // game-started → GameController takes over and navigates to role screen
@@ -197,7 +213,11 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   void _leaveRoom() {
+    if (_roomCode != null) {
+      _api.leaveRoom(_roomCode!);
+    }
     _joinSub?.cancel();
+    _leaveSub?.cancel();
     _startSub?.cancel();
     _pusher.disconnect();
     _api.clearActiveRoom();

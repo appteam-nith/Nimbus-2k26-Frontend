@@ -324,12 +324,24 @@ class _NightScreenState extends State<NightScreen> {
             ),
           ),
           
+          // ── Loading overlay ──────────────────────────────────────────────
           if (controller.isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
+            ),
+
+          // ── Hitman Strike Overlay ──────────────────────────────────
+          if (controller.hitmanStrikeEvent != null)
+            _HitmanStrikeOverlay(
+              data: controller.hitmanStrikeEvent!,
+              players: controller.players,
+              onDismiss: () {
+                controller.hitmanStrikeEvent = null;
+                controller.notifyListeners();
+              },
             ),
         ],
       ),
@@ -525,6 +537,167 @@ class _NightScreenState extends State<NightScreen> {
               child: Text(r, style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Inter')),
             );
           }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── HITMAN STRIKE OVERLAY ────────────────────────────────────────────────────
+
+class _HitmanStrikeOverlay extends StatefulWidget {
+  final Map<String, dynamic> data;
+  final List<dynamic> players; // List<PlayerModel>
+  final VoidCallback onDismiss;
+
+  const _HitmanStrikeOverlay({
+    required this.data,
+    required this.players,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_HitmanStrikeOverlay> createState() => _HitmanStrikeOverlayState();
+}
+
+class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..forward();
+    _fade = CurvedAnimation(parent: _anim, curve: Curves.easeIn);
+    // Auto-dismiss after 4s
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) widget.onDismiss();
+    });
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deaths = (widget.data['deaths'] as List<dynamic>? ?? []);
+    final hitmanMetMafia = widget.data['hitmanMetMafia'] as bool? ?? false;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: GestureDetector(
+        onTap: widget.onDismiss,
+        child: Container(
+          color: const Color(0xFF0D121B).withOpacity(0.95),
+          child: SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('🎯', style: TextStyle(fontSize: 52)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'HITMAN STRIKE',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      letterSpacing: 3,
+                      color: Color(0xFFFF6B00),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  if (hitmanMetMafia)
+                    _strikeNote('⚡ The Hitman has aligned with the Mafia team.')
+                  else if (deaths.isEmpty)
+                    _strikeNote("The Hitman's contract failed this round.")
+                  else
+                    ...deaths.map((d) {
+                      final uid = d['userId'] as String? ?? '';
+                      String name = 'Unknown';
+                      try {
+                        final p = widget.players
+                            .firstWhere((p) => p.userId == uid);
+                        name = p.name ?? 'Unknown';
+                      } catch (_) {}
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 6),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF991B1B).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFFF6B00).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('💀',
+                                style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 14),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'Eliminated by the Hitman',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: const Color(0xFFFF6B00)
+                                        .withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Tap to dismiss',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.25),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _strikeNote(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 15,
+          color: Colors.white.withOpacity(0.7),
         ),
       ),
     );

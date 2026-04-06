@@ -45,16 +45,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _checkExistingAuth() async {
+    debugPrint('[Auth] _checkExistingAuth: checking for stored token…');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null && token.isNotEmpty) {
+      debugPrint('[Auth] _checkExistingAuth: ✓ Found stored token (length=${token.length}), setting isAuthenticated=true');
       _isAuthenticated = true;
       _userName = prefs.getString('user_name');
       _userEmail = prefs.getString('user_email');
+      debugPrint('[Auth] _checkExistingAuth: name=$_userName, email=$_userEmail');
       _apiService.setToken(token);
       notifyListeners();
       _fetchAndCacheProfile();
+    } else {
+      debugPrint('[Auth] _checkExistingAuth: ✗ No stored token — user is NOT authenticated');
     }
   }
 
@@ -143,34 +148,55 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> signInWithGoogle() async {
+    debugPrint('[Auth] ── signInWithGoogle START ──────────────────────');
     _setStatus(AuthStatus.loading);
     try {
+      debugPrint('[Auth] Step 1: Waiting for Google SDK init…');
       await _googleInitFuture;
+      debugPrint('[Auth] Step 1: ✓ Google SDK ready');
+
+      debugPrint('[Auth] Step 2: Waiting for backend warmup…');
       await _backendWarmupFuture.timeout(
         const Duration(seconds: 8),
-        onTimeout: () {},
+        onTimeout: () {
+          debugPrint('[Auth] Step 2: ⚠ Backend warmup timed out (continuing anyway)');
+        },
       );
+      debugPrint('[Auth] Step 2: ✓ Backend warmup done');
 
+      debugPrint('[Auth] Step 3: Signing out existing sessions…');
       try {
         await FirebaseAuth.instance.signOut();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Auth] Step 3: ⚠ Firebase signOut error (non-fatal): $e');
+      }
 
       try {
         await GoogleSignIn.instance.signOut();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Auth] Step 3: ⚠ Google signOut error (non-fatal): $e');
+      }
+      debugPrint('[Auth] Step 3: ✓ Old sessions cleared');
 
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
+      debugPrint('[Auth] Step 4: Launching Google authenticate()…');
+      final GoogleSignInAccount googleUser =
+          await GoogleSignIn.instance.authenticate();
+      debugPrint('[Auth] Step 4: ✓ Google user = ${googleUser.email}');
+
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token.');
       }
+      debugPrint('[Auth] Step 4: ✓ Got Google idToken (length=${googleAuth.idToken!.length})');
 
       const scopes = ['email', 'profile'];
+      debugPrint('[Auth] Step 5: Getting authorization for scopes…');
       final clientAuth =
           await googleUser.authorizationClient.authorizationForScopes(scopes) ??
           await googleUser.authorizationClient.authorizeScopes(scopes);
+      debugPrint('[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken?.length})');
 
+      debugPrint('[Auth] Step 6: Signing into Firebase with credential…');
       final credential = GoogleAuthProvider.credential(
         accessToken: clientAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -183,40 +209,43 @@ class AuthProvider extends ChangeNotifier {
       if (firebaseUser == null) {
         throw Exception('Firebase sign-in failed.');
       }
+      debugPrint('[Auth] Step 6: ✓ Firebase user = ${firebaseUser.email}, uid=${firebaseUser.uid}');
 
-      final firebaseIdToken = await firebaseUser.getIdToken(
-        true,
-      ); // forceRefresh=true
+      debugPrint('[Auth] Step 7: Getting Firebase ID token (forceRefresh)…');
+      final firebaseIdToken = await firebaseUser.getIdToken(true); // forceRefresh=true
       if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
         throw Exception('Failed to generate Firebase ID token.');
       }
-      // Sanity check: a Firebase JWT always starts with "eyJ"
-      debugPrint(
-        '[Auth] Firebase ID token prefix: ${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}...',
-      );
+      debugPrint('[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}…)');
       if (!firebaseIdToken.startsWith('eyJ')) {
         throw Exception(
           'Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}',
         );
       }
 
+      debugPrint('[Auth] Step 8: Sending Firebase ID token to backend…');
       final response = await _apiService.googleSignIn(firebaseIdToken);
+      debugPrint('[Auth] Step 8: ✓ Backend response received — success=${response['success']}, hasToken=${response['token'] != null}');
 
       // ── Defensive extraction — never hard-cast from API responses ──
       final token = response['token'] as String?;
       if (token == null || token.isEmpty) {
+        debugPrint('[Auth] Step 8: ✗ Backend did NOT return a token! Full response: $response');
         throw Exception('Backend did not return a token. Check server logs.');
       }
 
       final userData = response['user'] as Map<String, dynamic>?;
       if (userData == null) {
+        debugPrint('[Auth] Step 8: ✗ Backend did NOT return user data! Full response: $response');
         throw Exception('Backend did not return user data.');
       }
+      debugPrint('[Auth] Step 8: ✓ user data = $userData');
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
       final userId = userData['user_id'] as String?;
 
+      debugPrint('[Auth] Step 9: Saving to SharedPreferences (name=$_userName, email=$_userEmail, userId=$userId)…');
       final prefs = await SharedPreferences.getInstance();
       if (_userName != null) {
         await prefs.setString('user_name', _userName!);
@@ -228,12 +257,16 @@ class AuthProvider extends ChangeNotifier {
         await prefs.setString('user_id', userId);
       }
       await prefs.setString('auth_token', token);
+      debugPrint('[Auth] Step 9: ✓ All data saved');
 
       _apiService.setToken(token);
       _isAuthenticated = true;
+      debugPrint('[Auth] Step 10: ✓ isAuthenticated = true — calling notifyListeners');
       _setStatus(AuthStatus.success);
+      debugPrint('[Auth] ── signInWithGoogle COMPLETE ✓ ─────────────────');
       return true;
     } on GoogleSignInException catch (e) {
+      debugPrint('[Auth] ✗ GoogleSignInException: code=${e.code}, desc=${e.description}');
       if (e.code == GoogleSignInExceptionCode.canceled) {
         _setStatus(AuthStatus.idle);
         return false;
@@ -244,10 +277,10 @@ class AuthProvider extends ChangeNotifier {
         error: e.description ?? 'Google sign-in failed.',
       );
       return false;
-    } catch (e) {
+    } catch (e, stack) {
       final errorMsg = _cleanError(e.toString());
-      // Always log to console so devs can see the real error in flutter logs
-      debugPrint('[AuthProvider] signInWithGoogle error: $e');
+      debugPrint('[Auth] ✗ UNHANDLED ERROR: $e');
+      debugPrint('[Auth] ✗ Stack trace: $stack');
       try {
         await GoogleSignIn.instance.signOut();
       } catch (_) {}

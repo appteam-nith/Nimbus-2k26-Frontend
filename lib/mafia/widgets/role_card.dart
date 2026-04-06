@@ -190,6 +190,14 @@ Color _glowColor(GameRole role) {
       return const Color(0xFF34D399);
     case GameRole.COP:
       return const Color(0xFF3B82F6);
+    case GameRole.HITMAN:
+      return const Color(0xFFFF6B00);
+    case GameRole.BOUNTY_HUNTER:
+      return const Color(0xFFF59E0B);
+    case GameRole.REPORTER:
+      return const Color(0xFF8B5CF6);
+    case GameRole.PROPHET:
+      return const Color(0xFF06B6D4);
     case GameRole.CITIZEN:
       return const Color(0xFF9CA3AF);
   }
@@ -207,6 +215,14 @@ String _roleEmoji(GameRole role) {
       return '🩺';
     case GameRole.COP:
       return '🔍';
+    case GameRole.HITMAN:
+      return '🎯';
+    case GameRole.BOUNTY_HUNTER:
+      return '🦯';
+    case GameRole.REPORTER:
+      return '📰';
+    case GameRole.PROPHET:
+      return '🔮';
     case GameRole.CITIZEN:
       return '👤';
   }

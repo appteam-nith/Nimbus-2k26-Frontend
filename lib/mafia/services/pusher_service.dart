@@ -7,10 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Manages Pusher channel subscriptions for the Mafia game.
 ///
 /// Channels used:
-///   • `game-{roomCode}`     — public room-wide events
-///   • `private-{userId}`    — player's private events (role, cop results)
+///   • `game-{roomCode}`           — public room-wide events
+///   • `private-{userId}`          — player's private events (role, cop results)
+///   • `private-mafia-{roomCode}`  — mafia team chat (MAFIA + met HITMAN)
+///   • `private-doc-{roomCode}`    — doc-nurse chat (DOCTOR + met NURSE)
+///   • `private-hitman-{roomCode}` — hitman-mafia coordination channel
 ///
-/// The private channel requires auth via POST /api/game/pusher/auth.
+/// The private channels require auth via POST /api/game/pusher/auth.
 class PusherService extends ChangeNotifier {
   PusherService._();
   static final PusherService instance = PusherService._();
@@ -40,9 +43,13 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _playerJoinedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _playerLeftController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _chatController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _investigationController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _hitmanStrikeController =
       StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onPhaseResolved => _phaseController.stream;
@@ -52,7 +59,11 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onVoteUpdated => _voteController.stream;
   Stream<Map<String, dynamic>> get onPlayerJoined =>
       _playerJoinedController.stream;
+  Stream<Map<String, dynamic>> get onPlayerLeft =>
+      _playerLeftController.stream;
   Stream<Map<String, dynamic>> get onChatMessage => _chatController.stream;
+  Stream<Map<String, dynamic>> get onHitmanStrike =>
+      _hitmanStrikeController.stream;
 
   /// Cop only — private investigation result
   Stream<Map<String, dynamic>> get onInvestigationResult =>
@@ -61,6 +72,9 @@ class PusherService extends ChangeNotifier {
   bool _connected = false;
   String? _currentRoomCode;
   String? _currentUserId;
+
+  // Track which team channels are subscribed
+  final Set<String> _subscribedTeamChannels = {};
 
   // ─── CONNECT ────────────────────────────────────────────────────────────────
 
@@ -77,7 +91,7 @@ class PusherService extends ChangeNotifier {
     await disconnect();
 
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? ''; // AuthProvider uses 'auth_token'
+    final token = prefs.getString('auth_token') ?? '';
 
     try {
       await _pusher.init(
@@ -97,13 +111,13 @@ class PusherService extends ChangeNotifier {
 
       await _pusher.connect();
 
-      // ── Public room channel ────────────────────────────────────────────────
+      // ── Public room channel ──────────────────────────────────────────────
       await _pusher.subscribe(
         channelName: 'game-$roomCode',
         onEvent: _onRoomEvent,
       );
 
-      // ── Private player channel ─────────────────────────────────────────────
+      // ── Private player channel ───────────────────────────────────────────
       await _pusher.subscribe(
         channelName: 'private-$userId',
         onEvent: _onPrivateEvent,
@@ -118,6 +132,47 @@ class PusherService extends ChangeNotifier {
     }
   }
 
+  // ─── TEAM CHANNEL SUBSCRIPTION ──────────────────────────────────────────────
+
+  /// Called from GameController after role is assigned.
+  /// Subscribes to the appropriate private team channel based on role.
+  Future<void> subscribeTeamChannel(String role, String roomCode) async {
+    if (!_connected) return;
+
+    String? channelName;
+
+    switch (role) {
+      case 'MAFIA':
+      case 'MAFIA_HELPER':
+        channelName = 'private-mafia-$roomCode';
+        break;
+      case 'DOCTOR':
+      case 'NURSE':
+        channelName = 'private-doc-$roomCode';
+        break;
+      case 'HITMAN':
+        // Hitman subscribes to both mafia and hitman channels.
+        // The mafia channel is only usable once hitman meets mafia (enforced by backend).
+        channelName = 'private-hitman-$roomCode';
+        break;
+      default:
+        return; // Citizens, Cop, etc. have no team channel
+    }
+
+    if (_subscribedTeamChannels.contains(channelName)) return;
+
+    try {
+      await _pusher.subscribe(
+        channelName: channelName,
+        onEvent: _onTeamChatEvent,
+      );
+      _subscribedTeamChannels.add(channelName);
+      debugPrint('[Pusher] Subscribed to team channel: $channelName');
+    } catch (e) {
+      debugPrint('[Pusher] Failed to subscribe to $channelName: $e');
+    }
+  }
+
   // ─── DISCONNECT ─────────────────────────────────────────────────────────────
 
   Future<void> disconnect() async {
@@ -129,6 +184,13 @@ class PusherService extends ChangeNotifier {
       if (_currentUserId != null) {
         await _pusher.unsubscribe(channelName: 'private-$_currentUserId');
       }
+      // Unsubscribe from all team channels
+      for (final ch in _subscribedTeamChannels) {
+        try {
+          await _pusher.unsubscribe(channelName: ch);
+        } catch (_) {}
+      }
+      _subscribedTeamChannels.clear();
       await _pusher.disconnect();
     } catch (_) {}
     _connected = false;
@@ -142,7 +204,7 @@ class PusherService extends ChangeNotifier {
     final data = _decode(event.data);
     if (data == null) return;
 
-    debugPrint('[Pusher] \${event.eventName}: \$data');
+    debugPrint('[Pusher] ${event.eventName}: $data');
 
     switch (event.eventName) {
       case 'game-started':
@@ -160,8 +222,14 @@ class PusherService extends ChangeNotifier {
       case 'player-joined':
         _playerJoinedController.add(data);
         break;
+      case 'player-left':
+        _playerLeftController.add(data);
+        break;
       case 'chat-message':
         _chatController.add(data);
+        break;
+      case 'hitman-strike':
+        _hitmanStrikeController.add(data);
         break;
     }
   }
@@ -170,7 +238,7 @@ class PusherService extends ChangeNotifier {
     final data = _decode(event.data);
     if (data == null) return;
 
-    debugPrint('[Pusher][private] \${event.eventName}: \$data');
+    debugPrint('[Pusher][private] ${event.eventName}: $data');
 
     switch (event.eventName) {
       case 'role-assigned':
@@ -179,6 +247,19 @@ class PusherService extends ChangeNotifier {
       case 'investigation-result':
         _investigationController.add(data);
         break;
+    }
+  }
+
+  /// Handles team chat channels (mafia, doc, hitman).
+  /// All team chat re-routes to the global chat stream with an enriched payload.
+  void _onTeamChatEvent(PusherEvent event) {
+    final data = _decode(event.data);
+    if (data == null) return;
+
+    debugPrint('[Pusher][team] ${event.eventName}: $data');
+
+    if (event.eventName == 'chat-message') {
+      _chatController.add(data);
     }
   }
 
@@ -202,8 +283,10 @@ class PusherService extends ChangeNotifier {
     _gameStartedController.close();
     _voteController.close();
     _playerJoinedController.close();
+    _playerLeftController.close();
     _chatController.close();
     _investigationController.close();
+    _hitmanStrikeController.close();
     super.dispose();
   }
 }

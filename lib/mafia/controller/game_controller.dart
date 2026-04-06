@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/room_model.dart';
 import '../models/player_model.dart';
+import '../models/death_event.dart';
 import '../services/game_api.dart';
 import '../services/pusher_service.dart';
 
@@ -47,6 +48,15 @@ class GameController extends ChangeNotifier {
   /// The player the current user has selected to vote for.
   String? myVoteTarget;
 
+  /// Deaths reported at the start of DISCUSSION (from NIGHT resolution).
+  List<DeathEvent> nightDeaths = [];
+
+  /// Reporter broadcast — non-null if a reporter exposed a player this round.
+  Map<String, dynamic>? reporterBroadcast;
+
+  /// Hitman strike event — non-null when T-5s kill fires.
+  Map<String, dynamic>? hitmanStrikeEvent;
+
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -55,7 +65,8 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _roleSub;
   StreamSubscription<Map<String, dynamic>>? _gameEndSub;
   StreamSubscription<Map<String, dynamic>>? _voteSub;
-  StreamSubscription<Map<String, dynamic>>? _chatSub; // NEW
+  StreamSubscription<Map<String, dynamic>>? _chatSub;
+  StreamSubscription<Map<String, dynamic>>? _hitmanStrikeSub; // NEW
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -150,14 +161,14 @@ class GameController extends ChangeNotifier {
     _gameEndSub?.cancel();
     _voteSub?.cancel();
     _chatSub?.cancel();
+    _hitmanStrikeSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
-    _chatSub = _pusher.onChatMessage.listen((_) => notifyListeners()); // NEW
+    _chatSub = _pusher.onChatMessage.listen((_) => notifyListeners());
+    _hitmanStrikeSub = _pusher.onHitmanStrike.listen(_handleHitmanStrike);
     _voteSub = _pusher.onVoteUpdated.listen((data) {
-      // Vote count updates are handled by screens directly;
-      // controller just notifies for state rebuild.
       notifyListeners();
     });
   }
@@ -172,7 +183,29 @@ class GameController extends ChangeNotifier {
     _phaseEndsAt =
         phaseEndsAtRaw != null ? DateTime.tryParse(phaseEndsAtRaw) : null;
 
-    // Update revealed player from eliminatedPlayerId
+    // ── Parse deaths array (NIGHT → DISCUSSION transition) ─────────────────
+    final rawDeaths = data['deaths'] as List<dynamic>?;
+    if (rawDeaths != null && rawDeaths.isNotEmpty) {
+      nightDeaths = rawDeaths
+          .map((d) => DeathEvent.fromJson(d as Map<String, dynamic>))
+          .toList();
+      // Mark those players as ELIMINATED in local state
+      final deadUserIds = nightDeaths.map((d) => d.userId).toSet();
+      players = players.map((p) {
+        if (deadUserIds.contains(p.userId)) {
+          return p.copyWith(status: PlayerStatus.ELIMINATED);
+        }
+        return p;
+      }).toList();
+    } else {
+      nightDeaths = [];
+    }
+
+    // ── Reporter broadcast ──────────────────────────────────────────────────
+    final rb = data['reporterBroadcast'];
+    reporterBroadcast = (rb is Map<String, dynamic>) ? rb : null;
+
+    // ── Update revealed player from eliminatedPlayerId (VOTING → REVEAL) ───
     final eliminatedId = data['eliminatedPlayerId'] as String?;
     revealedPlayer = eliminatedId != null
         ? players.cast<PlayerModel?>().firstWhere(
@@ -181,17 +214,6 @@ class GameController extends ChangeNotifier {
           )
         : null;
 
-    // Update a killed player from night resolution
-    final killedId = data['killedPlayerId'] as String?;
-    if (killedId != null) {
-      players = players.map((p) {
-        if (p.userId == killedId) {
-          return p.copyWith(status: PlayerStatus.ELIMINATED);
-        }
-        return p;
-      }).toList();
-    }
-
     status = GameStatus.values.firstWhere(
       (s) => s.name == phase,
       orElse: () => status,
@@ -199,6 +221,7 @@ class GameController extends ChangeNotifier {
 
     // Reset local vote target when phase changes
     myVoteTarget = null;
+    hitmanStrikeEvent = null; // clear between rounds
 
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
@@ -215,8 +238,17 @@ class GameController extends ChangeNotifier {
       );
       roleCardSeen = false;
       notifyListeners();
+      // Subscribe to team channel now that role is known
+      if (roomCode != null) {
+        _pusher.subscribeTeamChannel(roleStr, roomCode!);
+      }
       _navigate('/mafia/role');
     }
+  }
+
+  void _handleHitmanStrike(Map<String, dynamic> data) {
+    hitmanStrikeEvent = data;
+    notifyListeners();
   }
 
   void _handleGameEnded(Map<String, dynamic> data) {
@@ -380,6 +412,7 @@ class GameController extends ChangeNotifier {
     _gameEndSub?.cancel();
     _voteSub?.cancel();
     _chatSub?.cancel();
+    _hitmanStrikeSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -390,6 +423,9 @@ class GameController extends ChangeNotifier {
     roomCode = null;
     roleCardSeen = false;
     myVoteTarget = null;
+    nightDeaths = [];
+    reporterBroadcast = null;
+    hitmanStrikeEvent = null;
     notifyListeners();
   }
 
@@ -401,6 +437,7 @@ class GameController extends ChangeNotifier {
     _gameEndSub?.cancel();
     _voteSub?.cancel();
     _chatSub?.cancel();
+    _hitmanStrikeSub?.cancel();
     super.dispose();
   }
 }
