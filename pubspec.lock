@@ -163,6 +163,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
+<<<<<<< HEAD
   nested:
     dependency: transitive
     description:
@@ -171,6 +172,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+=======
+>>>>>>> fbd980c (Home page)
   path:
     dependency: transitive
     description:
@@ -252,6 +255,7 @@ packages:
     dependency: transitive
     description:
       name: test_api
+<<<<<<< HEAD
       sha256: "93167629bfc610f71560ab9312acdda4959de4df6fac7492c89ff0d3886f6636"
       url: "https://pub.dev"
     source: hosted
@@ -288,6 +292,12 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.20"
+=======
+      sha256: ab2726c1a94d3176a45960b6234466ec367179b87dd74f1611adb1f3b5fb9d55
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.7"
+>>>>>>> fbd980c (Home page)
   vector_math:
     dependency: transitive
     description:
