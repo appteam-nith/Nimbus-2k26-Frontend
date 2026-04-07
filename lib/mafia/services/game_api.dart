@@ -10,7 +10,8 @@ class GameApi {
   GameApi._();
   static final GameApi instance = GameApi._();
 
-  static const String _baseUrl = 'https://nimbus-2k26-backend-olhw.onrender.com';
+  static const String _baseUrl =
+      'https://nimbus-2k26-backend-olhw.onrender.com';
 
   // ─── TOKEN ──────────────────────────────────────────────────────────────────
 
@@ -21,9 +22,9 @@ class GameApi {
   }
 
   Map<String, String> _headers(String token) => {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  };
 
   // ─── ROOM STATE (Reconnect entry point) ─────────────────────────────────────
 
@@ -68,7 +69,10 @@ class GameApi {
           .map((r) => r as Map<String, dynamic>)
           .toList();
     } else {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
   }
 
@@ -76,7 +80,11 @@ class GameApi {
 
   /// POST /api/game/vote
   /// Sends a game action (Vote, Kill, Save, etc.) to the backend.
-  Future<void> postAction(String roomCode, String targetId, String actionType) async {
+  Future<void> postAction(
+    String roomCode,
+    String targetId,
+    String actionType,
+  ) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
@@ -94,7 +102,10 @@ class GameApi {
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
   }
 
@@ -139,7 +150,10 @@ class GameApi {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
   }
 
@@ -178,7 +192,10 @@ class GameApi {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
   }
 
@@ -186,7 +203,9 @@ class GameApi {
 
   /// POST /api/vote
   /// Optional arrays for Hitman or other complex actions.
-  Future<String?> submitVote(String roomCode, String voteType, {
+  Future<String?> submitVote(
+    String roomCode,
+    String voteType, {
     List<String>? targets,
     List<String>? roles,
   }) async {
@@ -201,7 +220,7 @@ class GameApi {
     if (targets != null && targets.isNotEmpty) {
       payload['targets'] = targets;
     }
-    
+
     if (roles != null && roles.isNotEmpty) {
       payload['roles'] = roles;
     }
@@ -212,7 +231,10 @@ class GameApi {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
 
     try {
@@ -224,12 +246,15 @@ class GameApi {
     }
   }
 
-<<<<<<< Updated upstream
   // ─── CHAT ───────────────────────────────────────────────────────────────────
 
   /// POST /api/game/chat
   /// [channel] is one of: null (global), 'mafia', 'doc'
-  Future<void> sendChat(String roomCode, String message, {String? channel}) async {
+  Future<void> sendChat(
+    String roomCode,
+    String message, {
+    String? channel,
+  }) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
@@ -242,20 +267,17 @@ class GameApi {
 
     final uri = Uri.parse('$_baseUrl/api/game/chat');
     final response = await http
-        .post(
-          uri,
-          headers: _headers(token),
-          body: jsonEncode(payload),
-        )
+        .post(uri, headers: _headers(token), body: jsonEncode(payload))
         .timeout(const Duration(seconds: 8));
 
     if (response.statusCode != 200) {
-      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
     }
   }
 
-=======
->>>>>>> Stashed changes
   // ─── ACTIVE ROOM PERSISTENCE ────────────────────────────────────────────────
 
   /// Persists the room code so reconnect works on app relaunch.
