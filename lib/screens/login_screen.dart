@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-
+import 'email_login_screen.dart';
+import 'email_signup_screen.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -231,6 +232,88 @@ class LoginScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                const Row(
+                                  children: [
+                                    Expanded(child: Divider(color: Color(0xFFE5E7EB), thickness: 1.5)),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text(
+                                        'OR',
+                                        style: TextStyle(
+                                          color: Color(0xFF9CA3AF),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(child: Divider(color: Color(0xFFE5E7EB), thickness: 1.5)),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 54,
+                                  child: OutlinedButton(
+                                    onPressed: auth.status == AuthStatus.loading
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => const EmailLoginScreen(),
+                                              ),
+                                            );
+                                          },
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      side: const BorderSide(
+                                        color: Color(0xFFE5E7EB),
+                                        width: 1.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.email_outlined, color: Color(0xFF111827), size: 22),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Sign in with Email',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF111827),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: auth.status == AuthStatus.loading
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const EmailSignUpScreen(),
+                                            ),
+                                          );
+                                        },
+                                  child: const Text(
+                                    "Don't have an account? Create one",
+                                    style: TextStyle(
+                                      color: Color(0xFF2D5BE3),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 14,

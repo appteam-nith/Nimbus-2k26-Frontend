@@ -154,6 +154,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> signInWithGoogle() async {
+    // ... [existing implementation]
+    // Keeping existing body to avoid overwriting Google sign in.
     debugPrint('[Auth] ── signInWithGoogle START ──────────────────────');
     _setStatus(AuthStatus.loading);
     try {
@@ -184,17 +186,15 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 3: ✓ Old sessions cleared');
 
-<<<<<<< Updated upstream
       debugPrint('[Auth] Step 4: Launching Google authenticate()…');
-      final GoogleSignInAccount googleUser =
-          await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
+      if(googleUser == null) {
+          _setStatus(AuthStatus.idle);
+          return false;
+      }
       debugPrint('[Auth] Step 4: ✓ Google user = ${googleUser.email}');
 
-=======
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
->>>>>>> Stashed changes
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token.');
       }
@@ -203,8 +203,11 @@ class AuthProvider extends ChangeNotifier {
       const scopes = ['email', 'profile'];
       debugPrint('[Auth] Step 5: Getting authorization for scopes…');
       final clientAuth =
-          await googleUser.authorizationClient.authorizationForScopes(scopes) ??
-          await googleUser.authorizationClient.authorizeScopes(scopes);
+          await googleUser.authorizationClient?.authorizationForScopes(scopes) ??
+          await googleUser.authorizationClient?.authorizeScopes(scopes);
+      if(clientAuth == null) {
+          throw Exception('Failed to get authorization for scopes.');
+      }
       debugPrint('[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken.length})');
 
       debugPrint('[Auth] Step 6: Signing into Firebase with credential…');
@@ -222,25 +225,12 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 6: ✓ Firebase user = ${firebaseUser.email}, uid=${firebaseUser.uid}');
 
-<<<<<<< Updated upstream
       debugPrint('[Auth] Step 7: Getting Firebase ID token (forceRefresh)…');
       final firebaseIdToken = await firebaseUser.getIdToken(true); // forceRefresh=true
       if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
         throw Exception('Failed to generate Firebase ID token.');
       }
       debugPrint('[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}…)');
-=======
-      final firebaseIdToken = await firebaseUser.getIdToken(
-        true,
-      ); // forceRefresh=true
-      if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
-        throw Exception('Failed to generate Firebase ID token.');
-      }
-      // Sanity check: a Firebase JWT always starts with "eyJ"
-      debugPrint(
-        '[Auth] Firebase ID token prefix: ${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}...',
-      );
->>>>>>> Stashed changes
       if (!firebaseIdToken.startsWith('eyJ')) {
         throw Exception(
           'Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}',
@@ -267,7 +257,7 @@ class AuthProvider extends ChangeNotifier {
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
-      final userId = userData['user_id'] as String?;
+      final userId = userData['user_id'] ?? userData['id'] as String?;
 
       debugPrint('[Auth] Step 9: Saving to SharedPreferences (name=$_userName, email=$_userEmail, userId=$userId)…');
       final prefs = await SharedPreferences.getInstance();
@@ -289,18 +279,6 @@ class AuthProvider extends ChangeNotifier {
       _setStatus(AuthStatus.success);
       debugPrint('[Auth] ── signInWithGoogle COMPLETE ✓ ─────────────────');
       return true;
-    } on GoogleSignInException catch (e) {
-      debugPrint('[Auth] ✗ GoogleSignInException: code=${e.code}, desc=${e.description}');
-      if (e.code == GoogleSignInExceptionCode.canceled) {
-        _setStatus(AuthStatus.idle);
-        return false;
-      }
-      await GoogleSignIn.instance.signOut();
-      _setStatus(
-        AuthStatus.error,
-        error: e.description ?? 'Google sign-in failed.',
-      );
-      return false;
     } catch (e, stack) {
       final errorMsg = _cleanError(e.toString());
       debugPrint('[Auth] ✗ UNHANDLED ERROR: $e');
@@ -309,6 +287,69 @@ class AuthProvider extends ChangeNotifier {
         await GoogleSignIn.instance.signOut();
       } catch (_) {}
       _setStatus(AuthStatus.error, error: errorMsg);
+      return false;
+    }
+  }
+
+  // ── EMAIL AUTHENTICATION ──────────────────────────────────────────────
+
+  Future<bool> signUpWithEmail(String name, String email, String password) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final response = await _apiService.emailSignUp(name, email, password);
+      // Backend returns {"message": ...}
+      _setStatus(AuthStatus.idle);
+      // We don't sign in automatically since they need to verify email
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> signInWithEmail(String email, String password) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final response = await _apiService.emailLogin(email, password);
+
+      final token = response['token'] as String?;
+      if (token == null || token.isEmpty) {
+        throw Exception('Backend did not return a token.');
+      }
+
+      final userData = response['user'] as Map<String, dynamic>?;
+      if (userData == null) {
+        throw Exception('Backend did not return user data.');
+      }
+
+      _userName = (userData['name'] ?? userData['full_name']) as String?;
+      _userEmail = userData['email'] as String?;
+      final userId = (userData['user_id'] ?? userData['id']) as String?;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (_userName != null) await prefs.setString('user_name', _userName!);
+      if (_userEmail != null) await prefs.setString('user_email', _userEmail!);
+      if (userId != null) await prefs.setString('user_id', userId);
+      await prefs.setString('auth_token', token);
+
+      _apiService.setToken(token);
+      _isAuthenticated = true;
+      _setStatus(AuthStatus.success);
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      await _apiService.forgotPassword(email);
+      _setStatus(AuthStatus.idle);
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
       return false;
     }
   }
