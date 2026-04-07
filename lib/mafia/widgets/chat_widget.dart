@@ -83,6 +83,76 @@ class _ChatWidgetState extends State<ChatWidget> {
     }
   }
 
+  void _showPlayersList() {
+    final gc = context.read<GameController>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1C2333),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'PLAYERS IN ROOM',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: gc.players.length,
+                  itemBuilder: (context, index) {
+                    final p = gc.players[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: p.isAlive ? Colors.blue.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+                          child: Text(
+                            p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                            style: TextStyle(color: p.isAlive ? Colors.blueAccent : Colors.redAccent),
+                          ),
+                        ),
+                        title: Text(
+                          p.name,
+                          style: TextStyle(
+                             color: p.isAlive ? Colors.white : Colors.white54,
+                             decoration: p.isAlive ? null : TextDecoration.lineThrough,
+                             fontFamily: 'Inter',
+                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: p.isAlive 
+                            ? const Icon(Icons.check_circle, color: Colors.green, size: 16)
+                            : const Icon(Icons.cancel, color: Colors.red, size: 16),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final myUserId = context.read<GameController>().myUserId;
@@ -233,28 +303,38 @@ class _ChatWidgetState extends State<ChatWidget> {
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.08)),
                     ),
-                    child: TextField(
-                      controller: _textController,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      decoration: const InputDecoration(
-                        hintText: 'Say something...',
-                        hintStyle: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white38,
-                          fontSize: 14,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _textController,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Say something...',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                color: Colors.white38,
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                            ),
+                            maxLines: null,
+                            keyboardType: TextInputType.text,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                      ),
-                      maxLines: null,
-                      keyboardType: TextInputType.text,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.white54, size: 20),
+                          onPressed: _showPlayersList,
+                        ),
+                      ],
                     ),
                   ),
                 ),
