@@ -80,6 +80,7 @@ class VotingScreen extends StatelessWidget {
                       selectedUserId: controller.myVoteTarget,
                       onTap: controller.setVoteTarget,
                       showRoles: false, // Don't show roles during voting
+                      voteCounts: controller.voteTally,
                     ),
                   ),
                 ),

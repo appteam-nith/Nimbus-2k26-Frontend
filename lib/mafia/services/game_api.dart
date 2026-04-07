@@ -201,13 +201,14 @@ class GameApi {
 
   // ─── GAME ACTIONS (Dev 4) ───────────────────────────────────────────────────
 
-  /// POST /api/vote
-  /// Optional arrays for Hitman or other complex actions.
+  /// POST /api/game/vote
+  /// [targetId] — single target user ID (most actions).
+  /// [targetMeta] — complex payload for Hitman (targets + roles).
   Future<String?> submitVote(
     String roomCode,
     String voteType, {
-    List<String>? targets,
-    List<String>? roles,
+    String? targetId,
+    Map<String, dynamic>? targetMeta,
   }) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
@@ -217,12 +218,12 @@ class GameApi {
       'vote_type': voteType,
     };
 
-    if (targets != null && targets.isNotEmpty) {
-      payload['targets'] = targets;
+    if (targetId != null) {
+      payload['target_id'] = targetId;
     }
 
-    if (roles != null && roles.isNotEmpty) {
-      payload['roles'] = roles;
+    if (targetMeta != null) {
+      payload['target_meta'] = targetMeta;
     }
 
     final uri = Uri.parse('$_baseUrl/api/game/vote');
@@ -239,7 +240,6 @@ class GameApi {
 
     try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
-      // The backend may return 'investigation_result' for Cop/Reporter
       return json['investigation_result'] as String?;
     } catch (_) {
       return null;

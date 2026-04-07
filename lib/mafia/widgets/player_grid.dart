@@ -6,6 +6,8 @@ import '../models/player_model.dart';
 /// [selectedUserId] — the player the current user has tapped (for voting).
 /// [onTap]          — called with userId when a tile is tapped (optional).
 /// [showRoles]      — if true, shows role badge below name (Game Over screen).
+/// [voteCounts]     — map of userId → vote count, shown as badges during voting.
+/// [vipUserId]      — Bounty Hunter's VIP, shown with a star marker.
 class PlayerGrid extends StatelessWidget {
   final List<PlayerModel> players;
   final String? selectedUserId;
@@ -13,6 +15,8 @@ class PlayerGrid extends StatelessWidget {
   final ValueChanged<String>? onTap;
   final bool showRoles;
   final bool allowSelfSelect;
+  final Map<String, int>? voteCounts;
+  final String? vipUserId;
 
   const PlayerGrid({
     super.key,
@@ -22,6 +26,8 @@ class PlayerGrid extends StatelessWidget {
     this.onTap,
     this.showRoles = false,
     this.allowSelfSelect = false,
+    this.voteCounts,
+    this.vipUserId,
   });
 
   @override
@@ -41,6 +47,8 @@ class PlayerGrid extends StatelessWidget {
         final isSelected = player.userId == selectedUserId;
         final isMe = player.userId == myUserId;
         final isEliminated = player.isEliminated;
+        final isVip = player.userId == vipUserId;
+        final voteCount = voteCounts?[player.userId] ?? 0;
 
         return GestureDetector(
           onTap: (onTap != null && !isEliminated && (!isMe || allowSelfSelect))
@@ -56,10 +64,12 @@ class PlayerGrid extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFF135BEC)
-                    : isMe
-                        ? const Color(0xFF135BEC).withValues(alpha: 0.4)
-                        : Colors.transparent,
-                width: 2,
+                    : isVip
+                        ? const Color(0xFFF59E0B).withValues(alpha: 0.7)
+                        : isMe
+                            ? const Color(0xFF135BEC).withValues(alpha: 0.4)
+                            : Colors.transparent,
+                width: isVip ? 2.5 : 2,
               ),
             ),
             child: Padding(
@@ -67,8 +77,9 @@ class PlayerGrid extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Avatar circle
+                  // Avatar circle with vote count badge
                   Stack(
+                    clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
                       CircleAvatar(
@@ -102,6 +113,58 @@ class PlayerGrid extends StatelessWidget {
                             Icons.close_rounded,
                             color: Color(0xFFEF4444),
                             size: 24,
+                          ),
+                        ),
+                      // Vote count badge (top-right)
+                      if (voteCount > 0)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x66EF4444),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '$voteCount',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // VIP star marker (top-left)
+                      if (isVip)
+                        Positioned(
+                          top: -6,
+                          left: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF59E0B),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x66F59E0B),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.star_rounded,
+                              color: Colors.white,
+                              size: 12,
+                            ),
                           ),
                         ),
                     ],

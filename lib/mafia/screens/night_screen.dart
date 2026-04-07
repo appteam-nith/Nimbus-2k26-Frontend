@@ -33,6 +33,36 @@ class _NightScreenState extends State<NightScreen> {
   String? _subscribedTeam;
   String? _cachedRoomCode;
 
+  StreamSubscription? _investigationSub;
+  StreamSubscription? _reporterResultSub;
+  StreamSubscription? _nurseCheckSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for private result events directly to pop dialogs
+    _investigationSub = PusherService.instance.onInvestigationResult.listen((data) {
+      if (!mounted) return;
+      _showResultDialog(context, data['result'] as String? ?? 'UNKNOWN');
+    });
+    _reporterResultSub = PusherService.instance.onReporterResult.listen((data) {
+      if (!mounted) return;
+      _showResultDialog(context, data['role'] as String? ?? 'UNKNOWN');
+    });
+    _nurseCheckSub = PusherService.instance.onNurseCheckResult.listen((data) {
+      if (!mounted) return;
+      final isDoctor = data['isDoctor'] as bool? ?? false;
+      _showResultDialog(
+        context,
+        isDoctor ? 'SUCCESS_DOC' : 'FAIL_DOC',
+        customTitle: 'Nurse Check',
+        customText: isDoctor 
+            ? 'You found the Doctor! Your powers are now linked.'
+            : 'That player is not the Doctor.',
+      );
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -78,6 +108,9 @@ class _NightScreenState extends State<NightScreen> {
     if (_subscribedTeam != null && _cachedRoomCode != null) {
       PusherService.instance.unsubscribeFromTeamChannel(_cachedRoomCode!, _subscribedTeam!);
     }
+    _investigationSub?.cancel();
+    _reporterResultSub?.cancel();
+    _nurseCheckSub?.cancel();
     super.dispose();
   }
 
@@ -291,6 +324,7 @@ class _NightScreenState extends State<NightScreen> {
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
                         showRoles: false,
+                        vipUserId: controller.bountyVipUserId,
                       ),
                     ),
                   )
@@ -356,11 +390,13 @@ class _NightScreenState extends State<NightScreen> {
                                   voteType,
                                 );
                                 if (!context.mounted) return;
-                                if (result != null) {
+                                
+                                // HTTP return can be a fallback, but Pusher handles most of these now
+                                if (result != null && result != 'CITIZEN' && result != 'MAFIA' && voteType != 'COP_INVESTIGATE' && voteType != 'REPORTER_EXPOSE' && voteType != 'NURSE_ACTION') {
                                   _showResultDialog(context, result);
                                 }
 
-                                if (['COP_INVESTIGATE', 'REPORTER_EXPOSE'].contains(voteType) && mounted) {
+                                if (['COP_INVESTIGATE', 'REPORTER_EXPOSE', 'BOUNTY_HUNTER_VIP'].contains(voteType) && mounted) {
                                   // Even if the result string is null, if the call didn't throw an error, we completed it
                                   if (controller.error == null) {
                                     setState(() => _hasLockedAction = true);
@@ -470,42 +506,14 @@ class _NightScreenState extends State<NightScreen> {
     );
   }
 
-  void _showResultDialog(BuildContext context, String resultMessage) {
+  void _showResultDialog(BuildContext context, String result, {String? customTitle, String? customText}) {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1C2333),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Investigation Complete',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        content: Text(
-          resultMessage,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            color: Colors.white70,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Understood',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                color: Color(0xFF135BEC),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+      builder: (ctx) => _InvestigationResultDialog(
+        result: result,
+        customTitle: customTitle,
+        customText: customText,
       ),
     );
   }
@@ -709,7 +717,124 @@ class _NightScreenState extends State<NightScreen> {
   }
 }
 
+// ─── INVESTIGATION / ACTION RESULT DIALOG ──────────────────────────────────────
+
+class _InvestigationResultDialog extends StatelessWidget {
+  final String result;
+  final String? customTitle;
+  final String? customText;
+
+  const _InvestigationResultDialog({
+    required this.result,
+    this.customTitle,
+    this.customText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMafia = result == 'MAFIA' || result == 'MAFIA_HELPER';
+    final isHitman = result == 'HITMAN';
+    final isSuccessDoc = result == 'SUCCESS_DOC'; // Nurse
+    
+    final color = isMafia 
+        ? const Color(0xFFEF4444)
+        : isHitman
+            ? const Color(0xFFF97316)
+            : isSuccessDoc
+                ? const Color(0xFF10B981)
+                : const Color(0xFF3B82F6);
+                
+    final String defaultTitle = isSuccessDoc ? 'SUCCESS' : 'INVESTIGATION RESULT';
+    final String defaultText = isSuccessDoc 
+        ? 'You have successfully found the Doctor.'
+        : isMafia
+            ? 'The target player is aligned with the Mafia.'
+            : isHitman
+                ? 'The target player is the Hitman.'
+                : 'The target player appears to be a Town role.';
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C2333),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isMafia ? Icons.warning_rounded 
+                : isSuccessDoc ? Icons.check_circle_rounded
+                : Icons.search_rounded,
+                color: color,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              customTitle ?? defaultTitle,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                letterSpacing: 2,
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              customText ?? defaultText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 15,
+                color: Colors.white,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  backgroundColor: color.withValues(alpha: 0.15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(
+                  'Understood',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─── HITMAN STRIKE OVERLAY ────────────────────────────────────────────────────
+
 
 class _HitmanStrikeOverlay extends StatefulWidget {
   final Map<String, dynamic> data;

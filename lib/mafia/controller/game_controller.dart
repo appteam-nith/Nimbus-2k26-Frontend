@@ -74,6 +74,21 @@ class GameController extends ChangeNotifier {
   /// Hitman strike event — non-null when T-5s kill fires.
   Map<String, dynamic>? hitmanStrikeEvent;
 
+  /// Live vote tally during VOTING phase: { playerId → voteCount }
+  Map<String, int> voteTally = {};
+
+  /// Cop investigation result — set when private Pusher event arrives.
+  String? investigationResult;
+
+  /// Reporter private result — role of investigated player.
+  String? reporterResult;
+
+  /// Nurse check result — whether the nurse found the doctor.
+  bool? nurseCheckIsDoctor;
+
+  /// Bounty Hunter's VIP user ID (so the BH can see who their VIP is).
+  String? bountyVipUserId;
+
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -84,6 +99,9 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _voteSub;
   StreamSubscription<Map<String, dynamic>>? _reporterSub;
   StreamSubscription<Map<String, dynamic>>? _hitmanSub;
+  StreamSubscription<Map<String, dynamic>>? _investigationSub;
+  StreamSubscription<Map<String, dynamic>>? _reporterResultSub;
+  StreamSubscription<Map<String, dynamic>>? _nurseCheckSub;
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -188,16 +206,23 @@ class GameController extends ChangeNotifier {
     _voteSub?.cancel();
     _reporterSub?.cancel();
     _hitmanSub?.cancel();
+    _investigationSub?.cancel();
+    _reporterResultSub?.cancel();
+    _nurseCheckSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
-    _voteSub = _pusher.onVoteUpdated.listen((data) {
-      notifyListeners();
-    });
+    _voteSub = _pusher.onVoteUpdated.listen(_handleVoteUpdated);
     _reporterSub =
         _pusher.onReporterBroadcast.listen(_handleReporterBroadcast);
     _hitmanSub = _pusher.onHitmanStrike.listen(_handleHitmanStrike);
+    _investigationSub =
+        _pusher.onInvestigationResult.listen(_handleInvestigationResult);
+    _reporterResultSub =
+        _pusher.onReporterResult.listen(_handleReporterResult);
+    _nurseCheckSub =
+        _pusher.onNurseCheckResult.listen(_handleNurseCheckResult);
   }
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
@@ -265,9 +290,30 @@ class GameController extends ChangeNotifier {
       orElse: () => status,
     );
 
+    // ─ REVEAL phase: build death event from eliminatedPlayerId (voting kill) ─
+    if (status == GameStatus.REVEAL && revealedPlayer != null && morningDeaths.isEmpty) {
+      morningDeaths = [
+        DeathEvent(
+          player: revealedPlayer!.copyWith(status: PlayerStatus.ELIMINATED),
+          cause: DeathCause.VOTE_ELIMINATION,
+        ),
+      ];
+      // Also mark the player as eliminated in the local list
+      players = players.map((p) {
+        if (p.userId == revealedPlayer!.userId) {
+          return p.copyWith(status: PlayerStatus.ELIMINATED);
+        }
+        return p;
+      }).toList();
+    }
+
     // Reset local vote target when phase changes
     myVoteTarget = null;
+    voteTally = {};
     hitmanStrikeEvent = null; // clear between rounds
+    investigationResult = null;
+    reporterResult = null;
+    nurseCheckIsDoctor = null;
 
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
@@ -345,6 +391,38 @@ class GameController extends ChangeNotifier {
         }).toList();
       }
     }
+    notifyListeners();
+  }
+
+  // ─ Vote Updated (with tally) ──────────────────────────────────────────────────
+
+  void _handleVoteUpdated(Map<String, dynamic> data) {
+    // Backend sends tally as { playerId: count } map
+    final rawTally = data['tally'] as Map<String, dynamic>?;
+    if (rawTally != null) {
+      voteTally = rawTally.map((k, v) => MapEntry(k, v is int ? v : 0));
+    }
+    notifyListeners();
+  }
+
+  // ─ Cop Investigation Result ──────────────────────────────────────────────────
+
+  void _handleInvestigationResult(Map<String, dynamic> data) {
+    investigationResult = data['result'] as String?;
+    notifyListeners();
+  }
+
+  // ─ Reporter Private Result ──────────────────────────────────────────────────
+
+  void _handleReporterResult(Map<String, dynamic> data) {
+    reporterResult = data['role'] as String?;
+    notifyListeners();
+  }
+
+  // ─ Nurse Check Result ──────────────────────────────────────────────────────
+
+  void _handleNurseCheckResult(Map<String, dynamic> data) {
+    nurseCheckIsDoctor = data['isDoctor'] as bool? ?? false;
     notifyListeners();
   }
 
@@ -434,20 +512,19 @@ class GameController extends ChangeNotifier {
   }
 
   /// Submits the vote via the API.
-  /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
+  /// If [overrideTargetMeta] is provided (for Hitman), it's sent as target_meta.
   Future<String?> submitVote(
     String voteType, {
     bool isSkip = false,
-    List<String>? overrideTargets,
-    List<String>? overrideRoles,
+    Map<String, dynamic>? overrideTargetMeta,
   }) async {
     if (roomCode == null) return null;
 
-    List<String>? targets = overrideTargets;
-    if (targets == null && !isSkip) {
+    String? targetId;
+    if (!isSkip) {
       if (myVoteTarget != null) {
-        targets = [myVoteTarget!];
-      } else {
+        targetId = myVoteTarget;
+      } else if (overrideTargetMeta == null) {
         error = 'Please select a player first.';
         notifyListeners();
         return null;
@@ -462,8 +539,8 @@ class GameController extends ChangeNotifier {
       final result = await _api.submitVote(
         roomCode!,
         voteType,
-        targets: targets,
-        roles: overrideRoles,
+        targetId: targetId,
+        targetMeta: overrideTargetMeta,
       );
 
       isLoading = false;
@@ -486,6 +563,9 @@ class GameController extends ChangeNotifier {
     _voteSub?.cancel();
     _reporterSub?.cancel();
     _hitmanSub?.cancel();
+    _investigationSub?.cancel();
+    _reporterResultSub?.cancel();
+    _nurseCheckSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -498,11 +578,16 @@ class GameController extends ChangeNotifier {
     morningDeaths = [];
     pendingBroadcast = null;
     myVoteTarget = null;
+    voteTally = {};
     nightDeaths = [];
     hitmanStrikeEvent = null;
     nurseMet = false;
     reporterUsed = false;
     hitmanMetMafia = false;
+    investigationResult = null;
+    reporterResult = null;
+    nurseCheckIsDoctor = null;
+    bountyVipUserId = null;
     notifyListeners();
   }
 
@@ -515,6 +600,9 @@ class GameController extends ChangeNotifier {
     _voteSub?.cancel();
     _reporterSub?.cancel();
     _hitmanSub?.cancel();
+    _investigationSub?.cancel();
+    _reporterResultSub?.cancel();
+    _nurseCheckSub?.cancel();
     super.dispose();
   }
 }
