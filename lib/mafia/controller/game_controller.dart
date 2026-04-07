@@ -62,6 +62,9 @@ class GameController extends ChangeNotifier {
   /// Whether the Reporter has already used their one-time broadcast ability.
   bool reporterUsed = false;
 
+  /// Whether the Hitman has met the Mafia team.
+  bool hitmanMetMafia = false;
+
   /// Whether the game is running in developer mode (bots fill empty slots, all roles visible).
   bool devMode = false;
 
@@ -172,6 +175,7 @@ class GameController extends ChangeNotifier {
     timeRemaining = room.timeRemaining ?? 0;
     nurseMet = room.nurseMet;
     reporterUsed = room.reporterUsed;
+    hitmanMetMafia = room.hitmanMetMafia;
     devMode = room.devMode;
   }
 
@@ -498,6 +502,7 @@ class GameController extends ChangeNotifier {
     hitmanStrikeEvent = null;
     nurseMet = false;
     reporterUsed = false;
+    hitmanMetMafia = false;
     notifyListeners();
   }
 

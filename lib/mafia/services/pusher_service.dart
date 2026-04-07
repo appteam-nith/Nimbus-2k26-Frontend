@@ -193,6 +193,30 @@ class PusherService extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // ─── TEAM CHANNELS ──────────────────────────────────────────────────────────
+
+  /// Subscribe to a private team channel (e.g. mafia, doc, citizen)
+  Future<void> subscribeToTeamChannel(String roomCode, String team) async {
+    final channelName = 'private-$team-$roomCode';
+    try {
+      await _pusher.subscribe(
+        channelName: channelName,
+        onEvent: _onRoomEvent,
+      );
+      debugPrint('[Pusher] Subscribed to team channel: $channelName');
+    } catch (e) {
+      debugPrint('[Pusher] Failed to subscribe to $channelName: $e');
+    }
+  }
+
+  Future<void> unsubscribeFromTeamChannel(String roomCode, String team) async {
+    final channelName = 'private-$team-$roomCode';
+    try {
+      await _pusher.unsubscribe(channelName: channelName);
+      debugPrint('[Pusher] Unsubscribed from team channel: $channelName');
+    } catch (_) {}
+  }
+
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
 
   // pusher_channels_flutter ^2.x passes events as `dynamic` (PusherEvent),

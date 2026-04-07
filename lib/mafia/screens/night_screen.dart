@@ -8,6 +8,8 @@ import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/dev_role_board.dart';
+import '../widgets/chat_widget.dart';
+import '../services/pusher_service.dart';
 
 class NightScreen extends StatefulWidget {
   const NightScreen({super.key});
@@ -27,6 +29,57 @@ class _NightScreenState extends State<NightScreen> {
 
   // Single select fallback if gameController's myVoteTarget isn't enough
   // but we usually rely on GameController for single selects.
+
+  String? _subscribedTeam;
+  String? _cachedRoomCode;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkSubscription();
+  }
+
+  void _checkSubscription() {
+    final gc = context.read<GameController>();
+    if (gc.status != GameStatus.NIGHT) return;
+    
+    final me = gc.players.firstWhere(
+      (p) => p.userId == gc.myUserId, 
+      orElse: () => const PlayerModel(userId: '', name: '', status: PlayerStatus.ELIMINATED)
+    );
+    if (!me.isAlive) return;
+    
+    String? team;
+    final role = gc.myRole;
+    if (role == GameRole.MAFIA || role == GameRole.MAFIA_HELPER) {
+      team = 'mafia';
+    } else if (role == GameRole.HITMAN && gc.hitmanMetMafia) {
+      team = 'mafia';
+    } else if (role == GameRole.DOCTOR || role == GameRole.NURSE) {
+      team = 'doc';
+    } else if (role == GameRole.CITIZEN) {
+      team = 'citizen';
+    }
+
+    if (team != _subscribedTeam) {
+      if (_subscribedTeam != null && _cachedRoomCode != null) {
+        PusherService.instance.unsubscribeFromTeamChannel(_cachedRoomCode!, _subscribedTeam!);
+      }
+      _subscribedTeam = team;
+      _cachedRoomCode = gc.roomCode;
+      if (team != null && _cachedRoomCode != null) {
+        PusherService.instance.subscribeToTeamChannel(_cachedRoomCode!, team);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_subscribedTeam != null && _cachedRoomCode != null) {
+      PusherService.instance.unsubscribeFromTeamChannel(_cachedRoomCode!, _subscribedTeam!);
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,9 +265,10 @@ class _NightScreenState extends State<NightScreen> {
 
                 // Main Interaction Area
                 if (customWidget != null)
-                  Expanded(child: customWidget)
+                  Expanded(flex: _subscribedTeam != null ? 3 : 1, child: customWidget)
                 else if (hasAction)
                   Expanded(
+                    flex: _subscribedTeam != null ? 3 : 1,
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: PlayerGrid(
@@ -226,7 +280,7 @@ class _NightScreenState extends State<NightScreen> {
                       ),
                     ),
                   )
-                else
+                else if (_subscribedTeam == null)
                   const Expanded(
                     child: Center(
                       child: Icon(
@@ -234,6 +288,20 @@ class _NightScreenState extends State<NightScreen> {
                         size: 100,
                         color: Color(0xFF1F2937),
                       ),
+                    ),
+                  ),
+                  
+                // Night Chat Area
+                if (_subscribedTeam != null)
+                  Expanded(
+                    flex: 4,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0A0F1C),
+                        border: Border(top: BorderSide(color: themeColor.withValues(alpha: 0.2))),
+                      ),
+                      child: ChatWidget(teamChannel: _subscribedTeam),
                     ),
                   ),
 
