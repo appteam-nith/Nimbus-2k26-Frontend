@@ -163,7 +163,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? Image.file(
                                   File(_selectedImagePath!),
                                   fit: BoxFit.cover,
+<<<<<<< Updated upstream
                                   errorBuilder: (_, e2, err) =>
+=======
+                                  errorBuilder: (_, __, ___) =>
+>>>>>>> Stashed changes
                                       _initialsAvatar(initials),
                                 )
                               : (avatarUrl != null && avatarUrl.isNotEmpty
@@ -291,14 +295,22 @@ class _ProfilePageState extends State<ProfilePage> {
       return Image.network(
         avatarUrl,
         fit: BoxFit.cover,
+<<<<<<< Updated upstream
         errorBuilder: (_, e2, err) => _initialsAvatar(initials),
+=======
+        errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+>>>>>>> Stashed changes
       );
     }
 
     return Image.file(
       File(avatarUrl),
       fit: BoxFit.cover,
+<<<<<<< Updated upstream
       errorBuilder: (_, e2, err) => _initialsAvatar(initials),
+=======
+      errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+>>>>>>> Stashed changes
     );
   }
 
@@ -457,9 +469,15 @@ class _ProfilePageState extends State<ProfilePage> {
               if (confirm != true || !context.mounted) return;
               await auth.logout();
               if (!context.mounted) return;
+<<<<<<< Updated upstream
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const AppBootstrapScreen()),
+=======
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+>>>>>>> Stashed changes
                 (route) => false,
               );
             },
@@ -508,9 +526,15 @@ class _ProfilePageState extends State<ProfilePage> {
               final deleted = await auth.deleteAccount();
               if (!context.mounted) return;
               if (deleted) {
+<<<<<<< Updated upstream
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const AppBootstrapScreen()),
+=======
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+>>>>>>> Stashed changes
                   (route) => false,
                 );
               } else {
@@ -576,9 +600,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.image,
                 label: 'Photo Gallery',
                 onTap: () async {
+<<<<<<< Updated upstream
                   debugPrint('DEBUG: Photo Gallery tapped');
                   Navigator.pop(bottomContext);
                   debugPrint(
+=======
+                  print('DEBUG: Photo Gallery tapped');
+                  Navigator.pop(bottomContext);
+                  print(
+>>>>>>> Stashed changes
                     'DEBUG: Bottom sheet closed, calling _pickImageFromGallery',
                   );
                   await _pickImageFromGallery();
@@ -589,9 +619,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.folder,
                 label: 'Files',
                 onTap: () async {
+<<<<<<< Updated upstream
                   debugPrint('DEBUG: Files tapped');
                   Navigator.pop(bottomContext);
                   debugPrint(
+=======
+                  print('DEBUG: Files tapped');
+                  Navigator.pop(bottomContext);
+                  print(
+>>>>>>> Stashed changes
                     'DEBUG: Bottom sheet closed, calling _pickImageFromFiles',
                   );
                   await _pickImageFromFiles();
@@ -653,12 +689,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImageFromGallery() async {
     try {
+<<<<<<< Updated upstream
       debugPrint('DEBUG: _pickImageFromGallery called');
       final status = await _requestPhotoPermission();
       debugPrint('DEBUG: Permission status = $status');
 
       if (!status.isGranted) {
         debugPrint('DEBUG: Permission denied');
+=======
+      print('DEBUG: _pickImageFromGallery called');
+      final status = await _requestPhotoPermission();
+      print('DEBUG: Permission status = $status');
+
+      if (!status.isGranted) {
+        print('DEBUG: Permission denied');
+>>>>>>> Stashed changes
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -669,7 +714,11 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
+<<<<<<< Updated upstream
       debugPrint('DEBUG: Permission granted, opening image picker');
+=======
+      print('DEBUG: Permission granted, opening image picker');
+>>>>>>> Stashed changes
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
@@ -678,7 +727,11 @@ class _ProfilePageState extends State<ProfilePage> {
         imageQuality: 85,
       );
 
+<<<<<<< Updated upstream
       debugPrint('DEBUG: Image picked: ${pickedFile?.path}');
+=======
+      print('DEBUG: Image picked: ${pickedFile?.path}');
+>>>>>>> Stashed changes
 
       if (pickedFile != null && mounted) {
         final profile = context.read<ProfileModel>();
@@ -695,10 +748,17 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         }
       } else {
+<<<<<<< Updated upstream
         debugPrint('DEBUG: No image selected or widget not mounted');
       }
     } catch (e) {
       debugPrint('DEBUG: Error in _pickImageFromGallery: $e');
+=======
+        print('DEBUG: No image selected or widget not mounted');
+      }
+    } catch (e) {
+      print('DEBUG: Error in _pickImageFromGallery: $e');
+>>>>>>> Stashed changes
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -711,12 +771,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImageFromFiles() async {
     try {
+<<<<<<< Updated upstream
       debugPrint('DEBUG: _pickImageFromFiles called');
       final status = await _requestStoragePermission();
       debugPrint('DEBUG: Permission status = $status');
 
       if (!status.isGranted) {
         debugPrint('DEBUG: Permission denied');
+=======
+      print('DEBUG: _pickImageFromFiles called');
+      final status = await _requestStoragePermission();
+      print('DEBUG: Permission status = $status');
+
+      if (!status.isGranted) {
+        print('DEBUG: Permission denied');
+>>>>>>> Stashed changes
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -727,14 +796,22 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
+<<<<<<< Updated upstream
       debugPrint('DEBUG: Permission granted, opening file picker');
+=======
+      print('DEBUG: Permission granted, opening file picker');
+>>>>>>> Stashed changes
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
         withData: false,
       );
 
+<<<<<<< Updated upstream
       debugPrint('DEBUG: File picked: ${result?.files.firstOrNull?.path}');
+=======
+      print('DEBUG: File picked: ${result?.files.firstOrNull?.path}');
+>>>>>>> Stashed changes
 
       if (result != null && result.files.isNotEmpty && mounted) {
         final filePath = result.files.single.path;
@@ -754,10 +831,17 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         }
       } else {
+<<<<<<< Updated upstream
         debugPrint('DEBUG: No file selected or widget not mounted');
       }
     } catch (e) {
       debugPrint('DEBUG: Error in _pickImageFromFiles: $e');
+=======
+        print('DEBUG: No file selected or widget not mounted');
+      }
+    } catch (e) {
+      print('DEBUG: Error in _pickImageFromFiles: $e');
+>>>>>>> Stashed changes
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -770,6 +854,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<PermissionStatus> _requestPhotoPermission() async {
     try {
+<<<<<<< Updated upstream
       debugPrint('DEBUG: _requestPhotoPermission called');
       // permission_handler automatically handles Android 13+ vs older versions
       final status = await Permission.photos.request();
@@ -777,12 +862,22 @@ class _ProfilePageState extends State<ProfilePage> {
       return status;
     } catch (e) {
       debugPrint('DEBUG: Error in _requestPhotoPermission: $e');
+=======
+      print('DEBUG: _requestPhotoPermission called');
+      // permission_handler automatically handles Android 13+ vs older versions
+      final status = await Permission.photos.request();
+      print('DEBUG: Permission.photos result: $status');
+      return status;
+    } catch (e) {
+      print('DEBUG: Error in _requestPhotoPermission: $e');
+>>>>>>> Stashed changes
       rethrow;
     }
   }
 
   Future<PermissionStatus> _requestStoragePermission() async {
     try {
+<<<<<<< Updated upstream
       debugPrint('DEBUG: _requestStoragePermission called');
       // permission_handler automatically handles Android 13+ vs older versions
       final status = await Permission.photos.request();
@@ -790,6 +885,15 @@ class _ProfilePageState extends State<ProfilePage> {
       return status;
     } catch (e) {
       debugPrint('DEBUG: Error in _requestStoragePermission: $e');
+=======
+      print('DEBUG: _requestStoragePermission called');
+      // permission_handler automatically handles Android 13+ vs older versions
+      final status = await Permission.photos.request();
+      print('DEBUG: Permission.photos result: $status');
+      return status;
+    } catch (e) {
+      print('DEBUG: Error in _requestStoragePermission: $e');
+>>>>>>> Stashed changes
       rethrow;
     }
   }

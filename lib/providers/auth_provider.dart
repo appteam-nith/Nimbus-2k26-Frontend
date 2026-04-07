@@ -184,11 +184,16 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 3: ✓ Old sessions cleared');
 
+<<<<<<< Updated upstream
       debugPrint('[Auth] Step 4: Launching Google authenticate()…');
       final GoogleSignInAccount googleUser =
           await GoogleSignIn.instance.authenticate();
       debugPrint('[Auth] Step 4: ✓ Google user = ${googleUser.email}');
 
+=======
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
+>>>>>>> Stashed changes
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token.');
@@ -217,12 +222,25 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 6: ✓ Firebase user = ${firebaseUser.email}, uid=${firebaseUser.uid}');
 
+<<<<<<< Updated upstream
       debugPrint('[Auth] Step 7: Getting Firebase ID token (forceRefresh)…');
       final firebaseIdToken = await firebaseUser.getIdToken(true); // forceRefresh=true
       if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
         throw Exception('Failed to generate Firebase ID token.');
       }
       debugPrint('[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}…)');
+=======
+      final firebaseIdToken = await firebaseUser.getIdToken(
+        true,
+      ); // forceRefresh=true
+      if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
+        throw Exception('Failed to generate Firebase ID token.');
+      }
+      // Sanity check: a Firebase JWT always starts with "eyJ"
+      debugPrint(
+        '[Auth] Firebase ID token prefix: ${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}...',
+      );
+>>>>>>> Stashed changes
       if (!firebaseIdToken.startsWith('eyJ')) {
         throw Exception(
           'Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}',

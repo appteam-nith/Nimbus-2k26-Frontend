@@ -48,6 +48,7 @@ class GameController extends ChangeNotifier {
   /// The player the current user has selected to vote for.
   String? myVoteTarget;
 
+<<<<<<< Updated upstream
   /// Whether the Nurse has found the Doctor yet (used to update Nurse UI).
   bool nurseMet = false;
 
@@ -66,6 +67,8 @@ class GameController extends ChangeNotifier {
   /// Hitman strike event — non-null when T-5s kill fires.
   Map<String, dynamic>? hitmanStrikeEvent;
 
+=======
+>>>>>>> Stashed changes
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -233,7 +236,10 @@ class GameController extends ChangeNotifier {
 
     // Reset local vote target when phase changes
     myVoteTarget = null;
+<<<<<<< Updated upstream
     hitmanStrikeEvent = null; // clear between rounds
+=======
+>>>>>>> Stashed changes
 
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
@@ -372,11 +378,14 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+<<<<<<< Updated upstream
   void clearHitmanStrike() {
     hitmanStrikeEvent = null;
     notifyListeners();
   }
 
+=======
+>>>>>>> Stashed changes
   /// Submits the vote via the API.
   /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
   Future<String?> submitVote(
@@ -440,11 +449,14 @@ class GameController extends ChangeNotifier {
     roomCode = null;
     roleCardSeen = false;
     myVoteTarget = null;
+<<<<<<< Updated upstream
     nightDeaths = [];
     reporterBroadcast = null;
     hitmanStrikeEvent = null;
     nurseMet = false;
     reporterUsed = false;
+=======
+>>>>>>> Stashed changes
     notifyListeners();
   }
 

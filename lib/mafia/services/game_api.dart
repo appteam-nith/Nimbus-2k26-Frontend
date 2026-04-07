@@ -224,6 +224,7 @@ class GameApi {
     }
   }
 
+<<<<<<< Updated upstream
   // ─── CHAT ───────────────────────────────────────────────────────────────────
 
   /// POST /api/game/chat
@@ -253,6 +254,8 @@ class GameApi {
     }
   }
 
+=======
+>>>>>>> Stashed changes
   // ─── ACTIVE ROOM PERSISTENCE ────────────────────────────────────────────────
 
   /// Persists the room code so reconnect works on app relaunch.
