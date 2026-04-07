@@ -70,8 +70,14 @@ class _GameOverScreenState extends State<GameOverScreen>
         ? 'The Mafia controlled the town.'
         : 'The citizens rooted out the evil.';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D121B),
+    return WillPopScope(
+      onWillPop: () async {
+        gc.leaveGame();
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0D121B),
       body: Stack(
         children: [
           // Background particle burst

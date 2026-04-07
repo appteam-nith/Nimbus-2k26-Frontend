@@ -225,7 +225,7 @@ class GameApi {
       payload['roles'] = roles;
     }
 
-    final uri = Uri.parse('$_baseUrl/api/vote');
+    final uri = Uri.parse('$_baseUrl/api/game/vote');
     final response = await http
         .post(uri, headers: _headers(token), body: jsonEncode(payload))
         .timeout(const Duration(seconds: 15));
