@@ -332,13 +332,12 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_inRoom) {
+    return PopScope(
+      canPop: !_inRoom,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (!didPop && _inRoom) {
           await _leaveRoom();
-          return false; // We handle navigation ourselves
         }
-        return true;
       },
       child: Scaffold(
         backgroundColor: _bg,
@@ -1091,7 +1090,7 @@ class _LobbyScreenState extends State<LobbyScreen>
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _players.length,
-        separatorBuilder: (_, _) =>
+        separatorBuilder: (_, __) =>
             const Divider(height: 1, color: _border),
         itemBuilder: (_, i) {
           final p = _players[i];

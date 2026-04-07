@@ -84,7 +84,7 @@ class _ClubsListScreenState extends State<ClubsListScreen> {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 itemCount: _filtered.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (ctx, i) => _ClubCard(
                   club: _filtered[i],
                   onTap: () => Navigator.push(

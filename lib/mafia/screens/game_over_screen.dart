@@ -70,11 +70,13 @@ class _GameOverScreenState extends State<GameOverScreen>
         ? 'The Mafia controlled the town.'
         : 'The citizens rooted out the evil.';
 
-    return WillPopScope(
-      onWillPop: () async {
-        gc.leaveGame();
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          gc.leaveGame();
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0D121B),
@@ -276,7 +278,7 @@ class _PlayerRoster extends StatelessWidget {
 
     return ListView.separated(
       itemCount: sorted.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
         final player = sorted[i];
         final isMe = player.userId == myUserId;

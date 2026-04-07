@@ -74,8 +74,10 @@ class _ReporterBroadcastListenerState extends State<ReporterBroadcastListener> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
         final gc = context.read<GameController>();
         final confirm = await showDialog<bool>(
           context: context,
@@ -105,7 +107,6 @@ class _ReporterBroadcastListenerState extends State<ReporterBroadcastListener> {
           await gc.leaveGame();
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         }
-        return false;
       },
       child: widget.child,
     );
