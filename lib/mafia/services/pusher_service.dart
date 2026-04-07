@@ -19,34 +19,35 @@ class PusherService extends ChangeNotifier {
   static final PusherService instance = PusherService._();
 
   bool get isConnected => _connected;
-  static const String _appKey =
-      String.fromEnvironment('PUSHER_APP_KEY', defaultValue: '');
-  static const String _cluster =
-      String.fromEnvironment('PUSHER_CLUSTER', defaultValue: 'ap2');
-  static const String _baseUrl =
-      String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'https://nimbus-2k26-backend-olhw.onrender.com');
+  static const String _appKey = String.fromEnvironment(
+    'PUSHER_APP_KEY',
+    defaultValue: '',
+  );
+  static const String _cluster = String.fromEnvironment(
+    'PUSHER_CLUSTER',
+    defaultValue: 'ap2',
+  );
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://nimbus-2k26-backend-olhw.onrender.com',
+  );
 
   final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
 
   // ─── EVENT STREAMS ──────────────────────────────────────────────────────────
 
-  final _phaseController =
-      StreamController<Map<String, dynamic>>.broadcast();
-  final _roleController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final _phaseController = StreamController<Map<String, dynamic>>.broadcast();
+  final _roleController = StreamController<Map<String, dynamic>>.broadcast();
   final _gameEndedController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _gameStartedController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _voteController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final _voteController = StreamController<Map<String, dynamic>>.broadcast();
   final _playerJoinedController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _playerLeftController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _chatController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final _chatController = StreamController<Map<String, dynamic>>.broadcast();
   final _investigationController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _hitmanStrikeController =
@@ -60,12 +61,12 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onPhaseResolved => _phaseController.stream;
   Stream<Map<String, dynamic>> get onRoleAssigned => _roleController.stream;
   Stream<Map<String, dynamic>> get onGameEnded => _gameEndedController.stream;
-  Stream<Map<String, dynamic>> get onGameStarted => _gameStartedController.stream;
+  Stream<Map<String, dynamic>> get onGameStarted =>
+      _gameStartedController.stream;
   Stream<Map<String, dynamic>> get onVoteUpdated => _voteController.stream;
   Stream<Map<String, dynamic>> get onPlayerJoined =>
       _playerJoinedController.stream;
-  Stream<Map<String, dynamic>> get onPlayerLeft =>
-      _playerLeftController.stream;
+  Stream<Map<String, dynamic>> get onPlayerLeft => _playerLeftController.stream;
   Stream<Map<String, dynamic>> get onChatMessage => _chatController.stream;
   Stream<Map<String, dynamic>> get onHitmanStrike =>
       _hitmanStrikeController.stream;
@@ -99,6 +100,12 @@ class PusherService extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token') ?? '';
+
+    if (_appKey.isEmpty) {
+      throw Exception(
+        'PUSHER_APP_KEY is not defined. Add it to dart_defines.json or pass it with --dart-define.',
+      );
+    }
 
     try {
       await _pusher.init(
