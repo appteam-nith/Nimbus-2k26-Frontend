@@ -332,13 +332,12 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_inRoom) {
+    return PopScope(
+      canPop: !_inRoom,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (!didPop && _inRoom) {
           await _leaveRoom();
-          return false; // We handle navigation ourselves
         }
-        return true;
       },
       child: Scaffold(
         backgroundColor: _bg,

@@ -12,6 +12,7 @@ class PlayerGrid extends StatelessWidget {
   final String? myUserId;
   final ValueChanged<String>? onTap;
   final bool showRoles;
+  final bool allowSelfSelect;
 
   const PlayerGrid({
     super.key,
@@ -20,6 +21,7 @@ class PlayerGrid extends StatelessWidget {
     this.myUserId,
     this.onTap,
     this.showRoles = false,
+    this.allowSelfSelect = false,
   });
 
   @override
@@ -41,7 +43,7 @@ class PlayerGrid extends StatelessWidget {
         final isEliminated = player.isEliminated;
 
         return GestureDetector(
-          onTap: (onTap != null && !isEliminated && !isMe)
+          onTap: (onTap != null && !isEliminated && (!isMe || allowSelfSelect))
               ? () => onTap!(player.userId)
               : null,
           child: AnimatedContainer(

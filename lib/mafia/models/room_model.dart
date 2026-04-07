@@ -19,6 +19,8 @@ class RoomModel {
   final bool nurseMet;
   /// True if the Reporter has already used their one-time broadcast this game.
   final bool reporterUsed;
+  /// True if the Hitman has successfully met the Mafia (used to authorize chat).
+  final bool hitmanMetMafia;
   /// True if this room was started in developer mode (bots fill empty slots).
   final bool devMode;
 
@@ -36,6 +38,7 @@ class RoomModel {
     required this.players,
     this.nurseMet = false,
     this.reporterUsed = false,
+    this.hitmanMetMafia = false,
     this.devMode = false,
   });
 
@@ -66,6 +69,7 @@ class RoomModel {
           .toList(),
       nurseMet: json['nurseMet'] as bool? ?? false,
       reporterUsed: json['reporterUsed'] as bool? ?? false,
+      hitmanMetMafia: json['hitmanMetMafia'] as bool? ?? false,
       devMode: json['devMode'] as bool? ?? false,
     );
   }

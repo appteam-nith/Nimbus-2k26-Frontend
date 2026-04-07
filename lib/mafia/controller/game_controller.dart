@@ -53,7 +53,28 @@ class GameController extends ChangeNotifier {
   /// Whether the local role card reveal animation has been shown.
   bool roleCardSeen = false;
 
-  // ─ Private ──────────────────────────────────────────────────────────────────────────────
+  /// The player the current user has selected to vote for.
+  String? myVoteTarget;
+
+  /// Whether the Nurse has found the Doctor yet (used to update Nurse UI).
+  bool nurseMet = false;
+
+  /// Whether the Reporter has already used their one-time broadcast ability.
+  bool reporterUsed = false;
+
+  /// Whether the Hitman has met the Mafia team.
+  bool hitmanMetMafia = false;
+
+  /// Whether the game is running in developer mode (bots fill empty slots, all roles visible).
+  bool devMode = false;
+
+  /// Deaths reported at the start of DISCUSSION (from NIGHT resolution).
+  List<DeathEvent> nightDeaths = [];
+
+  /// Hitman strike event — non-null when T-5s kill fires.
+  Map<String, dynamic>? hitmanStrikeEvent;
+
+  // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
 
@@ -72,8 +93,11 @@ class GameController extends ChangeNotifier {
   /// Call this after joining/creating a room.
   /// [reconnect] = true skips the role-reveal screen and goes straight to
   /// the current phase screen.
-  Future<void> init(String code, String userId,
-      {bool reconnect = false}) async {
+  Future<void> init(
+    String code,
+    String userId, {
+    bool reconnect = false,
+  }) async {
     roomCode = code;
     myUserId = userId;
     isReconnecting = reconnect;
@@ -104,7 +128,9 @@ class GameController extends ChangeNotifier {
       // 5. Navigate to current phase
       if (reconnect) {
         _routeToCurrentPhase();
-      } else if (status == GameStatus.NIGHT && myRole != null && !roleCardSeen) {
+      } else if (status == GameStatus.NIGHT &&
+          myRole != null &&
+          !roleCardSeen) {
         _navigate('/mafia/role');
       }
     } catch (e) {
@@ -149,6 +175,7 @@ class GameController extends ChangeNotifier {
     timeRemaining = room.timeRemaining ?? 0;
     nurseMet = room.nurseMet;
     reporterUsed = room.reporterUsed;
+    hitmanMetMafia = room.hitmanMetMafia;
     devMode = room.devMode;
   }
 
@@ -180,8 +207,9 @@ class GameController extends ChangeNotifier {
     round = data['round'] as int? ?? round;
 
     final phaseEndsAtRaw = data['phaseEndsAt'] as String?;
-    _phaseEndsAt =
-        phaseEndsAtRaw != null ? DateTime.tryParse(phaseEndsAtRaw) : null;
+    _phaseEndsAt = phaseEndsAtRaw != null
+        ? DateTime.tryParse(phaseEndsAtRaw)
+        : null;
 
     // ─ Parse multi-death array (new format) ─────────────────────────────────────
     final rawDeaths = data['deaths'] as List<dynamic>?;
@@ -236,6 +264,10 @@ class GameController extends ChangeNotifier {
       (s) => s.name == phase,
       orElse: () => status,
     );
+
+    // Reset local vote target when phase changes
+    myVoteTarget = null;
+    hitmanStrikeEvent = null; // clear between rounds
 
     if (_phaseEndsAt != null) _startCountdown(_phaseEndsAt!);
 
@@ -358,8 +390,8 @@ class GameController extends ChangeNotifier {
     _phaseEndsAt = endsAt;
 
     // Seed immediately
-    timeRemaining =
-        (endsAt.difference(DateTime.now()).inMilliseconds / 1000).ceil();
+    timeRemaining = (endsAt.difference(DateTime.now()).inMilliseconds / 1000)
+        .ceil();
     timeRemaining = timeRemaining.clamp(0, 999);
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -386,6 +418,65 @@ class GameController extends ChangeNotifier {
     _navigate('/mafia/night');
   }
 
+  /// Sets the local user's selected voting target.
+  void setVoteTarget(String? userId) {
+    if (myVoteTarget == userId) {
+      myVoteTarget = null; // Tap again to deselect
+    } else {
+      myVoteTarget = userId;
+    }
+    notifyListeners();
+  }
+
+  void clearHitmanStrike() {
+    hitmanStrikeEvent = null;
+    notifyListeners();
+  }
+
+  /// Submits the vote via the API.
+  /// If [overrideTargets] or [overrideRoles] are provided, they are used instead of [myVoteTarget].
+  Future<String?> submitVote(
+    String voteType, {
+    bool isSkip = false,
+    List<String>? overrideTargets,
+    List<String>? overrideRoles,
+  }) async {
+    if (roomCode == null) return null;
+
+    List<String>? targets = overrideTargets;
+    if (targets == null && !isSkip) {
+      if (myVoteTarget != null) {
+        targets = [myVoteTarget!];
+      } else {
+        error = 'Please select a player first.';
+        notifyListeners();
+        return null;
+      }
+    }
+
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await _api.submitVote(
+        roomCode!,
+        voteType,
+        targets: targets,
+        roles: overrideRoles,
+      );
+
+      isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
   /// Full cleanup — call when player leaves game or hits Home.
   Future<void> leaveGame() async {
     _stopCountdown();
@@ -406,6 +497,12 @@ class GameController extends ChangeNotifier {
     roleCardSeen = false;
     morningDeaths = [];
     pendingBroadcast = null;
+    myVoteTarget = null;
+    nightDeaths = [];
+    hitmanStrikeEvent = null;
+    nurseMet = false;
+    reporterUsed = false;
+    hitmanMetMafia = false;
     notifyListeners();
   }
 

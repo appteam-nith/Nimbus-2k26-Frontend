@@ -116,7 +116,7 @@ class VotingScreen extends StatelessWidget {
                           accentColor: const Color(0xFFEF4444), // Red for eliminate
                           onPressed: () {
                             if (canVote && myVoteTarget != null) {
-                              controller.submitVote('LYNCH');
+                              controller.submitVote('DAY_LYNCH');
                             }
                           },
                         ),
@@ -126,7 +126,7 @@ class VotingScreen extends StatelessWidget {
                         isDisabled: !canVote,
                         onPressed: () {
                           if (canVote) {
-                            controller.submitVote('LYNCH', isSkip: true);
+                            controller.submitVote('DAY_LYNCH', isSkip: true);
                           }
                         },
                       ),

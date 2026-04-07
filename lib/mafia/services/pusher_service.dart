@@ -8,20 +8,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Channels used:
 ///   • `game-{roomCode}`     — public room-wide events
+///   • `room-{roomCode}`     — lobby-phase room events
 ///   • `private-{userId}`    — player's private events (role, cop results)
+///   • `rooms`               — global room list events
 ///
 /// The private channel requires auth via POST /api/game/pusher/auth.
 class PusherService extends ChangeNotifier {
   PusherService._();
   static final PusherService instance = PusherService._();
 
-  static const String _appKey =
-      String.fromEnvironment('PUSHER_APP_KEY', defaultValue: '');
-  static const String _cluster =
-      String.fromEnvironment('PUSHER_CLUSTER', defaultValue: 'ap2');
-  static const String _baseUrl =
-      String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'https://nimbus-2k26-backend.onrender.com');
+  static const String _appKey = String.fromEnvironment(
+    'PUSHER_APP_KEY',
+    defaultValue: '9abb93acdbad87f7e0cb',
+  );
+  static const String _cluster = String.fromEnvironment(
+    'PUSHER_CLUSTER',
+    defaultValue: 'ap2',
+  );
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://nimbus-2k26-backend-olhw.onrender.com',
+  );
 
   final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
 
@@ -31,12 +38,14 @@ class PusherService extends ChangeNotifier {
   final _roleController = StreamController<Map<String, dynamic>>.broadcast();
   final _gameEndedController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _voteController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final _voteController = StreamController<Map<String, dynamic>>.broadcast();
   final _playerJoinedController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _chatController =
+  final _playerLeftController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _gameStartedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _chatController = StreamController<Map<String, dynamic>>.broadcast();
   final _investigationController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _reporterBroadcastController =
@@ -55,6 +64,9 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onVoteUpdated => _voteController.stream;
   Stream<Map<String, dynamic>> get onPlayerJoined =>
       _playerJoinedController.stream;
+  Stream<Map<String, dynamic>> get onPlayerLeft => _playerLeftController.stream;
+  Stream<Map<String, dynamic>> get onGameStarted =>
+      _gameStartedController.stream;
   Stream<Map<String, dynamic>> get onChatMessage => _chatController.stream;
 
   /// Cop only — private investigation result
@@ -69,7 +81,13 @@ class PusherService extends ChangeNotifier {
   Stream<Map<String, dynamic>> get onHitmanStrike =>
       _hitmanStrikeController.stream;
 
+  Stream<Map<String, dynamic>> get onRoomOpened => _roomOpenedController.stream;
+  Stream<Map<String, dynamic>> get onRoomClosed => _roomClosedController.stream;
+
   bool _connected = false;
+
+  /// Whether Pusher is currently connected.
+  bool get isConnected => _connected;
   String? _currentRoomCode;
   String? _currentUserId;
 
@@ -88,13 +106,7 @@ class PusherService extends ChangeNotifier {
     await disconnect();
 
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token') ?? '';
-
-    if (_appKey.isEmpty) {
-      throw Exception(
-        'PUSHER_APP_KEY is not defined. Add it to dart_defines.json or pass it with --dart-define.',
-      );
-    }
+    final token = prefs.getString('auth_token') ?? '';
 
     try {
       await _pusher.init(
@@ -114,10 +126,16 @@ class PusherService extends ChangeNotifier {
 
       await _pusher.connect();
 
-      // ── Public room channel ────────────────────────────────────────────────
+      // ── Public game channel ────────────────────────────────────────────────
       await _pusher.subscribe(
         channelName: 'game-$roomCode',
         onEvent: _onRoomEvent,
+      );
+
+      // ── Lobby room channel ─────────────────────────────────────────────────
+      await _pusher.subscribe(
+        channelName: 'room-$roomCode',
+        onEvent: _onLobbyEvent,
       );
 
       // ── Private player channel ─────────────────────────────────────────────
@@ -159,7 +177,6 @@ class PusherService extends ChangeNotifier {
   /// Subscribe to the global 'rooms' Pusher channel to get real-time
   /// room open/close events for the browse screen. Call on lobby entry.
   Future<void> subscribeRoomsChannel() async {
-    if (!_connected) return;
     try {
       await _pusher.subscribe(
         channelName: 'rooms',
@@ -176,15 +193,43 @@ class PusherService extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // ─── TEAM CHANNELS ──────────────────────────────────────────────────────────
+
+  /// Subscribe to a private team channel (e.g. mafia, doc, citizen)
+  Future<void> subscribeToTeamChannel(String roomCode, String team) async {
+    final channelName = 'private-$team-$roomCode';
+    try {
+      await _pusher.subscribe(
+        channelName: channelName,
+        onEvent: _onRoomEvent,
+      );
+      debugPrint('[Pusher] Subscribed to team channel: $channelName');
+    } catch (e) {
+      debugPrint('[Pusher] Failed to subscribe to $channelName: $e');
+    }
+  }
+
+  Future<void> unsubscribeFromTeamChannel(String roomCode, String team) async {
+    final channelName = 'private-$team-$roomCode';
+    try {
+      await _pusher.unsubscribe(channelName: channelName);
+      debugPrint('[Pusher] Unsubscribed from team channel: $channelName');
+    } catch (_) {}
+  }
+
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
 
-  void _onRoomEvent(PusherEvent event) {
-    final data = _decode(event.data);
+  // pusher_channels_flutter ^2.x passes events as `dynamic` (PusherEvent),
+  // so we accept dynamic and cast to avoid subtype errors at runtime.
+
+  void _onRoomEvent(dynamic event) {
+    final pusherEvent = event as PusherEvent;
+    final data = _decode(pusherEvent.data);
     if (data == null) return;
 
-    debugPrint('[Pusher] \${event.eventName}: \$data');
+    debugPrint('[Pusher] ${pusherEvent.eventName}: $data');
 
-    switch (event.eventName) {
+    switch (pusherEvent.eventName) {
       case 'phase-resolved':
         _phaseController.add(data);
         break;
@@ -206,18 +251,22 @@ class PusherService extends ChangeNotifier {
       case 'hitman-strike':
         _hitmanStrikeController.add(data);
         break;
+      case 'game-started':
+        _gameStartedController.add(data);
+        break;
     }
   }
 
   /// Handles lobby-phase room channel events (room-{code}).
   /// Backend fires: player-joined, player-left, game-started here.
-  void _onLobbyEvent(PusherEvent event) {
-    final data = _decode(event.data);
+  void _onLobbyEvent(dynamic event) {
+    final pusherEvent = event as PusherEvent;
+    final data = _decode(pusherEvent.data);
     if (data == null) return;
 
-    debugPrint('[Pusher][lobby] ${event.eventName}: $data');
+    debugPrint('[Pusher][lobby] ${pusherEvent.eventName}: $data');
 
-    switch (event.eventName) {
+    switch (pusherEvent.eventName) {
       case 'player-joined':
         _playerJoinedController.add(data);
         break;
@@ -231,13 +280,14 @@ class PusherService extends ChangeNotifier {
   }
 
   /// Handles global rooms channel events (rooms).
-  void _onGlobalRoomsEvent(PusherEvent event) {
-    final data = _decode(event.data);
+  void _onGlobalRoomsEvent(dynamic event) {
+    final pusherEvent = event as PusherEvent;
+    final data = _decode(pusherEvent.data);
     if (data == null) return;
 
-    debugPrint('[Pusher][rooms] ${event.eventName}: $data');
+    debugPrint('[Pusher][rooms] ${pusherEvent.eventName}: $data');
 
-    switch (event.eventName) {
+    switch (pusherEvent.eventName) {
       case 'room-opened':
         _roomOpenedController.add(data);
         break;
@@ -247,13 +297,14 @@ class PusherService extends ChangeNotifier {
     }
   }
 
-  void _onPrivateEvent(PusherEvent event) {
-    final data = _decode(event.data);
+  void _onPrivateEvent(dynamic event) {
+    final pusherEvent = event as PusherEvent;
+    final data = _decode(pusherEvent.data);
     if (data == null) return;
 
-    debugPrint('[Pusher][private] \${event.eventName}: \$data');
+    debugPrint('[Pusher][private] ${pusherEvent.eventName}: $data');
 
-    switch (event.eventName) {
+    switch (pusherEvent.eventName) {
       case 'role-assigned':
         _roleController.add(data);
         break;
@@ -282,6 +333,8 @@ class PusherService extends ChangeNotifier {
     _gameEndedController.close();
     _voteController.close();
     _playerJoinedController.close();
+    _playerLeftController.close();
+    _gameStartedController.close();
     _chatController.close();
     _investigationController.close();
     _reporterBroadcastController.close();

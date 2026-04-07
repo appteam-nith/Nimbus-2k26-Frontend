@@ -73,7 +73,44 @@ class _ReporterBroadcastListenerState extends State<ReporterBroadcastListener> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final gc = context.read<GameController>();
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF161D2B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Leave Game?',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            content: const Text(
+              'Are you sure you want to leave the game in progress?',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Stay', style: TextStyle(color: Colors.white70)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+                child: const Text('Leave', style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+        if (confirm == true) {
+          await gc.leaveGame();
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
+      },
+      child: widget.child,
+    );
+  }
 }
 
 // ─── OVERLAY WIDGET ───────────────────────────────────────────────────────────
@@ -216,7 +253,7 @@ class _ReporterBroadcastOverlayState extends State<_ReporterBroadcastOverlay>
             ),
             child: AnimatedBuilder(
               animation: _pulseAnim,
-              builder: (_, __) => Opacity(
+              builder: (_, _) => Opacity(
                 opacity: _pulseAnim.value,
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,

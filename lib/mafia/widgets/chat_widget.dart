@@ -386,6 +386,8 @@ class _ChatWidgetState extends State<ChatWidget> {
         return '🔫  MAFIA CHAT — PRIVATE';
       case 'doc':
         return '💉  DOCTOR – NURSE CHANNEL';
+      case 'citizen':
+        return '🤝  CITIZENS CHAT — PRIVATE';
       default:
         return '💬  GLOBAL CHAT';
     }
@@ -397,6 +399,8 @@ class _ChatWidgetState extends State<ChatWidget> {
         return const Color(0xFFEF4444);
       case 'doc':
         return const Color(0xFF22C55E);
+      case 'citizen':
+        return const Color(0xFF6B7280);
       default:
         return const Color(0xFF135BEC);
     }

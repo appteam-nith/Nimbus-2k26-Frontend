@@ -6,7 +6,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../models/profile_model.dart';
 import '../providers/auth_provider.dart';
-import '../main.dart';
 
 // ── Nimbus color tokens ──────────────────────────────────────────────────────
 class NimbusColors {
@@ -163,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? Image.file(
                                   File(_selectedImagePath!),
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
+                                  errorBuilder: (_, _, _) =>
                                       _initialsAvatar(initials),
                                 )
                               : (avatarUrl != null && avatarUrl.isNotEmpty
@@ -291,14 +290,14 @@ class _ProfilePageState extends State<ProfilePage> {
       return Image.network(
         avatarUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+        errorBuilder: (_, _, _) => _initialsAvatar(initials),
       );
     }
 
     return Image.file(
       File(avatarUrl),
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+      errorBuilder: (_, _, _) => _initialsAvatar(initials),
     );
   }
 

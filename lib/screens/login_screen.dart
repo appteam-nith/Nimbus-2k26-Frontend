@@ -340,6 +340,7 @@ class LoginScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Container(
+                                  width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 14,
                                     vertical: 7,
@@ -348,15 +349,18 @@ class LoginScreen extends StatelessWidget {
                                     color: const Color(0xFFECFDF5),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  child: const Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 5,
+                                    runSpacing: 4,
                                     children: [
                                       Icon(
                                         Icons.lock_outline,
                                         size: 13,
                                         color: Color(0xFF059669),
                                       ),
-                                      SizedBox(width: 5),
                                       Text(
                                         'Restricted to @nith.ac.in only. Reviewer login is allowed with reviewer@nith.ac.in.',
                                         style: TextStyle(

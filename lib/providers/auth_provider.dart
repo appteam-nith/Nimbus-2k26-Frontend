@@ -203,10 +203,11 @@ class AuthProvider extends ChangeNotifier {
       }
       debugPrint('[Auth] Step 3: ✓ Old sessions cleared');
 
-      debugPrint('[Auth] Step 4: Launching Google authenticate()…');
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
-      debugPrint('[Auth] Step 4: ✓ Google user = ${googleUser.email}');
+      debugPrint('[Auth] Step 4: Launching Google sign-in…');
+      final googleUser = await GoogleSignIn.instance.authenticate(
+        scopeHint: const ['email', 'profile'],
+      );
+      debugPrint('[Auth] Step 4: ✓ Google user selected = ${googleUser.email}');
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       if (googleAuth.idToken == null) {
@@ -216,18 +217,8 @@ class AuthProvider extends ChangeNotifier {
         '[Auth] Step 4: ✓ Got Google idToken (length=${googleAuth.idToken!.length})',
       );
 
-      const scopes = ['email', 'profile'];
-      debugPrint('[Auth] Step 5: Getting authorization for scopes…');
-      final clientAuth =
-          await googleUser.authorizationClient.authorizationForScopes(scopes) ??
-          await googleUser.authorizationClient.authorizeScopes(scopes);
-      debugPrint(
-        '[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken.length})',
-      );
-
-      debugPrint('[Auth] Step 6: Signing into Firebase with credential…');
+      debugPrint('[Auth] Step 5: Signing into Firebase with credential…');
       final credential = GoogleAuthProvider.credential(
-        accessToken: clientAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 

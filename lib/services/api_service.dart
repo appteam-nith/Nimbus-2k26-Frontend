@@ -53,7 +53,16 @@ class ApiService {
 
   // ── Helper: Handle response ────────────────────────────────────────
   dynamic _handleResponse(http.Response response) {
-    final body = jsonDecode(response.body);
+    dynamic body;
+    try {
+      body = jsonDecode(response.body);
+    } catch (e) {
+      if (response.statusCode >= 500) {
+         throw Exception('Server is temporarily unavailable (Status ${response.statusCode}). Please try again shortly.');
+      }
+      throw Exception('Unexpected server response (Status ${response.statusCode}): ${response.body.length > 50 ? '${response.body.substring(0, 50)}...' : response.body}');
+    }
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else if (response.statusCode == 401) {

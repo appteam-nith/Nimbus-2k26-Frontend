@@ -281,7 +281,7 @@ class _RoleScreenState extends State<RoleScreen> with TickerProviderStateMixin {
                       AnimatedBuilder(
                         animation: Listenable.merge(
                             [_badgeScale, _pulseAnim, _pulseController]),
-                        builder: (_, __) {
+                        builder: (_, _) {
                           return Transform.scale(
                             scale: _enterController.value < 1.0
                                 ? _badgeScale.value
@@ -527,7 +527,7 @@ class _BadgePortrait extends StatelessWidget {
               width: 172,
               height: 172,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 172,
                 height: 172,
                 color: const Color(0xFF1A1F2E),

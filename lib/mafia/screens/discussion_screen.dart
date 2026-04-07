@@ -6,7 +6,6 @@ import '../models/death_event.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/dev_role_board.dart';
-import '../services/pusher_service.dart';
 
 class DiscussionScreen extends StatefulWidget {
   const DiscussionScreen({super.key});
@@ -59,14 +58,14 @@ class _DiscussionScreenState extends State<DiscussionScreen>
       _autoDismissTimer = Timer(const Duration(seconds: 5), () {
         if (!mounted) return;
         // If reporter data also present, chain to that overlay
-        if (gc.reporterBroadcast != null) {
+        if (gc.pendingBroadcast != null) {
           _dismissMorning(thenShowReporter: true);
         } else {
           _dismissMorning(thenShowReporter: false);
         }
       });
-    } else if (gc.reporterBroadcast != null) {
-      _showReporter(gc.reporterBroadcast!);
+    } else if (gc.pendingBroadcast != null) {
+      _showReporterFromBroadcast(gc.pendingBroadcast!);
     }
   }
 
@@ -76,10 +75,19 @@ class _DiscussionScreenState extends State<DiscussionScreen>
       setState(() => _showMorningReveal = false);
       if (thenShowReporter && mounted) {
         final gc = context.read<GameController>();
-        if (gc.reporterBroadcast != null) {
-          _showReporter(gc.reporterBroadcast!);
+        if (gc.pendingBroadcast != null) {
+          _showReporterFromBroadcast(gc.pendingBroadcast!);
         }
       }
+    });
+  }
+
+  void _showReporterFromBroadcast(ReporterBroadcast broadcast) {
+    // Convert ReporterBroadcast to Map for the overlay widget
+    _showReporter({
+      'exposedRole': broadcast.role.name,
+      'targetUserId': '',
+      'playerName': broadcast.playerName,
     });
   }
 
@@ -100,7 +108,6 @@ class _DiscussionScreenState extends State<DiscussionScreen>
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final isConnected = PusherService.instance.isConnected;
     final myRole = game.myRole;
 
     // Determine if player can access team chat
@@ -135,17 +142,17 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                 Container(
                   width: 6,
                   height: 6,
-                  decoration: BoxDecoration(
-                    color: isConnected ? Colors.green : Colors.red,
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  isConnected ? 'LIVE' : 'RECONNECTING...',
+                const Text(
+                  'LIVE',
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: isConnected ? Colors.green : Colors.red,
+                    color: Colors.green,
                     fontSize: 10,
                   ),
                 ),
@@ -165,8 +172,9 @@ class _DiscussionScreenState extends State<DiscussionScreen>
               // Synced phase timer
               Center(
                 child: PhaseTimer(
-                  endTime: game.phaseEndsAt ??
-                      DateTime.now().add(const Duration(seconds: 30)),
+                  endTime: DateTime.now().add(
+                    Duration(seconds: game.timeRemaining > 0 ? game.timeRemaining : 30),
+                  ),
                   size: 90,
                 ),
               ),
@@ -216,7 +224,7 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                 onDismiss: () {
                   _autoDismissTimer?.cancel();
                   final gc = context.read<GameController>();
-                  if (gc.reporterBroadcast != null) {
+                  if (gc.pendingBroadcast != null) {
                     _dismissMorning(thenShowReporter: true);
                   } else {
                     _dismissMorning(thenShowReporter: false);
@@ -372,12 +380,8 @@ class _DeathCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Look up player name from players list
-    String name = 'Unknown';
-    try {
-      final p = players.firstWhere((p) => p.userId == death.userId);
-      name = p.name ?? 'Unknown';
-    } catch (_) {}
+    // Use player name directly from DeathEvent
+    final name = death.player.name;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
@@ -408,7 +412,7 @@ class _DeathCard extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                death.killedByEmoji,
+                death.cause.emoji,
                 style: const TextStyle(fontSize: 26),
               ),
             ),
@@ -429,7 +433,7 @@ class _DeathCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  death.killedByLabel,
+                  death.cause.label,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
