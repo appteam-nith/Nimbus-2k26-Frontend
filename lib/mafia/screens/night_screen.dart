@@ -287,6 +287,7 @@ class _NightScreenState extends State<NightScreen> {
                       child: PlayerGrid(
                         players: controller.players,
                         myUserId: controller.myUserId,
+                        allowSelfSelect: myRole == GameRole.DOCTOR,
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
                         showRoles: false,
