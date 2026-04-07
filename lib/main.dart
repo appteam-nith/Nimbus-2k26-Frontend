@@ -18,10 +18,7 @@ import 'mafia/screens/lobby_screen.dart';
 import 'mafia/screens/role_screen.dart';
 import 'mafia/screens/reveal_screen.dart';
 import 'mafia/screens/game_over_screen.dart';
-<<<<<<< Updated upstream
 import 'mafia/screens/discussion_screen.dart';
-=======
->>>>>>> Stashed changes
 import 'mafia/screens/night_screen.dart';
 import 'mafia/screens/voting_screen.dart';
 import 'mafia/screens/reporter_broadcast_screen.dart';
@@ -128,18 +125,8 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
-<<<<<<< Updated upstream
     final auth = context.watch<AuthProvider>();
     return auth.isAuthenticated ? const MainNavigationScreen() : const LoginScreen();
-=======
-    final authProvider = context.watch<AuthProvider>();
-
-    if (authProvider.isAuthenticated) {
-      return const MainNavigationScreen();
-    }
-    
-    return const LoginScreen();
->>>>>>> Stashed changes
   }
 }
 
