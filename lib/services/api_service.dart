@@ -97,6 +97,67 @@ class ApiService {
     }
   }
 
+  /// Sign up with email
+  Future<Map<String, dynamic>> emailSignUp(String name, String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/auth/signup'),
+        headers: _getHeaders(),
+        body: jsonEncode({'name': name, 'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 30));
+      return _handleResponse(response);
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Login with email
+  Future<Map<String, dynamic>> emailLogin(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/auth/login'),
+        headers: _getHeaders(),
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 30));
+
+      final data = _handleResponse(response);
+      if (data['token'] != null) {
+        await _saveToken(data['token']);
+      }
+      return data;
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Request password reset email
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/auth/forgot-password'),
+        headers: _getHeaders(),
+        body: jsonEncode({'email': email}),
+      ).timeout(const Duration(seconds: 30));
+      return _handleResponse(response);
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Reset password using token
+  Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/auth/reset-password?token=$token'),
+        headers: _getHeaders(),
+        body: jsonEncode({'newPassword': newPassword}),
+      ).timeout(const Duration(seconds: 30));
+      return _handleResponse(response);
+    } on Exception {
+      rethrow;
+    }
+  }
+
 
   /// Logout - clears token locally (no backend logout route)
   Future<void> logout() async {

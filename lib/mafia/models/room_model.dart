@@ -1,5 +1,7 @@
 import 'player_model.dart';
 
+// ignore_for_file: constant_identifier_names
+
 /// Full room snapshot returned by GET /api/game/rooms/:code
 class RoomModel {
   final String roomCode;
@@ -13,6 +15,12 @@ class RoomModel {
   final DateTime? phaseEndsAt;
   final int? timeRemaining; // seconds, precomputed by server
   final List<PlayerModel> players;
+  /// True if the Nurse has already found the Doctor this game.
+  final bool nurseMet;
+  /// True if the Reporter has already used their one-time broadcast this game.
+  final bool reporterUsed;
+  /// True if this room was started in developer mode (bots fill empty slots).
+  final bool devMode;
 
   const RoomModel({
     required this.roomCode,
@@ -26,6 +34,9 @@ class RoomModel {
     this.phaseEndsAt,
     this.timeRemaining,
     required this.players,
+    this.nurseMet = false,
+    this.reporterUsed = false,
+    this.devMode = false,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
@@ -53,6 +64,9 @@ class RoomModel {
       players: (json['players'] as List<dynamic>? ?? [])
           .map((p) => PlayerModel.fromJson(p as Map<String, dynamic>))
           .toList(),
+      nurseMet: json['nurseMet'] as bool? ?? false,
+      reporterUsed: json['reporterUsed'] as bool? ?? false,
+      devMode: json['devMode'] as bool? ?? false,
     );
   }
 

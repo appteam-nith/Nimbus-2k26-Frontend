@@ -1,4 +1,4 @@
-name: nimbus_2k26_frontend
+﻿name: nimbus_2k26_frontend
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -31,13 +31,14 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   change_app_package_name: ^1.5.0
 
-# flutter_launcher_icons config (root level - NOT inside dev_dependencies)
 flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/icon.png"
 
 flutter:
+  uses-material-design: true
+
   assets:
     - assets/clubs/
     - assets/icons/location.svg

@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../models/profile_model.dart';
 import '../providers/auth_provider.dart';
+import '../main.dart';
 
 // ── Nimbus color tokens ──────────────────────────────────────────────────────
 class NimbusColors {

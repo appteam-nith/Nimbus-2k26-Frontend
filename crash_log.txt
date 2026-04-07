@@ -1,0 +1,507 @@
+﻿--------- beginning of main
+04-07 04:31:22.740 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:22.991 11017 11017 E app_process: BBinder_init Processname  app_process  
+04-07 04:31:22.991 11017 11017 E app_process: BBinder_init hasGetProcessName  app_process
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv get_baksize open file /data/dalvik-cache/classpath failed , error(No such file or directory)
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv write_classpathbak open file failed:Permission denied
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv get_baksize open file /data/dalvik-cache/classpath2 failed , error(No such file or directory)
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv write_classpathbak open file failed:Permission denied
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv get_baksize open file /data/dalvik-cache/classpath3 failed , error(No such file or directory)
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv write_classpathbak open file failed:Permission denied
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv get_baksize open file /data/dalvik-cache/classpath4 failed , error(No such file or directory)
+04-07 04:31:23.012 11017 11017 E appproc : checkAndSetEnv write_classpathbak open file failed:Permission denied
+04-07 04:31:23.013 11017 11017 W app_process: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: settings
+04-07 04:31:23.017 11017 11017 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+04-07 04:31:23.040 11017 11017 I AndroidRuntime: Using default boot image
+04-07 04:31:23.040 11017 11017 I AndroidRuntime: Leaving lock profiling enabled
+04-07 04:31:23.047 11017 11017 I app_process: Using CollectorTypeCC GC.
+04-07 04:31:23.047 11017 11017 I app_process: MMAP_TRYLOCK is supported in uffd errno:2 addr:0x720631e000 size:4096
+04-07 04:31:23.202 11017 11017 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+04-07 04:31:23.228 11017 11017 D nativeloader: Load libicu_jni.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+04-07 04:31:23.228 11017 11017 D app_process: u_setTimeZoneFilesDirectory("/apex/com.android.tzdata/etc/tz/versioned/9/icu") succeeded. 
+04-07 04:31:23.229 11017 11017 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt76l.dat
+04-07 04:31:23.232 11017 11017 D nativeloader: Load libjavacore.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+04-07 04:31:23.234 11017 11017 D nativeloader: Load libopenjdk.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+04-07 04:31:23.268  5385  5397 I artd    : GetBestInfo: /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk has no usable artifacts
+04-07 04:31:23.286 11017 11017 W main    : type=1400 audit(0.0:18442563): avc:  denied  { read } for  name="u:object_r:system_mtk_app32_boost_prop:s0" dev="tmpfs" ino=444 scontext=u:r:shell:s0 tcontext=u:object_r:system_mtk_app32_boost_prop:s0 tclass=file permissive=0
+04-07 04:31:23.288 11017 11017 W libc    : Access denied finding property "ro.vendor.mtk.hbt_binfmt_misc_support"
+04-07 04:31:23.289 11017 11017 W libc    : Access denied finding property "ro.vendor.mtk.app32_boost_support"
+04-07 04:31:23.290 11017 11017 W libc    : Access denied finding property "ro.vendor.mtk.hbt_dyn_type"
+04-07 04:31:23.290 11017 11017 W libc    : Access denied finding property "persist.vendor.mtk.hbt_dyn_type"
+04-07 04:31:23.302 11017 11017 E VivoConfigStore: it is Zygote,don't need init
+04-07 04:31:23.304 11017 11017 E VivoConfigStore: the feature vivo.software.commonradius is used in zygote, but you did't add attribute is_support_zygote=1 in vivo_config.ini ,please play attention to check your vivo_config.ini for the feature!!!
+04-07 04:31:23.305 11017 11017 I VivoSystemFrameworkFactory: Instance implClass com.vivo.VivoSystemFrameworkFactoryImpl
+04-07 04:31:23.362 11017 11017 W libc    : Access denied finding property "ro.vendor.mtk.hbt_binfmt_misc_support"
+04-07 04:31:23.365 11017 11017 E VivoConfigStore: it is Zygote,don't need init
+04-07 04:31:23.365 11017 11017 E VivoConfigStore: the feature vivo.hardware.display.xdr is used in zygote, but you did't add attribute is_support_zygote=1 in vivo_config.ini ,please play attention to check your vivo_config.ini for the feature!!!
+--------- beginning of system
+04-07 04:31:23.409  1883  4135 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=7
+04-07 04:31:23.433 11017 11017 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+04-07 04:31:23.434 11017 11017 D AndroidRuntime: Calling main entry com.android.commands.monkey.Monkey
+04-07 04:31:23.439 11017 11017 D nativeloader: Load /system/lib64/libmonkey_jni.so using ns default for caller /system/framework/monkey.jar in same partition (is_bridged=0): ok
+04-07 04:31:23.440 11017 11017 W Monkey  : args: [-p, com.appteam.nimbus_2k26_frontend, -c, android.intent.category.LAUNCHER, 1]
+04-07 04:31:23.526 11017 11017 I AconfigPackage: android.app.admin.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.database.sqlite is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.power.feature.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.media.performance.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.app.contextualsearch.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.app.ondeviceintelligence.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.media.projection.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.companion is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.service.controls.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.text.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.companion.virtualdevice.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.uprobestats.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.net.thread.platform.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.view.contentprotection.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.dreams is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.graphics.surfaceflinger.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.hardware.input is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.sdk is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.input.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.tracing is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.biometrics is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.view.contentcapture.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.app.job is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.content.res is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.net.platform.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.aconfig.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.graphics.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.server.app is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.speech.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.stats is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.hardware.biometrics is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.car.feature is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.adpf is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.location.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.settingslib.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.managedprovisioning.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.app.assist.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.net is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.settingslib.widget.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.internal.camera.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.hardware.libsensor.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.internal.jank is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.providers.settings is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: android.multiuser is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.power.optimization is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.media.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.server.flags is mapped to system
+04-07 04:31:23.527 11017 11017 I AconfigPackage: com.android.graphics.libvulkan.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.app.appfunctions.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.app.smartspace.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.shell.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.media.aaudio is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.hardware.radio is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: suspend_service.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.media.midi is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.libcore.readonly is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.settingslib.widget.selectorwithwidgetpreference.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.service.notification is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.systemui.shared is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.app.jank is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.app.wearable is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.media.audio is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.service.chooser is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.server.compat is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.server.alarm is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: com.android.apex.flags is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.service.quickaccesswallet is mapped to system
+04-07 04:31:23.539 11017 11017 I AconfigPackage: android.app.usage is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.accessibility is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.app.supervision.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.utils is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.chre.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.content.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.media.codec is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.internal.os is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.app is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.security.keystore2 is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.crashrecovery.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.tradeinmode.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.hardware.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.telecom.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.settingslib.media.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.policy is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.media.audiopolicy is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.egg.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.internal.compat.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.security is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.service.autofill is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.example.android.aconfig.demo.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.view.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.companion.virtual.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.aconfig_new_storage is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.feature.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.systemui is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.power.batterysaver is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.widget.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.media.editing.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.media.codec.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.powerstats is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.graphics.egl.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.media.audioserver is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.deviceidle is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.nfc is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.permission.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.service.voice.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.content.pm is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.power.hint is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.os is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.service.dreams is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.graphics.libgui.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.hardware.usb.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.provider is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.job is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.internal.foldables.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.internal.telephony.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.webkit is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.credentials.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.display.feature.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.notification is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.appwidget.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.frameworks.sensorservice.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.window.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.adaptiveauth is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.net.wifi.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.media.tv.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.usb.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.os.vibrator is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.hardware.devicestate.feature.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.usage is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.server is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.wm.shell is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.view.inputmethod is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.graphics.hwui.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.backup is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.internal.pm.pkg.component.flags is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.view.accessibility is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: android.media.audio is mapped to system
+04-07 04:31:23.540 11017 11017 I AconfigPackage: com.android.server.am is mapped to system
+04-07 04:31:23.541 11017 11017 I AconfigPackage: com.android.media.playback.flags is mapped to system
+04-07 04:31:23.553 11017 11017 I AconfigPackage: com.android.settings.flags is mapped to system_ext
+04-07 04:31:23.553 11017 11017 I AconfigPackage: com.android.launcher3 is mapped to system_ext
+04-07 04:31:23.553 11017 11017 I AconfigPackage: com.android.systemui.accessibility.accessibilitymenu is mapped to system_ext
+04-07 04:31:23.584 11017 11017 I AconfigPackage: android.provider.flags is mapped to com.android.configinfrastructure
+04-07 04:31:23.584 11017 11017 I AconfigPackage: com.android.server.deviceconfig is mapped to com.android.configinfrastructure
+04-07 04:31:23.587 11017 11017 I AconfigPackage: com.android.bluetooth.flags is mapped to com.android.bt
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.net.ct.flags is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.tethering.mainline.beta is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.net.flags is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.nearby.flags is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: android.net.vcn is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.tethering.beta.test is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: android.net.http is mapped to com.android.tethering
+04-07 04:31:23.589 11017 11017 I AconfigPackage: com.android.net.thread.flags is mapped to com.android.tethering
+04-07 04:31:23.590 11017 11017 I AconfigPackage: com.android.rkpd.flags is mapped to com.android.rkpd
+04-07 04:31:23.592  7174  7174 I buuu    : onPause
+04-07 04:31:23.593 11017 11017 I AconfigPackage: com.android.cellbroadcastreceiver.flags is mapped to com.android.cellbroadcast
+04-07 04:31:23.594 11017 11017 I AconfigPackage: com.android.permission.flags is mapped to com.android.permission
+04-07 04:31:23.594 11017 11017 I AconfigPackage: com.android.permissioncontroller.flags is mapped to com.android.permission
+04-07 04:31:23.595 11017 11017 I AconfigPackage: com.android.devicelock.flags is mapped to com.android.devicelock
+04-07 04:31:23.597 11017 11017 I AconfigPackage: com.android.wifi.flags is mapped to com.android.wifi
+04-07 04:31:23.598 11017 11017 I AconfigPackage: android.uprobestats.mainline.flags is mapped to com.android.uprobestats
+04-07 04:31:23.602 11017 11017 I AconfigPackage: com.android.ipsec.flags is mapped to com.android.ipsec
+04-07 04:31:23.603 11017 11017 I AconfigPackage: com.android.uwb.flags is mapped to com.android.uwb
+04-07 04:31:23.603 11017 11017 I AconfigPackage: com.android.ranging.flags is mapped to com.android.uwb
+04-07 04:31:23.607 11017 11017 I AconfigPackage: com.android.art.flags is mapped to com.android.art
+04-07 04:31:23.607 11017 11017 I AconfigPackage: com.android.libcore is mapped to com.android.art
+04-07 04:31:23.613 11017 11017 I AconfigPackage: android.media.swcodec.flags is mapped to com.android.media.swcodec
+04-07 04:31:23.618 11017 11017 I AconfigPackage: com.android.adservices.flags is mapped to com.android.adservices
+04-07 04:31:23.618 11017 11017 I AconfigPackage: com.android.sdksandbox.flags is mapped to com.android.adservices
+04-07 04:31:23.620 11017 11017 I AconfigPackage: android.os.profiling is mapped to com.android.profiling
+04-07 04:31:23.622 11017 11017 I AconfigPackage: com.android.healthfitness.flags is mapped to com.android.healthfitness
+04-07 04:31:23.623 11017 11017 I AconfigPackage: com.android.icu is mapped to com.android.i18n
+04-07 04:31:23.625 11017 11017 I AconfigPackage: com.android.os.statsd.flags is mapped to com.android.os.statsd
+04-07 04:31:23.627 11017 11017 I AconfigPackage: com.android.org.conscrypt.flags is mapped to com.android.conscrypt
+04-07 04:31:23.627 11017 11017 I AconfigPackage: com.android.org.conscrypt.net.flags is mapped to com.android.conscrypt
+04-07 04:31:23.628 11017 11017 I AconfigPackage: com.android.adservices.ondevicepersonalization.flags is mapped to com.android.ondevicepersonalization
+04-07 04:31:23.630 11017 11017 I AconfigPackage: com.android.appsearch.flags is mapped to com.android.appsearch
+04-07 04:31:23.632 11017 11017 I AconfigPackage: android.graphics.pdf.flags is mapped to com.android.mediaprovider
+04-07 04:31:23.632 11017 11017 I AconfigPackage: com.android.providers.media.flags is mapped to com.android.mediaprovider
+04-07 04:31:23.632 11017 11017 I AconfigPackage: android.graphics.pdf.flags.readonly is mapped to com.android.mediaprovider
+04-07 04:31:23.633 11017 11017 I AconfigPackage: com.android.media.extractor.flags is mapped to com.android.media
+04-07 04:31:23.633 11017 11017 I AconfigPackage: com.android.media.mainline.flags is mapped to com.android.media
+04-07 04:31:23.635 11017 11017 I AconfigPackage: com.android.system.virtualmachine.flags is mapped to com.android.virt
+04-07 04:31:23.640 11017 11017 W AconfigPackage: failed to map some package from com.android.adbd.package.map: android.os.flagging.AconfigStorageReadException: ERROR_CANNOT_READ_STORAGE_FILE: Fail to mmap storage
+04-07 04:31:23.640 11017 11017 E FeatureFlagsImplExport: android.os.flagging.AconfigStorageReadException: ERROR_PACKAGE_NOT_FOUND: package android.xr cannot be found on the device
+04-07 04:31:23.661 11017 11017 W libc    : Access denied finding property "qemu.sf.lcd_density"
+04-07 04:31:23.662 11017 11017 W libc    : Access denied finding property "qemu.sf.lcd_density"
+04-07 04:31:23.672 11017 11017 W Monkey  :  arg: "-p"
+04-07 04:31:23.672 11017 11017 W Monkey  :  arg: "com.appteam.nimbus_2k26_frontend"
+04-07 04:31:23.673 11017 11017 W Monkey  :  arg: "-c"
+04-07 04:31:23.673 11017 11017 W Monkey  :  arg: "android.intent.category.LAUNCHER"
+04-07 04:31:23.673 11017 11017 W Monkey  :  arg: "1"
+04-07 04:31:23.674 11017 11017 W Monkey  : data="com.appteam.nimbus_2k26_frontend"
+04-07 04:31:23.674 11017 11017 W Monkey  : data="android.intent.category.LAUNCHER"
+--------- beginning of crash
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: FATAL EXCEPTION: main
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: Process: com.appteam.nimbus_2k26_frontend, PID: 11025
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate activity ComponentInfo{com.appteam.nimbus_2k26_frontend/com.appteam.nimbus_2k26_frontend_frontend.MainActivity}: java.lang.ClassNotFoundException: Didn't find class "com.appteam.nimbus_2k26_frontend_frontend.MainActivity" on path: DexPathList[[zip file "/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk"],nativeLibraryDirectories=[/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/lib/arm64, /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4902)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:5210)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:222)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3345)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:114)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:266)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:361)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:10381)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:675)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1002)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: Caused by: java.lang.ClassNotFoundException: Didn't find class "com.appteam.nimbus_2k26_frontend_frontend.MainActivity" on path: DexPathList[[zip file "/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk"],nativeLibraryDirectories=[/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/lib/arm64, /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at dalvik.system.BaseDexClassLoader.findClass(BaseDexClassLoader.java:259)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at java.lang.ClassLoader.loadClass(ClassLoader.java:637)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at java.lang.ClassLoader.loadClass(ClassLoader.java:573)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at androidx.core.app.CoreComponentFactory.instantiateActivity(CoreComponentFactory.java:44)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1457)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4884)
+04-07 04:31:23.683 11025 11025 E AndroidRuntime: 	... 13 more
+04-07 04:31:23.734 19858 19858 V InputMethod: startInput(): editor=android.view.inputmethod.EditorInfo@2554019
+04-07 04:31:23.734 19858 19858 V InputMethodService: CALL: doFinishInput
+04-07 04:31:23.735 19858 19858 D InlineSuggestionSessionController: notifyOnFinishInput
+04-07 04:31:23.735 19858 19858 V InputMethodService: CALL: onFinishInput
+04-07 04:31:23.735 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2159 
+04-07 04:31:23.736 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+04-07 04:31:23.736 19858 19858 V InputMethodService: finishStylusHandwriting()
+04-07 04:31:23.736 19858 19858 D InlineSuggestionSessionController: notifyOnStartInput: com.android.launcher3, 0
+04-07 04:31:23.736 19858 19858 V InputMethodService: CALL: onStartInput
+04-07 04:31:23.736 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1434 onStartInput(EditorInfo{EditorInfo{packageName=com.android.launcher3, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+04-07 04:31:23.736 19858 19858 I AndroidIME: LatinIMEBase.updateInputViewCoverNavigation():312 Update input view padding, isNavbarOverInputWindow=true, bottom inset=132
+04-07 04:31:23.737 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false
+04-07 04:31:23.769 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:23.783 19858 19858 I PkDeviceHelper: PkDeviceHelper.refreshDevices():87 refreshing devices
+04-07 04:31:23.807  7174  7174 I buuu    : onResume
+04-07 04:31:23.816 20203  8948 D SQLiteQueryBuilder: SELECT * FROM localweather WHERE (_id=1)
+04-07 04:31:23.852 19858 19858 V InputMethod: startInput(): editor=android.view.inputmethod.EditorInfo@491d58c
+04-07 04:31:23.852 19858 19858 V InputMethodService: CALL: doFinishInput
+04-07 04:31:23.852 19858 19858 D InlineSuggestionSessionController: notifyOnFinishInput
+04-07 04:31:23.852 19858 19858 V InputMethodService: CALL: onFinishInput
+04-07 04:31:23.852 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2159 
+04-07 04:31:23.852 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+04-07 04:31:23.853 19858 19858 V InputMethodService: finishStylusHandwriting()
+04-07 04:31:23.853 19858 19858 D InlineSuggestionSessionController: notifyOnStartInput: com.android.launcher3, 0
+04-07 04:31:23.853 19858 19858 V InputMethodService: CALL: onStartInput
+04-07 04:31:23.853 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1434 onStartInput(EditorInfo{EditorInfo{packageName=com.android.launcher3, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+04-07 04:31:23.853 19858 19858 I AndroidIME: LatinIMEBase.updateInputViewCoverNavigation():312 Update input view padding, isNavbarOverInputWindow=true, bottom inset=132
+04-07 04:31:23.854 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false
+04-07 04:31:23.876 11017 11017 E VivoConfigStore: it is Zygote,don't need init
+04-07 04:31:23.876 11017 11017 E VivoConfigStore: it is Zygote,don't need init
+04-07 04:31:23.907 11017 11017 I Monkey  : Events injected: 1
+04-07 04:31:23.938 11017 11017 I Monkey  : ## Network stats: elapsed time=53ms (0ms mobile, 0ms wifi, 53ms not connected)
+04-07 04:31:23.940 11017 11017 I app_process: System.exit called, status: 0
+04-07 04:31:23.940 11017 11017 I AndroidRuntime: VM exiting with result code 0.
+04-07 04:31:24.010  7174  7174 I buuu    : onPause
+04-07 04:31:24.048 11081 11081 I s_2k26_frontend: Late-enabling -Xcheck:jni
+04-07 04:31:24.049  5385  5397 I artd    : GetBestInfo: /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk has no usable artifacts
+04-07 04:31:24.057 19858 19858 I PkDeviceHelper: PkDeviceHelper.refreshDevices():87 refreshing devices
+04-07 04:31:24.074 11081 11081 I s_2k26_frontend: Using CollectorTypeCC GC.
+04-07 04:31:24.084 11081 11081 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+04-07 04:31:24.086 11081 11081 E s_2k26_frontend: BBinder_init Processname  com.appteam.nimbus_2k26_frontend  
+04-07 04:31:24.086 11081 11081 E s_2k26_frontend: BBinder_init hasGetProcessName  com.appteam.nimbus_2k26_frontend
+04-07 04:31:24.174 30311 30390 I soft.appmanager: Background young concurrent copying GC freed 12MB AllocSpace bytes, 2(40KB) LOS objects, 45% free, 14MB/26MB, paused 271us,125us total 210.866ms
+04-07 04:31:24.181 11081 11081 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+04-07 04:31:24.181 11081 11081 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+04-07 04:31:24.326 11081 11081 D nativeloader: Configuring clns-9 for other apk /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/lib/arm64:/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.appteam.nimbus_2k26_frontend
+04-07 04:31:24.333 11081 11081 I s_2k26_frontend: AssetManager2(0xb400007827ee4eb8) locale list changing from [] to [en-US]
+04-07 04:31:24.337 11081 11081 W Bundle  : Key enable expected ArrayList<java.lang.String> but value was of a different type.  The default value <null> was returned.
+04-07 04:31:24.338 11081 11081 W Bundle  : Attempt to cast generated internal exception:
+04-07 04:31:24.338 11081 11081 W Bundle  : java.lang.ClassCastException: Cannot cast java.lang.Boolean to java.util.ArrayList
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at java.lang.Class.cast(Class.java:4183)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.BaseBundle.getValueAt(BaseBundle.java:439)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.BaseBundle.getValue(BaseBundle.java:401)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.BaseBundle.getArrayList(BaseBundle.java:1569)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.BaseBundle.getStringArrayList(BaseBundle.java:1599)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.Bundle.getStringArrayList(Bundle.java:1385)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at com.vivo.vspa.VspaManager.parseBundles(VspaManager.java:201)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at com.vivo.vspa.VspaManager.initialize(VspaManager.java:105)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.app.VivoActivityThreadImpl.initialize(VivoActivityThreadImpl.java:142)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8835)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3062)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.Handler.dispatchMessage(Handler.java:114)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.Looper.loopOnce(Looper.java:266)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.os.Looper.loop(Looper.java:361)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at android.app.ActivityThread.main(ActivityThread.java:10381)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at java.lang.reflect.Method.invoke(Native Method)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:675)
+04-07 04:31:24.338 11081 11081 W Bundle  : 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1002)
+04-07 04:31:24.340 11081 11081 W VSPA    : Unable to open /proc/vivo_rsc/frame_set_priority: No such file or directory
+04-07 04:31:24.340 11081 11081 W VSPA    : Unable to open /proc/vivo_rsc/frame_set_priority: No such file or directory
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment: Currently set values for:
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[com.android.angle, com.linecorp.b612.android, com.campmobile.snow, com.google.android.apps.tachyon]
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment:   angle_gl_driver_selection_values=[angle, native, native, native]
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment: com.appteam.nimbus_2k26_frontend is not listed in per-application setting
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment: ANGLE allowlist from config: 
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment: com.appteam.nimbus_2k26_frontend is not listed in ANGLE allowlist or settings, returning default
+04-07 04:31:24.348 11081 11081 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+04-07 04:31:24.374 11081 11081 I FirebaseApp: Device unlocked: initializing all Firebase APIs for app [DEFAULT]
+04-07 04:31:24.378 11081 11081 I FirebaseInitProvider: FirebaseApp initialization successful
+04-07 04:31:24.416 11081 11103 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+04-07 04:31:24.419 11081 11103 I GameManager: __progname=com.appteam.nimbus_2k26_frontend
+04-07 04:31:24.427 11081 11081 I s_2k26_frontend: AssetManager2(0xb400007827ee99b8) locale list changing from [] to [en-US]
+04-07 04:31:24.428 11081 11103 I libEGL  : skip_priority_level=0, isWorkaroundEnable=1
+04-07 04:31:24.429  7174  7174 D VRI[Launcher,type=4]: visibilityChanged oldVisibility=true newVisibility=false
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: Failed to execute the transaction: tId:1136878541 ClientTransaction{
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541   transactionItems=[
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541     LaunchActivityItem{activityToken=android.os.BinderProxy@491b6c,intent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.appteam.nimbus_2k26_frontend/com.appteam.nimbus_2k26_frontend_frontend.MainActivity },ident=1853007,info=ActivityInfo{1b87fb1 com.appteam.nimbus_2k26_frontend_frontend.MainActivity},curConfig={1.0 405mcc872mnc [en_US,hi_IN,en_GB] ldltr sw393dp w393dp h873dp 440dpi nrml long widecg port night finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0 isEmbedding:false} s.9442 fontWeightAdjustment=0 themeId=2 themeParameter=0 nightModeLevel = -1 typefaceChanged=0.0 ?spacesystem eaMode=1},overrideConfig={1.0 405mcc872mnc [en_US,hi_IN,en_GB] ldltr sw393dp w393dp h873dp 440dpi nrml long widecg port night finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0 isEmbedding:false} s.3 fontWeightAdjustment=0 themeId=2 themeParameter=0 nightModeLevel = -1 typefaceChanged=0.0 ?spacesystem eaMode=1},deviceId=0,referrer=com.android.shell,procState=2,state=null,persistentState=null,pendingResults=null,pendingNewIntents=null,sceneTransitionInfo=null,profilerInfo=null,assistToken=android.os.BinderProxy@eaf4dca,shareableActivityToken=android.os.BinderProxy@e93db3b,activityWindowInfo=ActivityWindowInfo{isEmbedded=false, taskBounds=Rect(0, 0 - 1080, 2400), taskFragmentBounds=Rect(0, 0 - 1080, 2400)}}
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541     ResumeActivityItem{mActivityToken=android.os.BinderProxy@491b6c,procState=-1,isForward=true,shouldSendCompatFakeFocus=false}
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541     Target activity: Not found for token: android.os.BinderProxy@491b6c
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541   ]
+04-07 04:31:24.431 11081 11081 E TransactionExecutor: tId:1136878541 }
+04-07 04:31:24.431 11081 11081 D AndroidRuntime: Shutting down VM
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: FATAL EXCEPTION: main
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: Process: com.appteam.nimbus_2k26_frontend, PID: 11081
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate activity ComponentInfo{com.appteam.nimbus_2k26_frontend/com.appteam.nimbus_2k26_frontend_frontend.MainActivity}: java.lang.ClassNotFoundException: Didn't find class "com.appteam.nimbus_2k26_frontend_frontend.MainActivity" on path: DexPathList[[zip file "/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk"],nativeLibraryDirectories=[/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/lib/arm64, /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4902)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:5210)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:222)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3345)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:114)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:266)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:361)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:10381)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:675)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1002)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: Caused by: java.lang.ClassNotFoundException: Didn't find class "com.appteam.nimbus_2k26_frontend_frontend.MainActivity" on path: DexPathList[[zip file "/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk"],nativeLibraryDirectories=[/data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/lib/arm64, /data/app/~~611HmnH3vobLqutm1lWv6w==/com.appteam.nimbus_2k26_frontend-eeOgZtKY7J_pS4stIWrEGg==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at dalvik.system.BaseDexClassLoader.findClass(BaseDexClassLoader.java:259)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at java.lang.ClassLoader.loadClass(ClassLoader.java:637)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at java.lang.ClassLoader.loadClass(ClassLoader.java:573)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at androidx.core.app.CoreComponentFactory.instantiateActivity(CoreComponentFactory.java:44)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1457)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4884)
+04-07 04:31:24.433 11081 11081 E AndroidRuntime: 	... 13 more
+04-07 04:31:24.438  7174  7750 I HWUI    : [destroy] CanvasContext will be destroyed.
+04-07 04:31:24.475  7174  7174 D ViewRootImpl: AppSizeAfterRelayout, size: Point(1080, 2400), rotation: ROTATION_0
+04-07 04:31:24.475  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#12](f:0,a:1) destructor()
+04-07 04:31:24.476  7174  7174 D BufferQueueConsumer: [VRI[Launcher,type=4]#12(BLAST Consumer)12](id:1c060000000c,api:0,p:-1,c:7174) disconnect
+04-07 04:31:24.478  7174  7174 I buuu    : onStop
+04-07 04:31:24.492  7174  7174 D VRI[Launcher,type=4]: visibilityChanged oldVisibility=false newVisibility=true
+04-07 04:31:24.500 11081 11081 I Process : Sending signal. PID: 11081 SIG: 9
+04-07 04:31:24.518  7174  7174 D BufferQueueConsumer: [](id:1c060000000d,api:0,p:-1,c:7174) connect: controlledByApp=false
+04-07 04:31:24.518  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#13](f:0,a:0) constructor()
+04-07 04:31:24.518  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#13](f:0,a:0) update width=1080 height=2400 format=-2 mTransformHint=0
+04-07 04:31:24.524  7174  7750 W BLASTBufferQueue: Unable to open /proc/vivo_rsc/frame_set_priority: No such file or directory
+04-07 04:31:24.524  7174  7750 I BLASTBufferQueue: QoSAllocBuff Successful. Ret 0 
+04-07 04:31:24.534  7174  7750 D BLASTBufferQueue: [VRI[Launcher,type=4]#13](f:0,a:1) acquireNextBufferLocked size=1080x2400 mFrameNumber=1 applyTransaction=true mTimestamp=550453294976808(auto) mPendingTransactions.size=0 graphicBufferId=30812095381602 transform=0
+04-07 04:31:24.544  7174  7174 D VRI[Launcher,type=4]: visibilityChanged oldVisibility=true newVisibility=false
+04-07 04:31:24.568  3024  3060 I com.vivo.ai.aie: Background young concurrent copying GC freed 6232KB AllocSpace bytes, 3(124KB) LOS objects, 47% free, 7023KB/13MB, paused 284us,85us total 154.594ms
+04-07 04:31:24.586 20203  8948 D SQLiteQueryBuilder: SELECT * FROM localweather WHERE (_id=1)
+04-07 04:31:24.595  7174  7750 I HWUI    : [destroy] CanvasContext will be destroyed.
+04-07 04:31:24.601  7174  7174 D ViewRootImpl: AppSizeAfterRelayout, size: Point(1080, 2400), rotation: ROTATION_0
+04-07 04:31:24.601  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#13](f:0,a:1) destructor()
+04-07 04:31:24.601  7174  7174 D BufferQueueConsumer: [VRI[Launcher,type=4]#13(BLAST Consumer)13](id:1c060000000d,api:0,p:-1,c:7174) disconnect
+04-07 04:31:24.602  7174  7174 D VRI[Launcher,type=4]: visibilityChanged oldVisibility=false newVisibility=true
+04-07 04:31:24.602  7174  7174 I buuu    : onStart
+04-07 04:31:24.603  7174  7174 I bsrn    : (REDACTED) [%s] onStart()
+04-07 04:31:24.603  7174  7174 I bstt    : Reloading theme data
+04-07 04:31:24.604  7174  7174 I buuu    : onResume
+04-07 04:31:24.617  7174  7174 D BufferQueueConsumer: [](id:1c060000000e,api:0,p:-1,c:7174) connect: controlledByApp=false
+04-07 04:31:24.617  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#14](f:0,a:0) constructor()
+04-07 04:31:24.617  7174  7174 D BLASTBufferQueue: [VRI[Launcher,type=4]#14](f:0,a:0) update width=1080 height=2400 format=-2 mTransformHint=0
+04-07 04:31:24.618  7174  7750 W BLASTBufferQueue: Unable to open /proc/vivo_rsc/frame_set_priority: No such file or directory
+04-07 04:31:24.618  7174  7750 I BLASTBufferQueue: QoSAllocBuff Successful. Ret 0 
+04-07 04:31:24.622  7174  7750 D BLASTBufferQueue: [VRI[Launcher,type=4]#14](f:0,a:1) acquireNextBufferLocked size=1080x2400 mFrameNumber=1 applyTransaction=true mTimestamp=550453382967270(auto) mPendingTransactions.size=0 graphicBufferId=30812095381609 transform=0
+04-07 04:31:24.693 31066 31066 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.auth.aang.events.services.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }
+04-07 04:31:24.714 19858 19858 V InputMethod: startInput(): editor=android.view.inputmethod.EditorInfo@4ef3db
+04-07 04:31:24.714 19858 19858 V InputMethodService: CALL: doFinishInput
+04-07 04:31:24.714 19858 19858 D InlineSuggestionSessionController: notifyOnFinishInput
+04-07 04:31:24.714 19858 19858 V InputMethodService: CALL: onFinishInput
+04-07 04:31:24.714 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2159 
+04-07 04:31:24.714 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+04-07 04:31:24.715 19858 19858 V InputMethodService: finishStylusHandwriting()
+04-07 04:31:24.715 19858 19858 D InlineSuggestionSessionController: notifyOnStartInput: com.android.launcher3, 0
+04-07 04:31:24.715 19858 19858 V InputMethodService: CALL: onStartInput
+04-07 04:31:24.715 19858 19858 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1434 onStartInput(EditorInfo{EditorInfo{packageName=com.android.launcher3, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+04-07 04:31:24.715 19858 19858 I AndroidIME: LatinIMEBase.updateInputViewCoverNavigation():312 Update input view padding, isNavbarOverInputWindow=true, bottom inset=132
+04-07 04:31:24.715 19858 19858 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false
+04-07 04:31:24.783 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:25.701 31066  5737 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+04-07 04:31:25.701 31066  5737 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing}
+04-07 04:31:25.791 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:26.336  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.337  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.337  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.339  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.340  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.340  7554  7557 W .gms.persistent: Missing inline cache for iqbs bgaf.b(android.content.Context, byte[], int[], java.lang.String[], int[], byte[][], com.google.android.gms.phenotype.ExperimentTokens[], boolean, java.lang.String[], java.lang.String, boolean, java.lang.String, double, ewxz, bfzp)
+04-07 04:31:26.845 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:26.937  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=15
+04-07 04:31:27.902 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:28.017 19858 20442 I PhenotypeProcessReaper: Memory state is: 200
+04-07 04:31:28.464  1883  3610 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=2
+04-07 04:31:28.956 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:29.001 14773 14876 I Finsky  : [1424] AIM: AppInfoManager-Perf > Destroying AppInfoManager ...
+04-07 04:31:30.022 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:30.042  1883  4525 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:30.639 30311  9423 D BluetoothAdapter: 147919228: getState(). Returning ON
+04-07 04:31:31.056 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:31.085  1883  3610 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=2
+04-07 04:31:32.133 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:33.185 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:33.313  1883  3610 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:34.241 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:35.293 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:35.704 31066  5737 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+04-07 04:31:35.704 31066  5737 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing}
+04-07 04:31:36.341 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:36.344  1883  3610 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:37.395 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:37.680  9728  9789 I Process : Sending signal. PID: 9728 SIG: 9
+04-07 04:31:38.450 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:38.480  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:39.501 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:39.528  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=2
+04-07 04:31:40.557 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:41.629 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:42.391  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:42.691 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:43.754 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:43.790  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:44.701 31066 10867 I CastDatabase: Saving the database
+04-07 04:31:44.725 31066 10867 I SQLiteCastStore: [CastNetworkInfo] saved: 1, skipped: 0, [CastDeviceInfo]: saved 1, skipped 0, [ProbedNetworks]: saved 0, skipped: 0, [ProbedSocketAddress]: saved 1, skipped: 0, [Network-Device pairs]: saved: 1
+04-07 04:31:44.786 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:45.405  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:45.707 31066  5737 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+04-07 04:31:45.707 31066  5737 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing}
+04-07 04:31:45.845 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:46.893 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:46.925  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=2
+04-07 04:31:47.939 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:47.976  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1
+04-07 04:31:48.996 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:50.056 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:51.095 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:51.459  1883  4500 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=2
+04-07 04:31:52.145 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:53.218 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:54.279 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:55.010 31066  5737 I FusedLocation: (REDACTED) location delivery to %s blocked - too close
+04-07 04:31:55.012 31066  5737 I FusedLocation: (REDACTED) location delivery to %s blocked - too close
+04-07 04:31:55.014 31066  5737 I FusedLocation: (REDACTED) location delivery to %s blocked - too close
+04-07 04:31:55.015 31066  5737 I FusedLocation: (REDACTED) location delivery to %s blocked - too close
+04-07 04:31:55.067 31066 31066 D BoundBrokerSvc: onRebind: Intent { act=com.google.android.gms.auth.aang.events.services.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }
+04-07 04:31:55.176 31066 10707 I TFLite-in-PlayServices: Created interpreter.
+04-07 04:31:55.189 31066 10707 I TFLite-in-PlayServices: Created interpreter.
+04-07 04:31:55.205 31066 10707 I SemanticLocation: (REDACTED) [Inferrer] %s%s
+04-07 04:31:55.237 31066 10707 I SemanticLocation: (REDACTED) [OdlhCache] flushing %d segments
+04-07 04:31:55.270 31066 10707 I TFLite-in-PlayServices: Created interpreter.
+04-07 04:31:55.276 31066 10707 I TFLite-in-PlayServices: Created interpreter.
+04-07 04:31:55.281 31066 10707 I SemanticLocation: (REDACTED) [Inferrer] %s%s
+04-07 04:31:55.291 31066 31066 D BoundBrokerSvc: onRebind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+04-07 04:31:55.301 31066 10707 I SemanticLocation: (REDACTED) [OdlhCache] flushing %d segments
+04-07 04:31:55.306 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:55.709 31066  6457 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+04-07 04:31:55.710 31066  6457 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing}
+04-07 04:31:56.369 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:57.436 21859 21859 I wpa_supplicant: Iface already exists, return existing
+04-07 04:31:57.469  1883  4525 D BatteryStatsService: noteFpsPipe  : POWER_ID_FPS_PIPE initFps=2,fpsPipe=1

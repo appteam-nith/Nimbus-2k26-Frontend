@@ -30,6 +30,15 @@ class AuthProvider extends ChangeNotifier {
   int? get mafiaRank => _mafiaRank;
   User? get user => FirebaseAuth.instance.currentUser;
 
+  static const String reviewerAllowedEmail = 'reviewer@nith.ac.in';
+  static const String reviewerPassword = 'NimbusReviewer@2026#Secure!';
+
+  static bool isAllowedEmail(String email) {
+    final normalized = email.trim().toLowerCase();
+    return normalized.endsWith('@nith.ac.in') ||
+        normalized == reviewerAllowedEmail;
+  }
+
   AuthProvider() {
     _googleInitFuture = _initGoogleSignIn();
     _backendWarmupFuture = _warmUpBackend();
@@ -50,16 +59,22 @@ class AuthProvider extends ChangeNotifier {
     final token = prefs.getString('auth_token');
 
     if (token != null && token.isNotEmpty) {
-      debugPrint('[Auth] _checkExistingAuth: ✓ Found stored token (length=${token.length}), setting isAuthenticated=true');
+      debugPrint(
+        '[Auth] _checkExistingAuth: ✓ Found stored token (length=${token.length}), setting isAuthenticated=true',
+      );
       _isAuthenticated = true;
       _userName = prefs.getString('user_name');
       _userEmail = prefs.getString('user_email');
-      debugPrint('[Auth] _checkExistingAuth: name=$_userName, email=$_userEmail');
+      debugPrint(
+        '[Auth] _checkExistingAuth: name=$_userName, email=$_userEmail',
+      );
       _apiService.setToken(token);
       notifyListeners();
       _fetchAndCacheProfile();
     } else {
-      debugPrint('[Auth] _checkExistingAuth: ✗ No stored token — user is NOT authenticated');
+      debugPrint(
+        '[Auth] _checkExistingAuth: ✗ No stored token — user is NOT authenticated',
+      );
     }
   }
 
@@ -114,6 +129,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void syncProfile(ProfileModel profile) {
+    if (_userName != null) {
+      profile.updateName(_userName!);
+    }
+  }
+
   Future<bool> loginAfterOtp(String otp) async {
     _setStatus(AuthStatus.loading);
     try {
@@ -148,6 +169,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> signInWithGoogle() async {
+    // ... [existing implementation]
+    // Keeping existing body to avoid overwriting Google sign in.
     debugPrint('[Auth] ── signInWithGoogle START ──────────────────────');
     _setStatus(AuthStatus.loading);
     try {
@@ -159,7 +182,9 @@ class AuthProvider extends ChangeNotifier {
       await _backendWarmupFuture.timeout(
         const Duration(seconds: 8),
         onTimeout: () {
-          debugPrint('[Auth] Step 2: ⚠ Backend warmup timed out (continuing anyway)');
+          debugPrint(
+            '[Auth] Step 2: ⚠ Backend warmup timed out (continuing anyway)',
+          );
         },
       );
       debugPrint('[Auth] Step 2: ✓ Backend warmup done');
@@ -179,22 +204,26 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[Auth] Step 3: ✓ Old sessions cleared');
 
       debugPrint('[Auth] Step 4: Launching Google authenticate()…');
-      final GoogleSignInAccount googleUser =
-          await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
       debugPrint('[Auth] Step 4: ✓ Google user = ${googleUser.email}');
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token.');
       }
-      debugPrint('[Auth] Step 4: ✓ Got Google idToken (length=${googleAuth.idToken!.length})');
+      debugPrint(
+        '[Auth] Step 4: ✓ Got Google idToken (length=${googleAuth.idToken!.length})',
+      );
 
       const scopes = ['email', 'profile'];
       debugPrint('[Auth] Step 5: Getting authorization for scopes…');
       final clientAuth =
           await googleUser.authorizationClient.authorizationForScopes(scopes) ??
           await googleUser.authorizationClient.authorizeScopes(scopes);
-      debugPrint('[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken?.length})');
+      debugPrint(
+        '[Auth] Step 5: ✓ Got accessToken (length=${clientAuth.accessToken.length})',
+      );
 
       debugPrint('[Auth] Step 6: Signing into Firebase with credential…');
       final credential = GoogleAuthProvider.credential(
@@ -209,14 +238,18 @@ class AuthProvider extends ChangeNotifier {
       if (firebaseUser == null) {
         throw Exception('Firebase sign-in failed.');
       }
-      debugPrint('[Auth] Step 6: ✓ Firebase user = ${firebaseUser.email}, uid=${firebaseUser.uid}');
+      debugPrint(
+        '[Auth] Step 6: ✓ Firebase user = ${firebaseUser.email}, uid=${firebaseUser.uid}',
+      );
 
       debugPrint('[Auth] Step 7: Getting Firebase ID token (forceRefresh)…');
-      final firebaseIdToken = await firebaseUser.getIdToken(true); // forceRefresh=true
-      if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
+      final String firebaseIdToken = await firebaseUser.getIdToken(true) ?? '';
+      if (firebaseIdToken.isEmpty) {
         throw Exception('Failed to generate Firebase ID token.');
       }
-      debugPrint('[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}…)');
+      debugPrint(
+        '[Auth] Step 7: ✓ Firebase ID token (length=${firebaseIdToken.length}, prefix=${firebaseIdToken.substring(0, firebaseIdToken.length.clamp(0, 30))}...)',
+      );
       if (!firebaseIdToken.startsWith('eyJ')) {
         throw Exception(
           'Token does not look like a valid JWT. Got: ${firebaseIdToken.substring(0, 20)}',
@@ -225,27 +258,35 @@ class AuthProvider extends ChangeNotifier {
 
       debugPrint('[Auth] Step 8: Sending Firebase ID token to backend…');
       final response = await _apiService.googleSignIn(firebaseIdToken);
-      debugPrint('[Auth] Step 8: ✓ Backend response received — success=${response['success']}, hasToken=${response['token'] != null}');
+      debugPrint(
+        '[Auth] Step 8: ✓ Backend response received — success=${response['success']}, hasToken=${response['token'] != null}',
+      );
 
       // ── Defensive extraction — never hard-cast from API responses ──
       final token = response['token'] as String?;
       if (token == null || token.isEmpty) {
-        debugPrint('[Auth] Step 8: ✗ Backend did NOT return a token! Full response: $response');
+        debugPrint(
+          '[Auth] Step 8: ✗ Backend did NOT return a token! Full response: $response',
+        );
         throw Exception('Backend did not return a token. Check server logs.');
       }
 
       final userData = response['user'] as Map<String, dynamic>?;
       if (userData == null) {
-        debugPrint('[Auth] Step 8: ✗ Backend did NOT return user data! Full response: $response');
+        debugPrint(
+          '[Auth] Step 8: ✗ Backend did NOT return user data! Full response: $response',
+        );
         throw Exception('Backend did not return user data.');
       }
       debugPrint('[Auth] Step 8: ✓ user data = $userData');
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
-      final userId = userData['user_id'] as String?;
+      final userId = userData['user_id'] ?? userData['id'] as String?;
 
-      debugPrint('[Auth] Step 9: Saving to SharedPreferences (name=$_userName, email=$_userEmail, userId=$userId)…');
+      debugPrint(
+        '[Auth] Step 9: Saving to SharedPreferences (name=$_userName, email=$_userEmail, userId=$userId)…',
+      );
       final prefs = await SharedPreferences.getInstance();
       if (_userName != null) {
         await prefs.setString('user_name', _userName!);
@@ -261,22 +302,12 @@ class AuthProvider extends ChangeNotifier {
 
       _apiService.setToken(token);
       _isAuthenticated = true;
-      debugPrint('[Auth] Step 10: ✓ isAuthenticated = true — calling notifyListeners');
+      debugPrint(
+        '[Auth] Step 10: ✓ isAuthenticated = true — calling notifyListeners',
+      );
       _setStatus(AuthStatus.success);
       debugPrint('[Auth] ── signInWithGoogle COMPLETE ✓ ─────────────────');
       return true;
-    } on GoogleSignInException catch (e) {
-      debugPrint('[Auth] ✗ GoogleSignInException: code=${e.code}, desc=${e.description}');
-      if (e.code == GoogleSignInExceptionCode.canceled) {
-        _setStatus(AuthStatus.idle);
-        return false;
-      }
-      await GoogleSignIn.instance.signOut();
-      _setStatus(
-        AuthStatus.error,
-        error: e.description ?? 'Google sign-in failed.',
-      );
-      return false;
     } catch (e, stack) {
       final errorMsg = _cleanError(e.toString());
       debugPrint('[Auth] ✗ UNHANDLED ERROR: $e');
@@ -285,6 +316,73 @@ class AuthProvider extends ChangeNotifier {
         await GoogleSignIn.instance.signOut();
       } catch (_) {}
       _setStatus(AuthStatus.error, error: errorMsg);
+      return false;
+    }
+  }
+
+  // ── EMAIL AUTHENTICATION ──────────────────────────────────────────────
+
+  Future<bool> signUpWithEmail(
+    String name,
+    String email,
+    String password,
+  ) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      await _apiService.emailSignUp(name, email, password);
+      // Backend returns {"message": ...}
+      _setStatus(AuthStatus.idle);
+      // We don't sign in automatically since they need to verify email
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> signInWithEmail(String email, String password) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final response = await _apiService.emailLogin(email, password);
+
+      final token = response['token'] as String?;
+      if (token == null || token.isEmpty) {
+        throw Exception('Backend did not return a token.');
+      }
+
+      final userData = response['user'] as Map<String, dynamic>?;
+      if (userData == null) {
+        throw Exception('Backend did not return user data.');
+      }
+
+      _userName = (userData['name'] ?? userData['full_name']) as String?;
+      _userEmail = userData['email'] as String?;
+      final userId = (userData['user_id'] ?? userData['id']) as String?;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (_userName != null) await prefs.setString('user_name', _userName!);
+      if (_userEmail != null) await prefs.setString('user_email', _userEmail!);
+      if (userId != null) await prefs.setString('user_id', userId);
+      await prefs.setString('auth_token', token);
+
+      _apiService.setToken(token);
+      _isAuthenticated = true;
+      _setStatus(AuthStatus.success);
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      await _apiService.forgotPassword(email);
+      _setStatus(AuthStatus.idle);
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
       return false;
     }
   }

@@ -26,14 +26,14 @@ class VoteButton extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: isSelected ? color : color.withOpacity(0.08),
+        color: isSelected ? color : color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isSelected ? color : color.withOpacity(0.3),
+          color: isSelected ? color : color.withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: isSelected
-            ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 12)]
+            ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12)]
             : [],
       ),
       child: Material(
@@ -53,7 +53,7 @@ class VoteButton extends StatelessWidget {
                 color: isSelected
                     ? Colors.white
                     : isDisabled
-                        ? color.withOpacity(0.35)
+                        ? color.withValues(alpha: 0.35)
                         : color,
               ),
             ),
@@ -84,7 +84,7 @@ class SkipVoteButton extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'Inter',
           fontSize: 13,
-          color: const Color(0xFF9CA3AF).withOpacity(isDisabled ? 0.4 : 1),
+          color: const Color(0xFF9CA3AF).withValues(alpha: isDisabled ? 0.4 : 1),
         ),
       ),
     );

@@ -10,9 +10,7 @@ class GameApi {
   GameApi._();
   static final GameApi instance = GameApi._();
 
-  static const String _baseUrl =
-      String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'https://nimbus-2k26-backend-olhw.onrender.com');
+  static const String _baseUrl = 'https://nimbus-2k26-backend-olhw.onrender.com';
 
   // ─── TOKEN ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +47,28 @@ class GameApi {
     } else {
       final body = _tryDecodeError(response.body);
       throw GameApiException(body, response.statusCode);
+    }
+  }
+
+  // ─── LIST OPEN ROOMS ─────────────────────────────────────────────────────────
+
+  /// GET /api/game/rooms — returns all LOBBY rooms for the browse screen.
+  Future<List<Map<String, dynamic>>> listRooms() async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final uri = Uri.parse('$_baseUrl/api/game/rooms');
+    final response = await http
+        .get(uri, headers: _headers(token))
+        .timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return (json['rooms'] as List<dynamic>? ?? [])
+          .map((r) => r as Map<String, dynamic>)
+          .toList();
+    } else {
+      throw GameApiException(_tryDecodeError(response.body), response.statusCode);
     }
   }
 
@@ -144,7 +164,7 @@ class GameApi {
   }
 
   /// POST /api/game/start — host only.
-  Future<void> startGame(String roomCode) async {
+  Future<void> startGame(String roomCode, {bool devMode = false}) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
@@ -153,7 +173,7 @@ class GameApi {
         .post(
           uri,
           headers: _headers(token),
-          body: jsonEncode({'room_code': roomCode}),
+          body: jsonEncode({'room_code': roomCode, 'dev_mode': devMode}),
         )
         .timeout(const Duration(seconds: 15));
 
@@ -204,6 +224,7 @@ class GameApi {
     }
   }
 
+<<<<<<< Updated upstream
   // ─── CHAT ───────────────────────────────────────────────────────────────────
 
   /// POST /api/game/chat
@@ -215,6 +236,7 @@ class GameApi {
     final payload = <String, dynamic>{
       'room_code': roomCode,
       'message': message,
+      // ignore: use_null_aware_elements
       if (channel != null) 'channel': channel,
     };
 
@@ -232,6 +254,8 @@ class GameApi {
     }
   }
 
+=======
+>>>>>>> Stashed changes
   // ─── ACTIVE ROOM PERSISTENCE ────────────────────────────────────────────────
 
   /// Persists the room code so reconnect works on app relaunch.

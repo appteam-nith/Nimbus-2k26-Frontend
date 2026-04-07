@@ -1,3 +1,6 @@
 {
-  "CLERK_PUBLISHABLE_KEY": "pk_test_REPLACE_WITH_YOUR_CLERK_PUBLISHABLE_KEY_iN_your_dart_defines.json"
+  "CLERK_PUBLISHABLE_KEY": "pk_test_REPLACE_WITH_YOUR_CLERK_PUBLISHABLE_KEY_iN_your_dart_defines.json",
+  "PUSHER_APP_KEY": "9abb93acdbad87f7e0cb",
+  "PUSHER_CLUSTER": "ap2",
+  "API_BASE_URL": "https://nimbus-2k26-backend-olhw.onrender.com"
 }

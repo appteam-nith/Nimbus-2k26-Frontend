@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
 import '../models/chat_model.dart';
-import '../models/player_model.dart';
 import '../services/pusher_service.dart';
 import '../services/game_api.dart';
 
@@ -96,10 +95,10 @@ class _ChatWidgetState extends State<ChatWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: channelColor.withOpacity(0.08),
+            color: channelColor.withValues(alpha: 0.08),
             border: Border(
-              top: BorderSide(color: channelColor.withOpacity(0.2)),
-              bottom: BorderSide(color: channelColor.withOpacity(0.1)),
+              top: BorderSide(color: channelColor.withValues(alpha: 0.2)),
+              bottom: BorderSide(color: channelColor.withValues(alpha: 0.1)),
             ),
           ),
           child: Row(
@@ -112,7 +111,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                        color: channelColor.withOpacity(0.5),
+                        color: channelColor.withValues(alpha: 0.5),
                         blurRadius: 6),
                   ],
                 ),
@@ -134,7 +133,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ),
             ],
@@ -158,7 +157,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                     ],
@@ -187,7 +186,7 @@ class _ChatWidgetState extends State<ChatWidget> {
           Container(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            color: const Color(0xFFEF4444).withOpacity(0.1),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.1),
             child: Row(
               children: [
                 const Icon(Icons.error_outline,
@@ -219,7 +218,7 @@ class _ChatWidgetState extends State<ChatWidget> {
           decoration: BoxDecoration(
             color: const Color(0xFF111827),
             border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(0.06)),
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
             ),
           ),
           child: SafeArea(
@@ -232,7 +231,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                       color: const Color(0xFF1C2333),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.08)),
+                          color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: TextField(
                       controller: _textController,
@@ -276,7 +275,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           : [
                               BoxShadow(
                                 color:
-                                    channelColor.withOpacity(0.4),
+                                    channelColor.withValues(alpha: 0.4),
                                 blurRadius: 8,
                               )
                             ],
@@ -353,7 +352,7 @@ class _MessageBubble extends StatelessWidget {
           if (!isMe) ...[
             CircleAvatar(
               radius: 14,
-              backgroundColor: channelColor.withOpacity(0.2),
+              backgroundColor: channelColor.withValues(alpha: 0.2),
               child: Text(
                 initials,
                 style: TextStyle(
@@ -381,7 +380,7 @@ class _MessageBubble extends StatelessWidget {
                         fontFamily: 'Inter',
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: channelColor.withOpacity(0.8),
+                        color: channelColor.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -390,7 +389,7 @@ class _MessageBubble extends StatelessWidget {
                       horizontal: 14, vertical: 9),
                   decoration: BoxDecoration(
                     color: isMe
-                        ? channelColor.withOpacity(0.18)
+                        ? channelColor.withValues(alpha: 0.18)
                         : const Color(0xFF1C2333),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
@@ -402,8 +401,8 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     border: Border.all(
                       color: isMe
-                          ? channelColor.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.06),
+                          ? channelColor.withValues(alpha: 0.3)
+                          : Colors.white.withValues(alpha: 0.06),
                       width: 1,
                     ),
                   ),
@@ -423,7 +422,7 @@ class _MessageBubble extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 9,
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                   ),
                 ),
               ],

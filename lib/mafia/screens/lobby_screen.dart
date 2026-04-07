@@ -47,9 +47,19 @@ class _LobbyScreenState extends State<LobbyScreen>
   bool _loading = false;
   String? _error;
 
+  // Browse Rooms tab
+  int _entryTab = 0; // 0 = Create/Join, 1 = Browse
+  List<Map<String, dynamic>> _openRooms = [];
+  bool _roomsLoading = false;
+
+  // Developer Mode
+  bool _devMode = false;
+
   StreamSubscription<Map<String, dynamic>>? _joinSub;
   StreamSubscription<Map<String, dynamic>>? _leaveSub;
   StreamSubscription<Map<String, dynamic>>? _startSub;
+  StreamSubscription<Map<String, dynamic>>? _roomOpenedSub;
+  StreamSubscription<Map<String, dynamic>>? _roomClosedSub;
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -83,6 +93,8 @@ class _LobbyScreenState extends State<LobbyScreen>
     _joinSub?.cancel();
     _leaveSub?.cancel();
     _startSub?.cancel();
+    _roomOpenedSub?.cancel();
+    _roomClosedSub?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -134,6 +146,47 @@ class _LobbyScreenState extends State<LobbyScreen>
       // init() fetches room state, connects Pusher fully, then routes to /mafia/role
       await gc.init(_roomCode!, _myUserId!);
     });
+  }
+
+  // ── Browse rooms realtime subscriptions ──────────────────────────────────
+
+  void _subscribeBrowseEvents() {
+    _roomOpenedSub?.cancel();
+    _roomClosedSub?.cancel();
+
+    _roomOpenedSub = _pusher.onRoomOpened.listen((data) {
+      if (!mounted) return;
+      final code = data['roomCode'] as String?;
+      if (code == null) return;
+      setState(() {
+        // Upsert: update if exists, add if new
+        final idx = _openRooms.indexWhere((r) => r['roomCode'] == code);
+        if (idx >= 0) {
+          _openRooms[idx] = data;
+        } else {
+          _openRooms = [data, ..._openRooms];
+        }
+      });
+    });
+
+    _roomClosedSub = _pusher.onRoomClosed.listen((data) {
+      if (!mounted) return;
+      final code = data['roomCode'] as String?;
+      if (code == null) return;
+      setState(() => _openRooms.removeWhere((r) => r['roomCode'] == code));
+    });
+  }
+
+  Future<void> _loadOpenRooms() async {
+    setState(() => _roomsLoading = true);
+    try {
+      final rooms = await _api.listRooms();
+      if (mounted) setState(() => _openRooms = rooms);
+    } catch (_) {
+      // Fail silently — UI shows empty state
+    } finally {
+      if (mounted) setState(() => _roomsLoading = false);
+    }
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -199,7 +252,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       _error = null;
     });
     try {
-      await _api.startGame(_roomCode!);
+      await _api.startGame(_roomCode!, devMode: _devMode);
       // The backend broadcasts 'game-started' via Pusher.
       // _startSub in _subscribeLobbyEvents handles navigation for ALL players
       // (including the host), so nothing more to do here.
@@ -212,7 +265,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     }
   }
 
-  void _leaveRoom() {
+  Future<void> _leaveRoomConfirmed() async {
     if (_roomCode != null) {
       _api.leaveRoom(_roomCode!);
     }
@@ -228,6 +281,36 @@ class _LobbyScreenState extends State<LobbyScreen>
       _players = [];
       _error = null;
     });
+  }
+
+  Future<void> _leaveRoom() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Leave Room?',
+            style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w700)),
+        content: Text(
+          _isHost
+              ? 'You are the host. Leaving will transfer host or delete the room if you are the last player.'
+              : 'Are you sure you want to leave this room?',
+          style: const TextStyle(color: _textSecondary, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Stay', style: TextStyle(color: _textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: _red),
+            child: const Text('Leave', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) await _leaveRoomConfirmed();
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -249,10 +332,19 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: _inRoom ? _buildWaitingRoom() : _buildEntry(),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_inRoom) {
+          await _leaveRoom();
+          return false; // We handle navigation ourselves
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: SafeArea(
+          child: _inRoom ? _buildWaitingRoom() : _buildEntry(),
+        ),
       ),
     );
   }
@@ -260,6 +352,41 @@ class _LobbyScreenState extends State<LobbyScreen>
   // ░░░░░░░░░░░░░░░░░░░░░░░░  PHASE A — ENTRY  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
   Widget _buildEntry() {
+    return Column(
+      children: [
+        // ── Tab bar ────────────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Row(
+            children: [
+              _EntryTab(
+                label: 'Play',
+                icon: Icons.gamepad_outlined,
+                selected: _entryTab == 0,
+                onTap: () => setState(() => _entryTab = 0),
+              ),
+              const SizedBox(width: 10),
+              _EntryTab(
+                label: 'Browse Rooms',
+                icon: Icons.search_rounded,
+                selected: _entryTab == 1,
+                onTap: () {
+                  setState(() => _entryTab = 1);
+                  _loadOpenRooms();
+                  _subscribeBrowseEvents();
+                },
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _entryTab == 0 ? _buildPlayTab() : _buildBrowseTab(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
@@ -276,6 +403,137 @@ class _LobbyScreenState extends State<LobbyScreen>
           const SizedBox(height: 40),
           _buildRulesHint(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBrowseTab() {
+    if (_roomsLoading) {
+      return const Center(child: CircularProgressIndicator(color: _accent));
+    }
+    if (_openRooms.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🎭', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 16),
+            const Text('No open rooms',
+                style: TextStyle(
+                    color: _textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            const Text('Be the first — create a room!',
+                style: TextStyle(color: _textSecondary, fontSize: 13)),
+            const SizedBox(height: 24),
+            _PrimaryButton(
+              label: 'Create Room',
+              icon: Icons.add,
+              loading: false,
+              onTap: () => setState(() => _entryTab = 0),
+            ),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: _accent,
+      onRefresh: _loadOpenRooms,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _openRooms.length,
+        itemBuilder: (_, i) {
+          final r = _openRooms[i];
+          final code = r['roomCode'] as String? ?? '';
+          final size = r['roomSize'] as String? ?? 'FIVE';
+          final count = r['playerCount'] as int? ?? 0;
+          final max = r['maxPlayers'] as int? ?? 5;
+          final isFull = count >= max;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GestureDetector(
+              onTap: isFull ? null : () => _joinRoom(code),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isFull
+                        ? _border
+                        : _accent.withOpacity(0.35),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Room size icon
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _accent.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        size == 'FIVE' ? '5' : size == 'EIGHT' ? '8' : '12',
+                        style: const TextStyle(
+                            color: _accentGlow,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(code,
+                              style: const TextStyle(
+                                  color: _textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 2)),
+                          const SizedBox(height: 3),
+                          Text('$count / $max players',
+                              style: const TextStyle(
+                                  color: _textSecondary, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    if (isFull)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _gold.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('FULL',
+                            style: TextStyle(
+                                color: _gold,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700)),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _accent.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('JOIN',
+                            style: TextStyle(
+                                color: _accentGlow,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -315,7 +573,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                    color: _accent.withOpacity(0.4),
+                    color: _accent.withValues(alpha: 0.4),
                     blurRadius: 20,
                     spreadRadius: 2),
               ],
@@ -354,7 +612,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.15),
+                  color: _accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.add_circle_outline,
@@ -412,6 +670,100 @@ class _LobbyScreenState extends State<LobbyScreen>
             ],
           ),
           const SizedBox(height: 20),
+          // ── Developer Mode toggle ─────────────────────────────────────────
+          GestureDetector(
+            onTap: () => setState(() => _devMode = !_devMode),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: _devMode
+                    ? const Color(0xFFF59E0B).withOpacity(0.08)
+                    : _surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _devMode
+                      ? const Color(0xFFF59E0B).withOpacity(0.4)
+                      : _border,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: _devMode
+                          ? const Color(0xFFF59E0B).withOpacity(0.15)
+                          : _border,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.bug_report_outlined,
+                      size: 18,
+                      color: _devMode
+                          ? const Color(0xFFF59E0B)
+                          : _textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Developer Mode',
+                              style: TextStyle(
+                                color: _devMode
+                                    ? const Color(0xFFF59E0B)
+                                    : _textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (_devMode) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF59E0B)
+                                      .withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text('⚡ DEV',
+                                    style: TextStyle(
+                                        color: Color(0xFFF59E0B),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Fill empty slots with bots. All roles visible.',
+                          style: TextStyle(
+                            color: _devMode
+                                ? const Color(0xFFF59E0B).withOpacity(0.7)
+                                : _textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _devMode,
+                    onChanged: (v) => setState(() => _devMode = v),
+                    activeColor: const Color(0xFFF59E0B),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           _PrimaryButton(
             label: 'Create Room',
             icon: Icons.add,
@@ -433,7 +785,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _gold.withOpacity(0.12),
+                  color: _gold.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.login_rounded, color: _gold, size: 22),
@@ -585,12 +937,30 @@ class _LobbyScreenState extends State<LobbyScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _accent.withOpacity(0.15),
+                    color: _accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text('HOST',
                       style: TextStyle(
                           color: _accentGlow,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8)),
+                ),
+              if (_devMode)
+                Container(
+                  margin: const EdgeInsets.only(left: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                  ),
+                  child: const Text('⚡ DEV',
+                      style: TextStyle(
+                          color: Color(0xFFF59E0B),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8)),
@@ -618,7 +988,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   colors: [Color(0xFF1E1040), Color(0xFF2D1A5E)],
                 ),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _accent.withOpacity(0.4)),
+                border: Border.all(color: _accent.withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -681,7 +1051,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _gold.withOpacity(0.12),
+              color: _gold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text('FULL',
@@ -786,9 +1156,15 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildStartButton() {
-    final canStart = _roomFull && !_loading;
+    // In dev mode: can always start (bots will fill remaining slots)
+    // Normal mode: need a full room
+    final canStart = (_roomFull || _devMode) && !_loading;
+    final roomMax = _roomSize == 'FIVE' ? 5 : _roomSize == 'EIGHT' ? 8 : 12;
+    final label = _devMode
+        ? (_roomFull ? 'Start Game' : 'Start with Bots (${_players.length}/$roomMax)')
+        : (_roomFull ? 'Start Game' : 'Waiting for players...');
     return _PrimaryButton(
-      label: _roomFull ? 'Start Game' : 'Waiting for players...',
+      label: label,
       icon: Icons.play_arrow_rounded,
       loading: _loading,
       onTap: canStart ? _startGame : null,
@@ -841,9 +1217,9 @@ class _LobbyScreenState extends State<LobbyScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _red.withOpacity(0.1),
+        color: _red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _red.withOpacity(0.3)),
+        border: Border.all(color: _red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -905,7 +1281,7 @@ class _SizeChip extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? _accent.withOpacity(0.15) : _surface,
+            color: selected ? _accent.withValues(alpha: 0.15) : _surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? _accentGlow : _border,
@@ -923,7 +1299,7 @@ class _SizeChip extends StatelessWidget {
               const SizedBox(height: 2),
               Text(sublabel,
                   style: TextStyle(
-                    color: selected ? _accentGlow.withOpacity(0.7) : _textSecondary,
+                    color: selected ? _accentGlow.withValues(alpha: 0.7) : _textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   )),
@@ -969,7 +1345,7 @@ class _PrimaryButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                      color: _accent.withOpacity(0.35),
+                      color: _accent.withValues(alpha: 0.35),
                       blurRadius: 14,
                       offset: const Offset(0, 4))
                 ]
@@ -1111,7 +1487,7 @@ class _JoinCodeButton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                          color: _accent.withOpacity(0.35),
+                          color: _accent.withValues(alpha: 0.35),
                           blurRadius: 14,
                           offset: const Offset(0, 4))
                     ],
@@ -1129,6 +1505,58 @@ class _JoinCodeButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ─── ENTRY TAB CHIP ──────────────────────────────────────────────────────────
+
+class _EntryTab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _EntryTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? _accent.withOpacity(0.15) : _surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? _accent.withOpacity(0.5) : _border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 16,
+                color: selected ? _accentGlow : _textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? _accentGlow : _textSecondary,
+                fontSize: 13,
+                fontWeight:
+                    selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

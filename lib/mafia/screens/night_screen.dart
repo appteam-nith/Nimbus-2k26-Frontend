@@ -7,6 +7,7 @@ import '../models/room_model.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
 import '../widgets/phase_timer.dart';
+import '../widgets/dev_role_board.dart';
 
 class NightScreen extends StatefulWidget {
   const NightScreen({super.key});
@@ -17,7 +18,7 @@ class NightScreen extends StatefulWidget {
 
 class _NightScreenState extends State<NightScreen> {
   // Hitman multi-select tracking
-  List<String> _hitmanTargets = [];
+  final List<String> _hitmanTargets = [];
   String? _hitmanRoleGuess1;
   String? _hitmanRoleGuess2;
 
@@ -43,6 +44,10 @@ class _NightScreenState extends State<NightScreen> {
 
     // Hitman Lockout (T-5s)
     final hitmanLocked = myRole == GameRole.HITMAN && controller.timeRemaining <= 5;
+    // Single-use lock: seed from controller on first build (covers reconnect)
+    if (!_hasLockedAction && controller.reporterUsed && myRole == GameRole.REPORTER) {
+      _hasLockedAction = true;
+    }
     // General vote prevention
     final canVote = isNight && !hasVoted && isAlive && !hitmanLocked && !_hasLockedAction;
 
@@ -88,10 +93,12 @@ class _NightScreenState extends State<NightScreen> {
           break;
         case GameRole.NURSE:
           title = 'Find the Doctor';
-          subtitle = 'If you select the Doctor, they become empowered.';
+          subtitle = controller.nurseMet
+              ? 'You have found the Doctor. Assist them each night to keep them safe.'
+              : 'If you select the Doctor, they become empowered.';
           themeColor = const Color(0xFF10B981);
           hasAction = true;
-          actionLabel = 'Assist Player';
+          actionLabel = controller.nurseMet ? 'Assist Doctor' : 'Assist Player';
           voteType = 'NURSE_SUPPORT';
           break;
         case GameRole.BOUNTY_HUNTER:
@@ -164,7 +171,7 @@ class _NightScreenState extends State<NightScreen> {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -176,7 +183,9 @@ class _NightScreenState extends State<NightScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                
+                // ── DevRoleBoard (dev mode only) ──────────────────────────
+                // Injected below; the actual widget is in the Positioned overlay
+
                 // Timer
                 if (controller.timeRemaining > 0)
                   PhaseTimer(
@@ -194,7 +203,7 @@ class _NightScreenState extends State<NightScreen> {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -262,7 +271,8 @@ class _NightScreenState extends State<NightScreen> {
                             onPressed: () async {
                               if (canVote && myVoteTarget != null) {
                                 final result = await controller.submitVote(voteType);
-                                if (result != null && mounted) {
+                                if (!context.mounted) return;
+                                if (result != null) {
                                   _showResultDialog(context, result);
                                 }
                                 
@@ -327,7 +337,7 @@ class _NightScreenState extends State<NightScreen> {
           // ── Loading overlay ──────────────────────────────────────────────
           if (controller.isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
@@ -339,9 +349,14 @@ class _NightScreenState extends State<NightScreen> {
               data: controller.hitmanStrikeEvent!,
               players: controller.players,
               onDismiss: () {
-                controller.hitmanStrikeEvent = null;
-                controller.notifyListeners();
+                controller.clearHitmanStrike();
               },
+            ),
+          // ── Dev Mode Role Board overlay ────────────────────────────
+          if (controller.devMode)
+            DevRoleBoard(
+              players: controller.players,
+              myUserId: controller.myUserId,
             ),
         ],
       ),
@@ -400,7 +415,7 @@ class _NightScreenState extends State<NightScreen> {
             'Select exactly 2 Targets:',
             style: TextStyle(
               fontFamily: 'Inter',
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -434,7 +449,7 @@ class _NightScreenState extends State<NightScreen> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF991B1B).withOpacity(0.2) : const Color(0xFF1C2333),
+                    color: isSelected ? const Color(0xFF991B1B).withValues(alpha: 0.2) : const Color(0xFF1C2333),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isSelected ? const Color(0xFF991B1B) : Colors.transparent,
@@ -481,7 +496,7 @@ class _NightScreenState extends State<NightScreen> {
               'Select Roles for your targets:',
               style: TextStyle(
                 fontFamily: 'Inter',
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -595,7 +610,7 @@ class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
       child: GestureDetector(
         onTap: widget.onDismiss,
         child: Container(
-          color: const Color(0xFF0D121B).withOpacity(0.95),
+          color: const Color(0xFF0D121B).withValues(alpha: 0.95),
           child: SafeArea(
             child: Center(
               child: Column(
@@ -632,10 +647,10 @@ class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
                             horizontal: 32, vertical: 6),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF991B1B).withOpacity(0.12),
+                          color: const Color(0xFF991B1B).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFFFF6B00).withOpacity(0.3),
+                            color: const Color(0xFFFF6B00).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -661,7 +676,7 @@ class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
                                     fontFamily: 'Inter',
                                     fontSize: 12,
                                     color: const Color(0xFFFF6B00)
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],
@@ -676,7 +691,7 @@ class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                     ),
                   ),
                 ],
@@ -697,7 +712,7 @@ class _HitmanStrikeOverlayState extends State<_HitmanStrikeOverlay>
         style: TextStyle(
           fontFamily: 'Inter',
           fontSize: 15,
-          color: Colors.white.withOpacity(0.7),
+          color: Colors.white.withValues(alpha: 0.7),
         ),
       ),
     );

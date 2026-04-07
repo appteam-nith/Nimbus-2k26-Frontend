@@ -141,7 +141,7 @@ class _HeroBanner extends StatelessWidget {
             width: 200, height: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
             ),
           ),
         ),
@@ -151,7 +151,7 @@ class _HeroBanner extends StatelessWidget {
             width: 120, height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
             ),
           ),
         ),
@@ -166,7 +166,7 @@ class _HeroBanner extends StatelessWidget {
                   Container(
                     width: 64, height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: ClipRRect(
@@ -195,7 +195,7 @@ class _HeroBanner extends StatelessWidget {
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w500,
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -258,7 +258,7 @@ class _ClubImage extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      color: Colors.white.withOpacity(0.15),
+      color: Colors.white.withValues(alpha: 0.15),
       alignment: Alignment.center,
       child: Text(
         club.department.label[0],
@@ -284,7 +284,7 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -305,7 +305,7 @@ class _StatPill extends StatelessWidget {
               fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
               fontSize: 11,
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
         ],
@@ -420,7 +420,7 @@ class _ProjectCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF135BEC).withOpacity(0.08),
+                        color: const Color(0xFF135BEC).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
@@ -568,7 +568,7 @@ class _AchievementCard extends StatelessWidget {
           Container(
             width: 48, height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF135BEC).withOpacity(0.08),
+              color: const Color(0xFF135BEC).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
@@ -767,7 +767,7 @@ class _TechChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF135BEC).withOpacity(0.08),
+        color: const Color(0xFF135BEC).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -800,7 +800,7 @@ class _CircleBtn extends StatelessWidget {
       child: Container(
         width: 36, height: 36,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withValues(alpha: 0.18),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 16, color: Colors.white),

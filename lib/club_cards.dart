@@ -73,7 +73,7 @@ class _ClubCardState extends State<ClubCard>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(_expanded ? 0.13 : 0.07),
+                color: Colors.black.withValues(alpha: _expanded ? 0.13 : 0.07),
                 blurRadius: _expanded ? 24 : 12,
                 offset: const Offset(0, 6),
               ),
@@ -491,7 +491,7 @@ class _AchievementTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF135BEC).withOpacity(0.08),
+              color: const Color(0xFF135BEC).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
@@ -584,7 +584,7 @@ class _AboutSection extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF135BEC).withOpacity(0.08),
+                          color: const Color(0xFF135BEC).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(

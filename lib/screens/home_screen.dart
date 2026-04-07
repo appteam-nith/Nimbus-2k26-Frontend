@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF7C3AED).withOpacity(0.3),
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -51,13 +51,13 @@ class HomeScreen extends StatelessWidget {
                       width: 54,
                       height: 54,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withOpacity(0.2),
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: const Color(0xFF9D5EF5).withOpacity(0.4)),
+                            color: const Color(0xFF9D5EF5).withValues(alpha: 0.4)),
                       ),
                       child: const Center(
-                        child: Text('\u{1F3AD}',
+                        child: Text('🎭',
                             style: TextStyle(fontSize: 26)),
                       ),
                     ),
@@ -89,7 +89,7 @@ class HomeScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withOpacity(0.25),
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.arrow_forward_ios_rounded,

@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "332925057609-qsqm30fltrfkanra9kub87dt02ml144v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appteam.nimbus_2k26_frontend",
+            "certificate_hash": "c4d57e87b8f0c2c21242dd6f636e819de7aaa599"
+          }
+        },
+        {
           "client_id": "332925057609-0v2n5ct0suce1u60hc67kdaaqt9gd4jj.apps.googleusercontent.com",
           "client_type": 3
         }

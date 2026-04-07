@@ -334,6 +334,7 @@ class _RoleScreenState extends State<RoleScreen> with TickerProviderStateMixin {
     switch (role) {
       case GameRole.MAFIA:
       case GameRole.MAFIA_HELPER:
+      case GameRole.HITMAN:
         return const Color(0xFFEF4444);
       case GameRole.DOCTOR:
         return const Color(0xFF22C55E);

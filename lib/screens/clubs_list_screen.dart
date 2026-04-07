@@ -329,7 +329,7 @@ class _ClubCard extends StatelessWidget {
                                 color: club.department.badgeBg,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: club.department.badgeText.withOpacity(0.1),
+                                  color: club.department.badgeText.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Text(
@@ -387,7 +387,7 @@ class _ClubPlaceholderIcon extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            department.badgeText.withOpacity(0.7),
+            department.badgeText.withValues(alpha: 0.7),
             department.badgeText,
           ],
           begin: Alignment.topLeft,

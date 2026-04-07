@@ -147,6 +147,9 @@ class GameController extends ChangeNotifier {
     revealedPlayer = room.eliminatedPlayer;
     _phaseEndsAt = room.phaseEndsAt;
     timeRemaining = room.timeRemaining ?? 0;
+    nurseMet = room.nurseMet;
+    reporterUsed = room.reporterUsed;
+    devMode = room.devMode;
   }
 
   // ─── PUSHER SUBSCRIPTIONS ───────────────────────────────────────────────────

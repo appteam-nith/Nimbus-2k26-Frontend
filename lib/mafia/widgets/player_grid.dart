@@ -48,14 +48,14 @@ class PlayerGrid extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFF135BEC).withOpacity(0.15)
+                  ? const Color(0xFF135BEC).withValues(alpha: 0.15)
                   : const Color(0xFF1C2333),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFF135BEC)
                     : isMe
-                        ? const Color(0xFF135BEC).withOpacity(0.4)
+                        ? const Color(0xFF135BEC).withValues(alpha: 0.4)
                         : Colors.transparent,
                 width: 2,
               ),
@@ -94,7 +94,7 @@ class PlayerGrid extends StatelessWidget {
                           height: 52,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                           ),
                           child: const Icon(
                             Icons.close_rounded,
@@ -160,9 +160,9 @@ class _RoleBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: _roleColor(role).withOpacity(0.15),
+        color: _roleColor(role).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _roleColor(role).withOpacity(0.4)),
+        border: Border.all(color: _roleColor(role).withValues(alpha: 0.4)),
       ),
       child: Text(
         role.displayName,

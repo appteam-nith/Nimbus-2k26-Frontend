@@ -38,7 +38,7 @@ class TimelineEventCard extends StatelessWidget {
                       boxShadow: event.isLive
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(0.6),
+                                color: const Color(0xFF3B82F6).withValues(alpha: 0.6),
                                 blurRadius: 5,
                                 spreadRadius: 1.8,
                               ),
@@ -68,7 +68,7 @@ class TimelineEventCard extends StatelessWidget {
                   boxShadow: event.isLive
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.3),
+                            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
                             blurRadius: 10,
                             spreadRadius: 2,
                             offset: const Offset(0, 4),

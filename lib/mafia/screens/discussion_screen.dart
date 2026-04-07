@@ -5,6 +5,7 @@ import '../controller/game_controller.dart';
 import '../models/death_event.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/chat_widget.dart';
+import '../widgets/dev_role_board.dart';
 import '../services/pusher_service.dart';
 
 class DiscussionScreen extends StatefulWidget {
@@ -180,7 +181,7 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontStyle: FontStyle.italic,
                     fontSize: 13,
                   ),
@@ -238,6 +239,13 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                 },
               ),
             ),
+
+          // ── Dev Mode Role Board overlay ────────────────────────────────────
+          if (game.devMode)
+            DevRoleBoard(
+              players: game.players,
+              myUserId: game.myUserId,
+            ),
         ],
       ),
     );
@@ -270,16 +278,16 @@ class _TeamChatBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
+        color: color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontFamily: 'Inter',
           fontSize: 11,
-          color: color.withOpacity(0.8),
+          color: color.withValues(alpha: 0.8),
         ),
       ),
     );
@@ -304,7 +312,7 @@ class _MorningRevealOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: onDismiss,
       child: Container(
-        color: const Color(0xFF0D121B).withOpacity(0.96),
+        color: const Color(0xFF0D121B).withValues(alpha: 0.96),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -316,7 +324,7 @@ class _MorningRevealOverlay extends StatelessWidget {
                   fontFamily: 'Inter',
                   fontSize: 12,
                   letterSpacing: 3,
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                 ),
               ),
               const SizedBox(height: 8),
@@ -345,7 +353,7 @@ class _MorningRevealOverlay extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                 ),
               ),
             ],
@@ -378,11 +386,11 @@ class _DeathCard extends StatelessWidget {
         color: const Color(0xFF1C2333),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFEF4444).withOpacity(0.3),
+          color: const Color(0xFFEF4444).withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEF4444).withOpacity(0.1),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -395,7 +403,7 @@ class _DeathCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withOpacity(0.08),
+              color: const Color(0xFFEF4444).withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -425,7 +433,7 @@ class _DeathCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
-                    color: const Color(0xFFEF4444).withOpacity(0.8),
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -461,7 +469,7 @@ class _ReporterOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: onDismiss,
       child: Container(
-        color: const Color(0xFF0D121B).withOpacity(0.97),
+        color: const Color(0xFF0D121B).withValues(alpha: 0.97),
         child: SafeArea(
           child: Center(
             child: Column(
@@ -502,7 +510,7 @@ class _ReporterOverlay extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -510,13 +518,13 @@ class _ReporterOverlay extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 28, vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD946EF).withOpacity(0.1),
+                    color: const Color(0xFFD946EF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: const Color(0xFFD946EF).withOpacity(0.4)),
+                        color: const Color(0xFFD946EF).withValues(alpha: 0.4)),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD946EF).withOpacity(0.2),
+                        color: const Color(0xFFD946EF).withValues(alpha: 0.2),
                         blurRadius: 30,
                         spreadRadius: 2,
                       ),
@@ -539,7 +547,7 @@ class _ReporterOverlay extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                   ),
                 ),
               ],

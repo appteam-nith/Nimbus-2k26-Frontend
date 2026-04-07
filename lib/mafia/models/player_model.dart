@@ -1,17 +1,21 @@
+// ignore_for_file: constant_identifier_names
+
 /// Mirrors the backend GamePlayer shape returned by getRoomState.
 /// [role] is only populated for the calling player themselves,
-/// or for ALL players once the game has ENDED.
+/// or for ALL players once the game has ENDED or in dev mode.
 class PlayerModel {
   final String userId;
   final String name;
   final PlayerStatus status;
   final GameRole? role;
+  final bool isBot;
 
   const PlayerModel({
     required this.userId,
     required this.name,
     required this.status,
     this.role,
+    this.isBot = false,
   });
 
   factory PlayerModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +32,7 @@ class PlayerModel {
               orElse: () => GameRole.CITIZEN,
             )
           : null,
+      isBot: json['isBot'] as bool? ?? false,
     );
   }
 
@@ -39,12 +44,14 @@ class PlayerModel {
     String? name,
     PlayerStatus? status,
     GameRole? role,
+    bool? isBot,
   }) {
     return PlayerModel(
       userId: userId ?? this.userId,
       name: name ?? this.name,
       status: status ?? this.status,
       role: role ?? this.role,
+      isBot: isBot ?? this.isBot,
     );
   }
 }

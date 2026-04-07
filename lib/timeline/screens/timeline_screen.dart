@@ -14,8 +14,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      context.read<TimelineController>().loadTimeline();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TimelineController>().loadTimeline();
     });
   }
 

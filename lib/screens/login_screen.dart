@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'email_login_screen.dart';
+import 'email_signup_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -43,10 +45,10 @@ class LoginScreen extends StatelessWidget {
                                 height: 82,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.14),
+                                  color: Colors.white.withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.16),
+                                    color: Colors.white.withValues(alpha: 0.16),
                                   ),
                                 ),
                                 child: Image.asset(
@@ -104,7 +106,9 @@ class LoginScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.05,
+                                        ),
                                         blurRadius: 16,
                                         offset: const Offset(0, 4),
                                       ),
@@ -118,7 +122,9 @@ class LoginScreen extends StatelessWidget {
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFF8FAFC),
-                                          borderRadius: BorderRadius.circular(18),
+                                          borderRadius: BorderRadius.circular(
+                                            18,
+                                          ),
                                         ),
                                         child: Image.asset(
                                           'assets/images/nith_logo.png',
@@ -186,7 +192,7 @@ class LoginScreen extends StatelessWidget {
                                   width: double.infinity,
                                   height: 54,
                                   child: OutlinedButton(
-                                            onPressed: auth.status == AuthStatus.loading
+                                    onPressed: auth.status == AuthStatus.loading
                                         ? null
                                         : () async {
                                             await auth.signInWithGoogle();
@@ -205,7 +211,8 @@ class LoginScreen extends StatelessWidget {
                                       elevation: 0,
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Image.network(
                                           'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
@@ -231,6 +238,107 @@ class LoginScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                const Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(
+                                        color: Color(0xFFE5E7EB),
+                                        thickness: 1.5,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: Text(
+                                        'OR',
+                                        style: TextStyle(
+                                          color: Color(0xFF9CA3AF),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(
+                                        color: Color(0xFFE5E7EB),
+                                        thickness: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 54,
+                                  child: OutlinedButton(
+                                    onPressed: auth.status == AuthStatus.loading
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const EmailLoginScreen(),
+                                              ),
+                                            );
+                                          },
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      side: const BorderSide(
+                                        color: Color(0xFFE5E7EB),
+                                        width: 1.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.email_outlined,
+                                          color: Color(0xFF111827),
+                                          size: 22,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Sign in with Email',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF111827),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: auth.status == AuthStatus.loading
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const EmailSignUpScreen(),
+                                            ),
+                                          );
+                                        },
+                                  child: const Text(
+                                    "Don't have an account? Create one",
+                                    style: TextStyle(
+                                      color: Color(0xFF2D5BE3),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 14,
@@ -250,7 +358,7 @@ class LoginScreen extends StatelessWidget {
                                       ),
                                       SizedBox(width: 5),
                                       Text(
-                                        'Restricted to @nith.ac.in only',
+                                        'Restricted to @nith.ac.in only. Reviewer login is allowed with reviewer@nith.ac.in.',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
