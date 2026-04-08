@@ -319,7 +319,7 @@ class _NightScreenState extends State<NightScreen> {
                         allowSelfSelect: myRole == GameRole.DOCTOR,
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
-                        showRoles: false,
+                        showRoles: controller.devMode,
                         vipUserId: controller.bountyVipUserId,
                       ),
                     ),

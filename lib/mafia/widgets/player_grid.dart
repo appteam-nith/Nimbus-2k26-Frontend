@@ -3,11 +3,11 @@ import '../models/player_model.dart';
 
 /// Grid of player avatar tiles.
 ///
-/// [selectedUserId] — the player the current user has tapped (for voting).
-/// [onTap]          — called with userId when a tile is tapped (optional).
-/// [showRoles]      — if true, shows role badge below name (Game Over screen).
-/// [voteCounts]     — map of userId → vote count, shown as badges during voting.
-/// [vipUserId]      — Bounty Hunter's VIP, shown with a star marker.
+/// [selectedUserId] - currently selected player (for voting).
+/// [onTap]          - called with userId when a tile is tapped (optional).
+/// [showRoles]      - if true, shows role icon on each player's avatar.
+/// [voteCounts]     - map of userId -> vote count, shown as badges during voting.
+/// [vipUserId]      - Bounty Hunter's VIP, shown with a star marker.
 class PlayerGrid extends StatelessWidget {
   final List<PlayerModel> players;
   final String? selectedUserId;
@@ -77,7 +77,7 @@ class PlayerGrid extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Avatar circle with vote count badge
+                  // Avatar circle with vote count + optional markers.
                   Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
@@ -167,10 +167,15 @@ class PlayerGrid extends StatelessWidget {
                             ),
                           ),
                         ),
+                      if (showRoles && player.role != null)
+                        Positioned(
+                          bottom: -6,
+                          right: -6,
+                          child: _RoleIconBadge(role: player.role!),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Name
                   Text(
                     isMe ? '${player.name} (You)' : player.name,
                     textAlign: TextAlign.center,
@@ -185,10 +190,6 @@ class PlayerGrid extends StatelessWidget {
                           : Colors.white,
                     ),
                   ),
-                  if (showRoles && player.role != null) ...[
-                    const SizedBox(height: 4),
-                    _RoleBadge(role: player.role!),
-                  ],
                 ],
               ),
             ),
@@ -198,7 +199,7 @@ class PlayerGrid extends StatelessWidget {
     );
   }
 
-  // Deterministic color from userId string
+  // Deterministic color from userId string.
   Color _avatarColor(String userId) {
     final colors = [
       const Color(0xFF3B5BDB),
@@ -213,58 +214,63 @@ class PlayerGrid extends StatelessWidget {
   }
 }
 
-// ─── ROLE BADGE ───────────────────────────────────────────────────────────────
-
-class _RoleBadge extends StatelessWidget {
+class _RoleIconBadge extends StatelessWidget {
   final GameRole role;
 
-  const _RoleBadge({required this.role});
+  const _RoleIconBadge({required this.role});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      width: 20,
+      height: 20,
       decoration: BoxDecoration(
-        color: _roleColor(role).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _roleColor(role).withValues(alpha: 0.4)),
+        color: const Color(0xFF0F172A),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 6,
+          ),
+        ],
       ),
-      child: Text(
-        role.displayName,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 9,
-          fontWeight: FontWeight.w600,
-          color: _roleColor(role),
+      child: ClipOval(
+        child: Image.asset(
+          _iconPath(role),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.shield_rounded,
+            size: 12,
+            color: Colors.white,
+          ),
         ),
       ),
     );
   }
 
-  Color _roleColor(GameRole role) {
+  String _iconPath(GameRole role) {
     switch (role) {
       case GameRole.MAFIA:
+        return 'assets/images/mafia/role_mafia.png';
       case GameRole.MAFIA_HELPER:
+        return 'assets/images/mafia/role_mafia_helper.png';
       case GameRole.HITMAN:
-        return const Color(0xFFEF4444);
-      case GameRole.DOCTOR:
-      case GameRole.NURSE:
-        return const Color(0xFF22C55E);
-      case GameRole.COP:
-      case GameRole.REPORTER:
-      case GameRole.BOUNTY_HUNTER:
-        return const Color(0xFF3B82F6);
+        return 'assets/images/mafia/role_hitman.png';
       case GameRole.CITIZEN:
-      case GameRole.PROPHET:
-        return const Color(0xFF9CA3AF);
-      case GameRole.HITMAN:
-        return const Color(0xFFF97316);
+        return 'assets/images/mafia/role_citizen.png';
+      case GameRole.DOCTOR:
+        return 'assets/images/mafia/role_doctor.png';
+      case GameRole.COP:
+        return 'assets/images/mafia/role_cop.png';
+      case GameRole.NURSE:
+        return 'assets/images/mafia/role_nurse.png';
       case GameRole.BOUNTY_HUNTER:
-        return const Color(0xFFF59E0B);
+        return 'assets/images/mafia/role_bounty_hunter.png';
       case GameRole.PROPHET:
-        return const Color(0xFFA855F7);
+        return 'assets/images/mafia/role_prophet.png';
       case GameRole.REPORTER:
-        return const Color(0xFF06B6D4);
+        return 'assets/images/mafia/role_reporter.png';
     }
   }
 }

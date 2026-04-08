@@ -178,16 +178,25 @@ class GameApi {
   }
 
   /// POST /api/game/start — host only.
-  Future<void> startGame(String roomCode, {bool devMode = false}) async {
+  Future<void> startGame(String roomCode, {bool devMode = false, String? devHostRole}) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
     final uri = Uri.parse('$_baseUrl/api/game/start');
+    
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'dev_mode': devMode,
+    };
+    if (devHostRole != null) {
+      payload['dev_host_role'] = devHostRole;
+    }
+
     final response = await http
         .post(
           uri,
           headers: _headers(token),
-          body: jsonEncode({'room_code': roomCode, 'dev_mode': devMode}),
+          body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 15));
 

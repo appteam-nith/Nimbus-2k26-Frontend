@@ -54,6 +54,7 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   // Developer Mode
   bool _devMode = false;
+  GameRole? _devHostRole;
 
   StreamSubscription<Map<String, dynamic>>? _joinSub;
   StreamSubscription<Map<String, dynamic>>? _leaveSub;
@@ -252,7 +253,11 @@ class _LobbyScreenState extends State<LobbyScreen>
       _error = null;
     });
     try {
-      await _api.startGame(_roomCode!, devMode: _devMode);
+      await _api.startGame(
+        _roomCode!,
+        devMode: _devMode,
+        devHostRole: _devHostRole?.name,
+      );
       // The backend broadcasts 'game-started' via Pusher.
       // _startSub in _subscribeLobbyEvents handles navigation for ALL players
       // (including the host), so nothing more to do here.
@@ -762,6 +767,10 @@ class _LobbyScreenState extends State<LobbyScreen>
               ),
             ),
           ),
+          if (_devMode) ...[
+            const SizedBox(height: 10),
+            _buildDevHostRoleDropdown(),
+          ],
           const SizedBox(height: 14),
           _PrimaryButton(
             label: 'Create Room',
@@ -1193,6 +1202,45 @@ class _LobbyScreenState extends State<LobbyScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDevHostRoleDropdown() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<GameRole?>(
+          value: _devHostRole,
+          dropdownColor: _card,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFF59E0B)),
+          isExpanded: true,
+          hint: const Text(
+            'Host Role (Random)',
+            style: TextStyle(color: Color(0xFFF59E0B), fontSize: 14),
+          ),
+          items: [
+            const DropdownMenuItem<GameRole?>(
+              value: null,
+              child: Text('Host Role (Random)', style: TextStyle(color: Color(0xFFF59E0B))),
+            ),
+            ...GameRole.values.map(
+              (r) => DropdownMenuItem(
+                value: r,
+                child: Text(r.name, style: const TextStyle(color: _textPrimary)),
+              ),
+            ),
+          ],
+          onChanged: (val) {
+            setState(() => _devHostRole = val);
+          },
+        ),
       ),
     );
   }
