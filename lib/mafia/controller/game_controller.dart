@@ -220,15 +220,13 @@ class GameController extends ChangeNotifier {
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
     _gameEndSub = _pusher.onGameEnded.listen(_handleGameEnded);
     _voteSub = _pusher.onVoteUpdated.listen(_handleVoteUpdated);
-    _reporterSub =
-        _pusher.onReporterBroadcast.listen(_handleReporterBroadcast);
+    _reporterSub = _pusher.onReporterBroadcast.listen(_handleReporterBroadcast);
     _hitmanSub = _pusher.onHitmanStrike.listen(_handleHitmanStrike);
-    _investigationSub =
-        _pusher.onInvestigationResult.listen(_handleInvestigationResult);
-    _reporterResultSub =
-        _pusher.onReporterResult.listen(_handleReporterResult);
-    _nurseCheckSub =
-        _pusher.onNurseCheckResult.listen(_handleNurseCheckResult);
+    _investigationSub = _pusher.onInvestigationResult.listen(
+      _handleInvestigationResult,
+    );
+    _reporterResultSub = _pusher.onReporterResult.listen(_handleReporterResult);
+    _nurseCheckSub = _pusher.onNurseCheckResult.listen(_handleNurseCheckResult);
     _actionReportSub = _pusher.onActionReport.listen(_handleActionReport);
   }
 
@@ -247,8 +245,7 @@ class GameController extends ChangeNotifier {
     final rawDeaths = data['deaths'] as List<dynamic>?;
     if (rawDeaths != null && rawDeaths.isNotEmpty) {
       morningDeaths = rawDeaths
-          .map((d) => DeathEvent.fromJson(
-              d as Map<String, dynamic>, players))
+          .map((d) => DeathEvent.fromJson(d as Map<String, dynamic>, players))
           .toList();
       // Mark eliminated players
       final deadIds = morningDeaths.map((d) => d.player.userId).toSet();
@@ -271,14 +268,47 @@ class GameController extends ChangeNotifier {
         final dead = players.firstWhere(
           (p) => p.userId == killedId,
           orElse: () => PlayerModel(
-              userId: killedId, name: '?', status: PlayerStatus.ELIMINATED),
+            userId: killedId,
+            name: '?',
+            status: PlayerStatus.ELIMINATED,
+          ),
         );
         morningDeaths = [
-          DeathEvent(player: dead, cause: DeathCause.MAFIA_KILL)
+          DeathEvent(player: dead, cause: DeathCause.MAFIA_KILL),
         ];
       } else {
         morningDeaths = [];
       }
+    }
+
+    // Mirror morning deaths into the legacy `nightDeaths` property so
+    // the Discussion screen's morning overlay logic works consistently.
+    nightDeaths = morningDeaths;
+
+    // If backend included a reporterBroadcast payload inside the
+    // `phase-resolved` event, convert it to the local ReporterBroadcast
+    // object so the ReporterBroadcastListener overlay can show it.
+    final rb = data['reporterBroadcast'];
+    if (rb is Map<String, dynamic>) {
+      final targetUserId = rb['targetUserId'] as String?;
+      final exposedRoleStr = rb['exposedRole'] as String?;
+
+      String playerName = '?';
+      if (targetUserId != null) {
+        try {
+          final p = players.firstWhere((p) => p.userId == targetUserId);
+          playerName = p.name ?? '?';
+        } catch (_) {}
+      }
+
+      final role = exposedRoleStr != null
+          ? GameRole.values.firstWhere(
+              (r) => r.name == exposedRoleStr,
+              orElse: () => GameRole.CITIZEN,
+            )
+          : GameRole.CITIZEN;
+
+      pendingBroadcast = ReporterBroadcast(playerName: playerName, role: role);
     }
 
     // Legacy single-player compat
@@ -289,8 +319,8 @@ class GameController extends ChangeNotifier {
             orElse: () => null,
           )
         : morningDeaths.isNotEmpty
-            ? morningDeaths.first.player
-            : null;
+        ? morningDeaths.first.player
+        : null;
 
     status = GameStatus.values.firstWhere(
       (s) => s.name == phase,
@@ -298,7 +328,9 @@ class GameController extends ChangeNotifier {
     );
 
     // ─ REVEAL phase: build death event from eliminatedPlayerId (voting kill) ─
-    if (status == GameStatus.REVEAL && revealedPlayer != null && morningDeaths.isEmpty) {
+    if (status == GameStatus.REVEAL &&
+        revealedPlayer != null &&
+        morningDeaths.isEmpty) {
       morningDeaths = [
         DeathEvent(
           player: revealedPlayer!.copyWith(status: PlayerStatus.ELIMINATED),

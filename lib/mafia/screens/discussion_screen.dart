@@ -48,25 +48,27 @@ class _DiscussionScreenState extends State<DiscussionScreen>
     if (!mounted) return;
     final gc = context.read<GameController>();
 
-    // Morning death reveal
-    if (gc.nightDeaths.isNotEmpty) {
-      setState(() {
-        _localDeaths = gc.nightDeaths;
-        _showMorningReveal = true;
-      });
-      _overlayFade.forward();
-      _autoDismissTimer = Timer(const Duration(seconds: 5), () {
-        if (!mounted) return;
-        // If reporter data also present, chain to that overlay
-        if (gc.pendingBroadcast != null) {
-          _dismissMorning(thenShowReporter: true);
-        } else {
-          _dismissMorning(thenShowReporter: false);
-        }
-      });
-    } else if (gc.pendingBroadcast != null) {
-      _showReporterFromBroadcast(gc.pendingBroadcast!);
-    }
+    // Always show the morning overlay when entering DISCUSSION. This
+    // covers both peaceful mornings and nights with deaths. If a
+    // reporter broadcast is present, chain it after the morning overlay.
+    setState(() {
+      _localDeaths = gc.nightDeaths;
+      _showMorningReveal = true;
+    });
+    _overlayFade.forward();
+
+    // Keep the morning card slightly shorter for peaceful nights.
+    final int displaySeconds =
+        (gc.nightDeaths.isNotEmpty || gc.pendingBroadcast != null) ? 5 : 3;
+
+    _autoDismissTimer = Timer(Duration(seconds: displaySeconds), () {
+      if (!mounted) return;
+      if (gc.pendingBroadcast != null) {
+        _dismissMorning(thenShowReporter: true);
+      } else {
+        _dismissMorning(thenShowReporter: false);
+      }
+    });
   }
 
   void _dismissMorning({required bool thenShowReporter}) {
@@ -115,8 +117,7 @@ class _DiscussionScreenState extends State<DiscussionScreen>
         myRole?.name == 'MAFIA' || myRole?.name == 'MAFIA_HELPER';
     // (Hitman gets mafia chat only after meeting — backend enforces, show tab anyway)
     final bool hasHitmanMafiaChat = myRole?.name == 'HITMAN';
-    final bool hasDocChat =
-        myRole?.name == 'DOCTOR' || myRole?.name == 'NURSE';
+    final bool hasDocChat = myRole?.name == 'DOCTOR' || myRole?.name == 'NURSE';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D121B),
@@ -173,15 +174,19 @@ class _DiscussionScreenState extends State<DiscussionScreen>
               Center(
                 child: PhaseTimer(
                   endTime: DateTime.now().add(
-                    Duration(seconds: game.timeRemaining > 0 ? game.timeRemaining : 30),
+                    Duration(
+                      seconds: game.timeRemaining > 0 ? game.timeRemaining : 30,
+                    ),
                   ),
                   size: 90,
                 ),
               ),
 
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 24,
+                ),
                 child: Text(
                   game.status.name == 'DISCUSSION'
                       ? 'Who is the Mafia? Convince the others!'
@@ -250,10 +255,7 @@ class _DiscussionScreenState extends State<DiscussionScreen>
 
           // ── Dev Mode Role Board overlay ────────────────────────────────────
           if (game.devMode)
-            DevRoleBoard(
-              players: game.players,
-              myUserId: game.myUserId,
-            ),
+            DevRoleBoard(players: game.players, myUserId: game.myUserId),
         ],
       ),
     );
@@ -340,8 +342,8 @@ class _MorningRevealOverlay extends StatelessWidget {
                 deaths.isEmpty
                     ? 'No one died tonight'
                     : deaths.length == 1
-                        ? 'One soul was lost in the night'
-                        : '${deaths.length} souls were lost in the night',
+                    ? 'One soul was lost in the night'
+                    : '${deaths.length} souls were lost in the night',
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 22,
@@ -482,7 +484,9 @@ class _ReporterOverlay extends StatelessWidget {
                 // Breaking news badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 6),
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD946EF),
                     borderRadius: BorderRadius.circular(4),
@@ -520,12 +524,15 @@ class _ReporterOverlay extends StatelessWidget {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 14),
+                    horizontal: 28,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD946EF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: const Color(0xFFD946EF).withValues(alpha: 0.4)),
+                      color: const Color(0xFFD946EF).withValues(alpha: 0.4),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFFD946EF).withValues(alpha: 0.2),
