@@ -480,14 +480,6 @@ class _NightScreenState extends State<NightScreen> {
       ),
     );
   }
-
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
   Widget _buildErrorBanner(String message) {
     final isEliminatedInfo = message.toLowerCase().contains('eliminated') ||
         message.toLowerCase().contains('cannot target');
