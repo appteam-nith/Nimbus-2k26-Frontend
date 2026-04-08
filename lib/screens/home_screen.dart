@@ -1,12 +1,34 @@
 // ignore: depend_on_referenced_packages
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/header.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/top_performers.dart';
 import '../widgets/event_card.dart';
+import '../timeline/controller/timeline_controller.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<void> _eventsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventsFuture = context.read<TimelineController>().loadTimeline();
+  }
+
+  String _formatTime(DateTime time) {
+    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +43,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
             const TopPerformers(),
             const SizedBox(height: 20),
-            // ── Mafia Game Banner ─────────────────────────────────────────
+            // ── Mafia Game Banner ─────────────────────────────────────────────
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/mafia/lobby'),
               child: Container(
@@ -54,11 +76,11 @@ class HomeScreen extends StatelessWidget {
                         color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: const Color(0xFF9D5EF5).withValues(alpha: 0.4)),
+                          color: const Color(0xFF9D5EF5).withValues(alpha: 0.4),
+                        ),
                       ),
                       child: const Center(
-                        child: Text('🎭',
-                            style: TextStyle(fontSize: 26)),
+                        child: Text('🎭', style: TextStyle(fontSize: 26)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -92,8 +114,11 @@ class HomeScreen extends StatelessWidget {
                         color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_forward_ios_rounded,
-                          color: Color(0xFF9D5EF5), size: 14),
+                      child: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Color(0xFF9D5EF5),
+                        size: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -115,27 +140,52 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            const EventCard(
-              title: "AI & Future Tech",
-              tag: "Workshop",
-              time: "10:00",
-              location: "Lecture Hall A",
-              image: "assets/images/event1.png",
-              primary: true,
-            ),
-            EventCard(
-              title: "RoboWars Qualifiers",
-              tag: "Competition",
-              time: "13:00",
-              location: "Main Ground",
-              image: "assets/images/event2.png",
-            ),
-            EventCard(
-              title: "CyberSec Seminar",
-              tag: "Talk",
-              time: "15:00",
-              location: "Lab 2",
-              image: "assets/images/event3.png",
+            FutureBuilder<void>(
+              future: _eventsFuture,
+              builder: (context, snapshot) {
+                final controller = context.watch<TimelineController>();
+                final events = controller.upcomingEvents;
+
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    events.isEmpty) {
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (controller.error != null) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      controller.error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                if (events.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Text('No upcoming events available.'),
+                  );
+                }
+
+                return Column(
+                  children: events.take(3).map((event) {
+                    return EventCard(
+                      title: event.title,
+                      tag: event.isLive ? 'Live' : 'Event',
+                      time: _formatTime(event.startTime),
+                      location: event.location,
+                      image: event.imageUrl.isNotEmpty
+                          ? event.imageUrl
+                          : 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
+                      primary: event.isLive,
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),

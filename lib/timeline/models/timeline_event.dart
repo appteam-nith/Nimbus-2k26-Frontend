@@ -4,6 +4,7 @@ class TimelineEvent {
   final String description;
   final DateTime startTime;
   final String location;
+  final String imageUrl;
   final bool isLive;
   final int day;
 
@@ -13,6 +14,7 @@ class TimelineEvent {
     required this.description,
     required this.startTime,
     required this.location,
+    required this.imageUrl,
     required this.isLive,
     required this.day,
   });
@@ -24,6 +26,7 @@ class TimelineEvent {
       description: json['description'],
       startTime: DateTime.parse(json['startTime']),
       location: json['location'],
+      imageUrl: json['imageUrl'] ?? '',
       isLive: json['isLive'],
       day: json['day'],
     );
@@ -36,6 +39,7 @@ class TimelineEvent {
       'description': description,
       'startTime': startTime.toIso8601String(),
       'location': location,
+      'imageUrl': imageUrl,
       'isLive': isLive,
       'day': day,
     };

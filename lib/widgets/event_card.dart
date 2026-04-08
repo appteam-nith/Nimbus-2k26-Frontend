@@ -57,12 +57,31 @@ class EventCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      image,
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
+                    child: image.toLowerCase().startsWith('http')
+                        ? Image.network(
+                            image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade200,
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                   Positioned(
                     top: 6,
@@ -120,10 +139,7 @@ class EventCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         const Text(
                           "• Today",
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 11, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -180,7 +196,10 @@ class EventCard extends StatelessWidget {
                     ),
                     child: const Text(
                       "Register Now",
-                      style: TextStyle(color:Colors.white, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   )
                 : OutlinedButton(
@@ -206,6 +225,3 @@ class EventCard extends StatelessWidget {
     );
   }
 }
-
-
-

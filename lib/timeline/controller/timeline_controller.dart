@@ -17,9 +17,15 @@ class TimelineController extends ChangeNotifier {
   int get selectedDay => _selectedDay;
 
   List<TimelineEvent> get events {
-    return _allEvents
-        .where((e) => e.day == _selectedDay)
-        .toList();
+    return _allEvents.where((e) => e.day == _selectedDay).toList();
+  }
+
+  List<TimelineEvent> get allEvents => List.unmodifiable(_allEvents);
+
+  List<TimelineEvent> get upcomingEvents {
+    final sorted = List<TimelineEvent>.from(_allEvents)
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    return sorted;
   }
 
   Future<void> loadTimeline() async {
