@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -448,11 +449,13 @@ class _NightScreenState extends State<NightScreen> {
                               _hitmanRoleGuess2 != null) {
                             final result = await controller.submitVote(
                               voteType,
-                              overrideTargets: _hitmanTargets,
-                              overrideRoles: [
-                                _hitmanRoleGuess1!,
-                                _hitmanRoleGuess2!,
-                              ],
+                              overrideTargetMeta: {
+                                'targets': _hitmanTargets,
+                                'roles': [
+                                  _hitmanRoleGuess1!,
+                                  _hitmanRoleGuess2!,
+                                ],
+                              },
                             );
                             if (!context.mounted) return;
                             if (result != null) {
