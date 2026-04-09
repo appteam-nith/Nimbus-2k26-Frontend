@@ -118,6 +118,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     CommunityChatProvider chat,
     AuthProvider auth,
   ) async {
+    final rootMessenger = ScaffoldMessenger.of(context);
     final roomController = TextEditingController();
     final passwordController = TextEditingController();
     var lockRoom = false;
@@ -171,9 +172,10 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    final navigator = Navigator.of(dialogContext);
                     final nickname = auth.userNickname?.trim();
                     if (nickname == null || nickname.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      rootMessenger.showSnackBar(
                         const SnackBar(
                           content: Text(
                             'Set your nickname before creating a room.',
@@ -192,20 +194,21 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                     );
 
                     if (error != null) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(error)));
+                      rootMessenger.showSnackBar(
+                        SnackBar(content: Text(error)),
+                      );
                       return;
                     }
 
                     final roomName = roomController.text.trim();
-                    if (!context.mounted) return;
-                    Navigator.of(dialogContext).pop();
-                    final room = chat.roomByName(roomName);
-                    if (room != null) {
-                      _openRoom(room);
-                    }
+                    navigator.pop();
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      final room = chat.roomByName(roomName);
+                      if (room != null) {
+                        _openRoom(room);
+                      }
+                    });
                   },
                   child: const Text('Create'),
                 ),

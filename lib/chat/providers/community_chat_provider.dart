@@ -11,6 +11,7 @@ class CommunityChatProvider extends ChangeNotifier {
   static const String _prefsKey = 'community_chat_state_v1';
 
   final Map<String, CommunityChatRoom> _rooms = {};
+  final Map<String, Map<String, String>> _activeParticipants = {};
   bool _isInitialized = false;
 
   bool get isInitialized => _isInitialized;
@@ -30,6 +31,13 @@ class CommunityChatProvider extends ChangeNotifier {
 
   CommunityChatRoom? roomByName(String roomName) {
     return _rooms[roomName.trim()];
+  }
+
+  List<String> participantsInRoom(String roomName) {
+    final participants = _activeParticipants[roomName.trim()];
+    if (participants == null || participants.isEmpty) return const [];
+    final names = participants.values.toList()..sort();
+    return names;
   }
 
   Future<void> ensureInitialized() async {
@@ -169,6 +177,84 @@ class CommunityChatProvider extends ChangeNotifier {
     await _persist();
     notifyListeners();
     return null;
+  }
+
+  Future<String?> joinRoom({
+    required String roomName,
+    required String userId,
+    required String nickname,
+  }) async {
+    final room = roomByName(roomName);
+    if (room == null) return 'Room not found.';
+
+    final trimmedNickname = nickname.trim();
+    if (trimmedNickname.isEmpty) return 'Nickname is required.';
+
+    final participants = _activeParticipants.putIfAbsent(room.name, () => {});
+    final previousNickname = participants[userId];
+
+    if (previousNickname == trimmedNickname) {
+      return null;
+    }
+
+    participants[userId] = trimmedNickname;
+
+    if (previousNickname == null) {
+      room.messages.add(
+        CommunityChatMessage(
+          senderNickname: 'System',
+          text: '$trimmedNickname joined',
+          sentAt: DateTime.now(),
+          isSystem: true,
+        ),
+      );
+    } else {
+      room.messages.add(
+        CommunityChatMessage(
+          senderNickname: 'System',
+          text: '$previousNickname is now $trimmedNickname',
+          sentAt: DateTime.now(),
+          isSystem: true,
+        ),
+      );
+    }
+
+    await _persist();
+    notifyListeners();
+    return null;
+  }
+
+  Future<void> leaveRoom({
+    required String roomName,
+    required String userId,
+  }) async {
+    final room = roomByName(roomName);
+    if (room == null) return;
+
+    final participants = _activeParticipants[room.name];
+    if (participants == null || participants.isEmpty) return;
+
+    final leavingNickname = participants.remove(userId);
+    if (leavingNickname == null) return;
+
+    room.messages.add(
+      CommunityChatMessage(
+        senderNickname: 'System',
+        text: '$leavingNickname left',
+        sentAt: DateTime.now(),
+        isSystem: true,
+      ),
+    );
+
+    if (participants.isEmpty) {
+      _activeParticipants.remove(room.name);
+      if (!room.isPublic) {
+        _rooms.remove(room.name);
+      }
+    }
+
+    await _persist();
+    notifyListeners();
   }
 
   CommunityChatRoom? _findRoomCaseInsensitive(String name) {
