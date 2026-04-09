@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'club_cards.dart';
+import 'models/club_models.dart';
 
 class DepartmentalClubsPage extends StatefulWidget {
   const DepartmentalClubsPage({super.key});
@@ -166,129 +167,21 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
     );
   }
 
-  // ── Club data with clubId matching kSampleClubs ──────────────────────────
-  List<Map<String, dynamic>> _getAllClubs() {
-    return [
-      {
-        'clubId': 'team-exe',
-        'title': 'Team .EXE',
-        'department': 'Computer Science',
-        'departmentColor': const Color(0xFFEEF5FF),
-        'description':
-            'The official technical club of CSE, focusing on web dev, competitive coding, and open source.',
-        'imagePath': 'assets/clubs/EXE.jpg',
-        'filterKey': 'CSE',
-      },
-      {
-        'clubId': 'hermetica',
-        'title': 'Hermetica',
-        'department': 'Chemical',
-        'departmentColor': const Color(0xFFF0FBEF),
-        'description':
-            'Innovating in process design and sustainable chemical solutions for the future.',
-        'imagePath': 'assets/clubs/Hermetica.jpg',
-        'filterKey': 'Chem',
-      },
-      {
-        'clubId': 'vibhav',
-        'title': 'Vibhav',
-        'department': 'Electronics & Communication',
-        'departmentColor': const Color(0xFFFFF9ED),
-        'description':
-            'Exploring embedded systems, VLSI, and signal processing.',
-        'imagePath': 'assets/clubs/Vibhav.jpg',
-        'filterKey': 'ECE',
-      },
-      {
-        'clubId': 'ojas',
-        'title': 'Ojas',
-        'department': 'Electrical',
-        'departmentColor': const Color.fromARGB(248, 224, 255, 247),
-        'description':
-            'Lighting up the campus with innovation in power systems and renewable energy.',
-        'imagePath': 'assets/clubs/Ojas.jpg',
-        'filterKey': 'Electrical',
-      },
-      {
-        'clubId': 'medextrous',
-        'title': 'Medextrous',
-        'department': 'Mechanical',
-        'departmentColor': const Color.fromARGB(255, 240, 200, 200),
-        'description': 'Designing and manufacturing the machines of tomorrow.',
-        'imagePath': 'assets/clubs/Medextrous.jpg',
-        'filterKey': 'Mech',
-      },
-      {
-        'clubId': 'c-helix',
-        'title': 'C-Helix',
-        'department': 'Civil',
-        'departmentColor': const Color.fromARGB(255, 220, 190, 240),
-        'description':
-            'Exploring infrastructure, structural design, and sustainable civil engineering projects.',
-        'imagePath': 'assets/clubs/CHelix.jpg',
-        'filterKey': 'Civil',
-      },
-      {
-        'clubId': 'matcom',
-        'title': 'Matcom',
-        'department': 'Mathematics & Computing',
-        'departmentColor': const Color(0xFFEEF5FF),
-        'description':
-            'Bridging mathematics and computation through algorithms, data science, and theoretical computing.',
-        'imagePath': 'assets/clubs/Matcom.jpg',
-        'filterKey': 'MNC',
-      },
-      {
-        'clubId': 'metamorph',
-        'title': 'Metamorph',
-        'department': 'Materials Science',
-        'departmentColor': const Color.fromARGB(255, 240, 245, 180),
-        'description':
-            'Transforming materials science through research, innovation, and advanced material applications.',
-        'imagePath': 'assets/clubs/Metamorph.jpg',
-        'filterKey': 'Material',
-      },
-      {
-        'clubId': 'design-o-crafts',
-        'title': 'Design O Crafts',
-        'department': 'Architecture',
-        'departmentColor': const Color.fromARGB(255, 242, 200, 240),
-        'description':
-            'Creating innovative architectural designs and sustainable urban planning solutions.',
-        'imagePath': 'assets/clubs/DesignOCrafts.jpg',
-        'filterKey': 'Arch',
-      },
-      {
-        'clubId': 'team-abraxas',
-        'title': 'Team Abraxas',
-        'department': 'Physics',
-        'departmentColor': const Color.fromARGB(255, 200, 235, 210),
-        'description':
-            'Exploring quantum mechanics, astrophysics, and experimental physics research.',
-        'imagePath': 'assets/clubs/Abraxas.jpg',
-        'filterKey': 'Physics',
-      },
-    ];
-  }
-
-  List<Map<String, dynamic>> _getFilteredClubs() {
-    final allClubs = _getAllClubs();
-    return allClubs.where((club) {
+  List<Club> _getFilteredClubs() {
+    return kSampleClubs.where((club) {
       final matchesSearch =
           _searchQuery.isEmpty ||
-          club['title'].toLowerCase().contains(_searchQuery) ||
-          club['department'].toLowerCase().contains(_searchQuery) ||
-          club['description'].toLowerCase().contains(_searchQuery);
+          club.name.toLowerCase().contains(_searchQuery) ||
+          club.department.fullName.toLowerCase().contains(_searchQuery) ||
+          club.description.toLowerCase().contains(_searchQuery);
 
       final matchesFilter =
           _selectedFilterIndex == 0 ||
-          club['filterKey'] == filters[_selectedFilterIndex];
+          club.department.label == filters[_selectedFilterIndex];
 
       return matchesSearch && matchesFilter;
     }).toList();
   }
-
-  
 
   Widget _clubList() {
     final filteredClubs = _getFilteredClubs();
@@ -302,19 +195,19 @@ class _DepartmentalClubsPageState extends State<DepartmentalClubsPage> {
       );
     }
 
-    return ListView(
-      children: filteredClubs
-          .map(
-            (club) => ClubCard(
-              clubId: club['clubId'],        // ← new required field
-              title: club['title'],
-              department: club['department'],
-              departmentColor: club['departmentColor'],
-              description: club['description'],
-              imagePath: club['imagePath'],
-            ),
-          )
-          .toList(),
+    return ListView.builder(
+      itemCount: filteredClubs.length,
+      itemBuilder: (context, index) {
+        final club = filteredClubs[index];
+        return ClubCard(
+          clubId: club.id,
+          title: club.name,
+          department: club.department.label,
+          departmentColor: club.department.badgeBg,
+          description: club.description,
+          imagePath: club.imageAsset ?? 'assets/clubs/default.jpg',
+        );
+      },
     );
   }
 }
