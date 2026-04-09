@@ -6,12 +6,13 @@ import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'timeline/controller/timeline_controller.dart';
+import 'chat/providers/community_chat_provider.dart';
 import 'models/profile_model.dart';
 import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/profile_page.dart';
 import 'timeline/screens/timeline_screen.dart';
+import 'chat/screens/chat_hub_screen.dart';
 
 import 'departmental_clubs_page.dart';
 import 'widgets/bottom_nav.dart';
@@ -36,6 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TimelineController()),
         ChangeNotifierProvider(create: (_) => ProfileModel()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => CommunityChatProvider()),
         ChangeNotifierProvider(create: (_) => GameController()),
       ],
       child: const MyApp(),
@@ -271,7 +273,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const TimelineScreen(),
     const DepartmentalClubsPage(),
-    const ProfilePage(),
+    const ChatHubScreen(),
   ];
   void _onNavItemTapped(int index) {
     if (index < 0 || index >= _screens.length) return;

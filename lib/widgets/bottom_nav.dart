@@ -53,9 +53,9 @@ class BottomNav extends StatelessWidget {
                   onTap: () => onTap(2),
                 ),
                 _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: "Profile",
+                  icon: Icons.chat_bubble_outline_rounded,
+                  activeIcon: Icons.chat_bubble_rounded,
+                  label: "Chat",
                   selected: currentIndex == 3,
                   onTap: () => onTap(3),
                 ),
