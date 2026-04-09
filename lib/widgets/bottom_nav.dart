@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'nimbus_city_logo.dart';
 
 class BottomNav extends StatelessWidget {
   final int currentIndex;
@@ -48,56 +49,26 @@ class BottomNav extends StatelessWidget {
                   icon: Icons.groups_outlined,
                   activeIcon: Icons.groups,
                   label: "Clubs",
-                  selected: currentIndex == 3,
-                  onTap: () => onTap(3),
+                  selected: currentIndex == 2,
+                  onTap: () => onTap(2),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                   label: "Profile",
-                  selected: currentIndex == 4,
-                  onTap: () => onTap(4),
+                  selected: currentIndex == 3,
+                  onTap: () => onTap(3),
                 ),
               ],
             ),
           ),
 
-          // Center floating Scan/Explore button (index 2)
-          Positioned(
+          // Center Nimbus City logo (decorative, no navigation)
+          const Positioned(
             top: -20,
             left: 0,
             right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap: () => onTap(2),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1A3BB3), Color(0xFF4169E1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF2D5BE3).withValues(alpha: 0.45),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    currentIndex == 2
-                        ? Icons.explore
-                        : Icons.explore_outlined,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ),
+            child: Center(child: NimbusCityLogo(size: 60)),
           ),
         ],
       ),
@@ -142,8 +113,7 @@ class _NavItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color: color,
-                  fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
             ],
