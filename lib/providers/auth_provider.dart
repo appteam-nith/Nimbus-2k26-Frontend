@@ -83,6 +83,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _fetchAndCacheProfile() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final profileData = await _apiService.getUserProfile();
       final userData = profileData['user'] as Map<String, dynamic>?;
       final name = (userData?['full_name'] ?? userData?['name']) as String?;
@@ -101,7 +102,6 @@ class AuthProvider extends ChangeNotifier {
           userData?['mafia_rank'];
 
       if (name != null && name.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_name', name);
         if (email != null) {
           await prefs.setString('user_email', email);
