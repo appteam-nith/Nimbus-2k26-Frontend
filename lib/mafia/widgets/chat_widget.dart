@@ -716,10 +716,10 @@ class _MessageBubble extends StatelessWidget {
   }
 
   String _formatTime(DateTime dt) {
-    final local = dt.toLocal();
-    final h = local.hour.toString().padLeft(2, '0');
-    final m = local.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    final istTime = dt.toUtc().add(const Duration(hours: 5, minutes: 30));
+    final h = istTime.hour.toString().padLeft(2, '0');
+    final m = istTime.minute.toString().padLeft(2, '0');
+    return '$h:$m IST';
   }
 }
 

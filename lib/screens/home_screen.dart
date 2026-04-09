@@ -25,10 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _formatTime(DateTime time) {
-    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
+    final istTime = time.toUtc().add(const Duration(hours: 5, minutes: 30));
+    final hour = istTime.hour % 12 == 0 ? 12 : istTime.hour % 12;
+    final minute = istTime.minute.toString().padLeft(2, '0');
+    final period = istTime.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period IST';
   }
 
   @override

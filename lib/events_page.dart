@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'timeline/controller/timeline_controller.dart';
 import 'timeline/models/timeline_event.dart';
@@ -21,6 +21,7 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   String _formatDateTime(DateTime time) {
+    final istTime = time.toUtc().add(const Duration(hours: 5, minutes: 30));
     final month = [
       'Jan',
       'Feb',
@@ -34,11 +35,11 @@ class _EventsScreenState extends State<EventsScreen> {
       'Oct',
       'Nov',
       'Dec',
-    ][time.month - 1];
-    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.hour >= 12 ? 'PM' : 'AM';
-    return '$month ${time.day} • $hour:$minute $period';
+    ][istTime.month - 1];
+    final hour = istTime.hour % 12 == 0 ? 12 : istTime.hour % 12;
+    final minute = istTime.minute.toString().padLeft(2, '0');
+    final period = istTime.hour >= 12 ? 'PM' : 'AM';
+    return '$month ${istTime.day} • $hour:$minute $period IST';
   }
 
   List<TimelineEvent> _filteredEvents(List<TimelineEvent> events) {
@@ -358,6 +359,19 @@ class _EventsScreenState extends State<EventsScreen> {
           );
         }).toList(),
       );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xffF5F6FA),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: children,
+        ),
+      ),
+    );
+  }
+}
     }
 
     return Scaffold(
