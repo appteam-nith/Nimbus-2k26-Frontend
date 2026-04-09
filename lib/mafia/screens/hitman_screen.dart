@@ -140,19 +140,11 @@ class _HitmanScreenState extends State<HitmanScreen> {
                     _buildPlayerGrid(candidates, gc.myUserId),
                     const SizedBox(height: 28),
 
-                    // ── Role guess dropdowns ─────────────────────────────────
-                    if (_targets[0] != null || _targets[1] != null) ...[
-                      _buildSectionLabel(
-                          'ROLE PREDICTIONS', 'Guess each target\'s role'),
-                      const SizedBox(height: 12),
-                      if (_targets[0] != null)
-                        _buildRoleSlot(0, gc),
-                      if (_targets[1] != null) ...[
-                        const SizedBox(height: 12),
-                        _buildRoleSlot(1, gc),
-                      ],
-                      const SizedBox(height: 8),
-                    ],
+                    _buildSectionLabel(
+                      'QUICK PREDICTION',
+                      'Role popup appears as soon as you tap a player',
+                    ),
+                    const SizedBox(height: 8),
 
                     // ── Error banner ─────────────────────────────────────────
                     if (_errorMsg != null) ...[
@@ -193,8 +185,11 @@ class _HitmanScreenState extends State<HitmanScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFF2C2C3C)),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: _textMuted, size: 14),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: _textMuted,
+                size: 14,
+              ),
             ),
           ),
           const SizedBox(width: 14),
@@ -244,10 +239,12 @@ class _HitmanScreenState extends State<HitmanScreen> {
             color: filled
                 ? _redGlow
                 : active
-                    ? _redGlow.withValues(alpha: 0.3)
-                    : _card,
+                ? _redGlow.withValues(alpha: 0.3)
+                : _card,
             border: Border.all(
-              color: filled || active ? _redGlow : _textMuted.withValues(alpha: 0.3),
+              color: filled || active
+                  ? _redGlow
+                  : _textMuted.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -282,15 +279,15 @@ class _HitmanScreenState extends State<HitmanScreen> {
           color: player != null
               ? _red.withValues(alpha: 0.08)
               : isActive
-                  ? _redGlow.withValues(alpha: 0.05)
-                  : _card,
+              ? _redGlow.withValues(alpha: 0.05)
+              : _card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: player != null
                 ? _red.withValues(alpha: 0.6)
                 : isActive
-                    ? _redGlow.withValues(alpha: 0.3)
-                    : const Color(0xFF2C2C3C),
+                ? _redGlow.withValues(alpha: 0.3)
+                : const Color(0xFF2C2C3C),
             width: isActive ? 1.5 : 1,
           ),
         ),
@@ -323,9 +320,10 @@ class _HitmanScreenState extends State<HitmanScreen> {
                               ? player.name[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700),
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -347,8 +345,11 @@ class _HitmanScreenState extends State<HitmanScreen> {
                           _roles[idx] = null;
                           _activeSlot = idx;
                         }),
-                        child: const Icon(Icons.close_rounded,
-                            color: _textMuted, size: 14),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: _textMuted,
+                          size: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -356,12 +357,15 @@ class _HitmanScreenState extends State<HitmanScreen> {
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: _amber.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                            color: _amber.withValues(alpha: 0.3)),
+                          color: _amber.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         role,
@@ -377,11 +381,12 @@ class _HitmanScreenState extends State<HitmanScreen> {
                   ] else
                     const SizedBox(height: 4),
                   Text(
-                    role == null ? '— pick a role below —' : '',
+                    role == null ? 'Tap a player to set role guess' : '',
                     style: const TextStyle(
-                        fontFamily: 'Inter',
-                        color: _textMuted,
-                        fontSize: 9),
+                      fontFamily: 'Inter',
+                      color: _textMuted,
+                      fontSize: 9,
+                    ),
                   ),
                 ],
               ),
@@ -391,9 +396,100 @@ class _HitmanScreenState extends State<HitmanScreen> {
 
   // ── Player Grid ──────────────────────────────────────────────────────────────
 
+  Future<String?> _showRolePredictionPopup(String playerName) async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: const Color(0xFF151520),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _redGlow.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Predict $playerName',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Choose your role guess for this target.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: _textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _guessableRoles
+                      .map(
+                        (role) => GestureDetector(
+                          onTap: () => Navigator.of(ctx).pop(role),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _card,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _amber.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Text(
+                              role,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _textPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontFamily: 'Inter', color: _textMuted),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPlayerGrid(List<PlayerModel> candidates, String? myUserId) {
-    final selectedIds =
-        _targets.where((t) => t != null).map((t) => t!.userId).toSet();
+    final selectedIds = _targets
+        .where((t) => t != null)
+        .map((t) => t!.userId)
+        .toSet();
 
     return GridView.builder(
       shrinkWrap: true,
@@ -415,7 +511,7 @@ class _HitmanScreenState extends State<HitmanScreen> {
         return GestureDetector(
           onTap: isEliminated
               ? null
-              : () {
+              : () async {
                   setState(() {
                     if (isSelected) {
                       // Deselect
@@ -428,16 +524,21 @@ class _HitmanScreenState extends State<HitmanScreen> {
                         _roles[1] = null;
                         _activeSlot = 1;
                       }
-                    } else {
-                      // Assign to active slot
-                      _targets[_activeSlot] = p;
-                      _roles[_activeSlot] = null;
-                      // Advance active slot if both aren't filled
-                      if (_activeSlot == 0 && _targets[1] == null) {
-                        _activeSlot = 1;
-                      } else if (_activeSlot == 1 && _targets[0] == null) {
-                        _activeSlot = 0;
-                      }
+                    }
+                  });
+                  if (isSelected || !mounted) return;
+
+                  final slot = _activeSlot;
+                  final guessedRole = await _showRolePredictionPopup(p.name);
+                  if (!mounted || guessedRole == null) return;
+
+                  setState(() {
+                    _targets[slot] = p;
+                    _roles[slot] = guessedRole;
+                    if (slot == 0 && _targets[1] == null) {
+                      _activeSlot = 1;
+                    } else if (slot == 1 && _targets[0] == null) {
+                      _activeSlot = 0;
                     }
                   });
                 },
@@ -447,15 +548,15 @@ class _HitmanScreenState extends State<HitmanScreen> {
               color: isSelected
                   ? _red.withValues(alpha: 0.15)
                   : isEliminated
-                      ? _card.withValues(alpha: 0.5)
-                      : _card,
+                  ? _card.withValues(alpha: 0.5)
+                  : _card,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isSelected
                     ? _redGlow
                     : isEliminated
-                        ? const Color(0xFF2C2C3C).withValues(alpha: 0.5)
-                        : const Color(0xFF2C2C3C),
+                    ? const Color(0xFF2C2C3C).withValues(alpha: 0.5)
+                    : const Color(0xFF2C2C3C),
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -470,8 +571,8 @@ class _HitmanScreenState extends State<HitmanScreen> {
                       backgroundColor: isEliminated
                           ? const Color(0xFF374151)
                           : isSelected
-                              ? _red.withValues(alpha: 0.5)
-                              : const Color(0xFF3B5BDB),
+                          ? _red.withValues(alpha: 0.5)
+                          : const Color(0xFF3B5BDB),
                       child: Text(
                         p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
                         style: TextStyle(
@@ -491,8 +592,11 @@ class _HitmanScreenState extends State<HitmanScreen> {
                           shape: BoxShape.circle,
                           color: Colors.black.withValues(alpha: 0.5),
                         ),
-                        child: const Icon(Icons.close_rounded,
-                            color: Color(0xFFEF4444), size: 20),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Color(0xFFEF4444),
+                          size: 20,
+                        ),
                       ),
                     // Slot badge
                     if (isSlot0 || isSlot1)
@@ -503,14 +607,17 @@ class _HitmanScreenState extends State<HitmanScreen> {
                           width: 18,
                           height: 18,
                           decoration: const BoxDecoration(
-                              color: _redGlow, shape: BoxShape.circle),
+                            color: _redGlow,
+                            shape: BoxShape.circle,
+                          ),
                           child: Center(
                             child: Text(
                               isSlot0 ? '1' : '2',
                               style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800),
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
@@ -563,24 +670,30 @@ class _HitmanScreenState extends State<HitmanScreen> {
           hint: Text(
             'Guess role for ${player.name}',
             style: const TextStyle(
-                color: _textMuted, fontSize: 12, fontFamily: 'Inter'),
+              color: _textMuted,
+              fontSize: 12,
+              fontFamily: 'Inter',
+            ),
           ),
           isExpanded: true,
           dropdownColor: const Color(0xFF1C1C26),
           iconEnabledColor: _textMuted,
           onChanged: (val) => setState(() => _roles[idx] = val),
           items: _guessableRoles
-              .map((r) => DropdownMenuItem(
-                    value: r,
-                    child: Text(
-                      r,
-                      style: const TextStyle(
-                          color: _textPrimary,
-                          fontSize: 13,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600),
+              .map(
+                (r) => DropdownMenuItem(
+                  value: r,
+                  child: Text(
+                    r,
+                    style: const TextStyle(
+                      color: _textPrimary,
+                      fontSize: 13,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
       ),
@@ -631,7 +744,9 @@ class _HitmanScreenState extends State<HitmanScreen> {
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2),
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             ),
                           )
                         : Row(
@@ -639,16 +754,12 @@ class _HitmanScreenState extends State<HitmanScreen> {
                             children: [
                               Icon(
                                 Icons.gavel_rounded,
-                                color: ready
-                                    ? Colors.white
-                                    : _textMuted,
+                                color: ready ? Colors.white : _textMuted,
                                 size: 18,
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                ready
-                                    ? 'EXECUTE CONTRACT'
-                                    : _statusText(),
+                                ready ? 'EXECUTE CONTRACT' : _statusText(),
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 13,
@@ -703,9 +814,7 @@ class _HitmanScreenState extends State<HitmanScreen> {
             margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
             height: 3,
             decoration: BoxDecoration(
-              color: steps[i]
-                  ? _redGlow
-                  : const Color(0xFF2C2C3C),
+              color: steps[i] ? _redGlow : const Color(0xFF2C2C3C),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -734,7 +843,10 @@ class _HitmanScreenState extends State<HitmanScreen> {
         Text(
           sub,
           style: const TextStyle(
-              fontFamily: 'Inter', color: _textMuted, fontSize: 11),
+            fontFamily: 'Inter',
+            color: _textMuted,
+            fontSize: 11,
+          ),
         ),
       ],
     );
@@ -756,7 +868,10 @@ class _HitmanScreenState extends State<HitmanScreen> {
             child: Text(
               message,
               style: const TextStyle(
-                  fontFamily: 'Inter', fontSize: 12, color: _redGlow),
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: _redGlow,
+              ),
             ),
           ),
         ],

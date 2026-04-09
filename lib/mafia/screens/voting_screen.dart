@@ -19,7 +19,12 @@ class VotingScreen extends StatelessWidget {
 
     final me = controller.players.firstWhere(
       (p) => p.userId == controller.myUserId, 
-      orElse: () => const PlayerModel(userId: '', name: '', status: PlayerStatus.ELIMINATED)
+      orElse: () => const PlayerModel(
+        playerId: '',
+        userId: '',
+        name: '',
+        status: PlayerStatus.ELIMINATED,
+      )
     );
     final isAlive = me.isAlive;
 
