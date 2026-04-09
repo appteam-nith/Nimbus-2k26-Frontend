@@ -17,6 +17,7 @@ class PlayerGrid extends StatelessWidget {
   final bool allowSelfSelect;
   final Map<String, int>? voteCounts;
   final String? vipUserId;
+  final Set<String>? leftPlayerIds;
 
   const PlayerGrid({
     super.key,
@@ -28,6 +29,7 @@ class PlayerGrid extends StatelessWidget {
     this.allowSelfSelect = false,
     this.voteCounts,
     this.vipUserId,
+    this.leftPlayerIds,
   });
 
   @override
@@ -48,10 +50,15 @@ class PlayerGrid extends StatelessWidget {
         final isMe = player.userId == myUserId;
         final isEliminated = player.isEliminated;
         final isVip = player.userId == vipUserId;
+        final isLeft = leftPlayerIds?.contains(player.userId) ?? false;
         final voteCount = voteCounts?[player.userId] ?? 0;
 
         return GestureDetector(
-          onTap: (onTap != null && !isEliminated && (!isMe || allowSelfSelect))
+          onTap:
+              (onTap != null &&
+                  !isEliminated &&
+                  !isLeft &&
+                  (!isMe || allowSelfSelect))
               ? () => onTap!(player.userId)
               : null,
           child: AnimatedContainer(
@@ -65,10 +72,10 @@ class PlayerGrid extends StatelessWidget {
                 color: isSelected
                     ? const Color(0xFF135BEC)
                     : isVip
-                        ? const Color(0xFFF59E0B).withValues(alpha: 0.7)
-                        : isMe
-                            ? const Color(0xFF135BEC).withValues(alpha: 0.4)
-                            : Colors.transparent,
+                    ? const Color(0xFFF59E0B).withValues(alpha: 0.7)
+                    : isMe
+                    ? const Color(0xFF135BEC).withValues(alpha: 0.4)
+                    : Colors.transparent,
                 width: isVip ? 2.5 : 2,
               ),
             ),
@@ -84,7 +91,7 @@ class PlayerGrid extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 26,
-                        backgroundColor: isEliminated
+                        backgroundColor: (isEliminated || isLeft)
                             ? const Color(0xFF374151)
                             : _avatarColor(player.userId),
                         child: Text(
@@ -95,7 +102,7 @@ class PlayerGrid extends StatelessWidget {
                             fontFamily: 'Inter',
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: isEliminated
+                            color: (isEliminated || isLeft)
                                 ? const Color(0xFF6B7280)
                                 : Colors.white,
                           ),
@@ -113,6 +120,20 @@ class PlayerGrid extends StatelessWidget {
                             Icons.close_rounded,
                             color: Color(0xFFEF4444),
                             size: 24,
+                          ),
+                        ),
+                      if (isLeft && !isEliminated)
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.45),
+                          ),
+                          child: const Icon(
+                            Icons.exit_to_app_rounded,
+                            color: Color(0xFF9CA3AF),
+                            size: 22,
                           ),
                         ),
                       // Vote count badge (top-right)
@@ -185,11 +206,20 @@ class PlayerGrid extends StatelessWidget {
                       fontFamily: 'Inter',
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isEliminated
+                      color: (isEliminated || isLeft)
                           ? const Color(0xFF6B7280)
                           : Colors.white,
                     ),
                   ),
+                  if (isLeft && !isEliminated)
+                    Text(
+                      'Left',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 9,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -227,23 +257,18 @@ class _RoleIconBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 6,
-          ),
-        ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.85),
+          width: 1.5,
+        ),
+        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6)],
       ),
       child: ClipOval(
         child: Image.asset(
           _iconPath(role),
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(
-            Icons.shield_rounded,
-            size: 12,
-            color: Colors.white,
-          ),
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.shield_rounded, size: 12, color: Colors.white),
         ),
       ),
     );

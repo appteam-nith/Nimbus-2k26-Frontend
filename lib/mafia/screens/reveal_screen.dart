@@ -5,7 +5,7 @@ import '../controller/game_controller.dart';
 import '../models/death_event.dart';
 import '../models/player_model.dart';
 import '../models/room_model.dart';
-import '../widgets/phase_timer.dart';
+import '../widgets/linear_phase_timer.dart';
 
 /// Morning Reveal Screen — shown after NIGHT phase ends.
 ///
@@ -172,17 +172,16 @@ class _RevealScreenState extends State<RevealScreen>
 
             // ── Countdown ───────────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 16, 0, 28),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
               child: Column(
                 children: [
-                  PhaseTimer(
+                  LinearPhaseTimer(
                     endTime: phaseEndsAt,
-                    size: 56,
-                    strokeWidth: 4,
+                    height: 6,
                     textStyle: const TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
@@ -307,6 +306,11 @@ class _DeathCard extends StatelessWidget {
     final role = death.player.role;
     final causeColor = _causeColor(death.cause);
 
+    // Only reveal roles for night kills, not for vote eliminations
+    // Vote eliminations will be revealed on the NEXT morning's reveal screen
+    final shouldShowRole =
+        role != null && death.cause != DeathCause.VOTE_ELIMINATION;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -399,8 +403,8 @@ class _DeathCard extends StatelessWidget {
                   ),
                 ),
 
-                // Role reveal — fades in
-                if (role != null) ...[
+                // Role reveal — fades in (only for night kills, not vote eliminations)
+                if (shouldShowRole) ...[
                   const SizedBox(height: 8),
                   FadeTransition(
                     opacity: animation ?? const AlwaysStoppedAnimation(1.0),

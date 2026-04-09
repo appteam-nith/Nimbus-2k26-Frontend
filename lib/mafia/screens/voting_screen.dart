@@ -7,7 +7,7 @@ import '../models/player_model.dart';
 import '../models/room_model.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
-import '../widgets/phase_timer.dart';
+import '../widgets/linear_phase_timer.dart';
 
 class VotingScreen extends StatefulWidget {
   const VotingScreen({super.key});
@@ -43,18 +43,19 @@ class _VotingScreenState extends State<VotingScreen> {
     final hasVoted = controller.isLoading; // Prevent spam
 
     final me = controller.players.firstWhere(
-      (p) => p.userId == controller.myUserId, 
+      (p) => p.userId == controller.myUserId,
       orElse: () => const PlayerModel(
         playerId: '',
         userId: '',
         name: '',
         status: PlayerStatus.ELIMINATED,
-      )
+      ),
     );
     final isAlive = me.isAlive;
 
     // Only allow voting if phase is VOTING and player is alive
-    final canVote = !hasVoted && controller.status == GameStatus.VOTING && isAlive;
+    final canVote =
+        !hasVoted && controller.status == GameStatus.VOTING && isAlive;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D121B),
@@ -89,18 +90,26 @@ class _VotingScreenState extends State<VotingScreen> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 20),
-                
-                // Timer
-                if (controller.timeRemaining > 0)
-                  PhaseTimer(
-                    endTime: DateTime.now().add(Duration(seconds: controller.timeRemaining)),
-                    size: 80,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: LinearPhaseTimer(
+                    endTime: DateTime.now().add(
+                      Duration(
+                        seconds: controller.timeRemaining > 0
+                            ? controller.timeRemaining
+                            : 10,
+                      ),
+                    ),
+                    height: 6,
+                    textStyle: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
-                  
-                const SizedBox(height: 32),
-
-                // Player Grid
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -111,6 +120,8 @@ class _VotingScreenState extends State<VotingScreen> {
                       onTap: controller.setVoteTarget,
                       showRoles: controller.devMode,
                       voteCounts: controller.voteTally,
+                      allowSelfSelect: true,
+                      leftPlayerIds: controller.leftPlayerIds,
                     ),
                   ),
                 ),
@@ -118,7 +129,10 @@ class _VotingScreenState extends State<VotingScreen> {
                 // Info/Error Message
                 if (controller.error != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: _buildErrorBanner(controller.error!),
                   ),
 
@@ -131,12 +145,14 @@ class _VotingScreenState extends State<VotingScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: VoteButton(
-                          label: myVoteTarget != null 
-                              ? 'Lynch Selected Player' 
+                          label: myVoteTarget != null
+                              ? 'Lynch Selected Player'
                               : 'Select a player',
                           isSelected: myVoteTarget != null,
                           isDisabled: !canVote || myVoteTarget == null,
-                          accentColor: const Color(0xFFEF4444), // Red for eliminate
+                          accentColor: const Color(
+                            0xFFEF4444,
+                          ), // Red for eliminate
                           onPressed: () {
                             if (canVote && myVoteTarget != null) {
                               controller.submitVote('DAY_LYNCH');
@@ -159,13 +175,11 @@ class _VotingScreenState extends State<VotingScreen> {
               ],
             ),
           ),
-          
+
           if (controller.isLoading)
             Container(
               color: Colors.black.withValues(alpha: 0.5),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
@@ -173,13 +187,19 @@ class _VotingScreenState extends State<VotingScreen> {
   }
 
   Widget _buildErrorBanner(String message) {
-    final isBountyInfo = message.contains('Bounty Hunter kill is not yet unlocked');
-    final isEliminatedInfo = isBountyInfo || message.toLowerCase().contains('eliminated') ||
+    final isBountyInfo = message.contains(
+      'Bounty Hunter kill is not yet unlocked',
+    );
+    final isEliminatedInfo =
+        isBountyInfo ||
+        message.toLowerCase().contains('eliminated') ||
         message.toLowerCase().contains('cannot target');
 
     String displayMessage = message;
     if (isBountyInfo && displayMessage.startsWith('GameApiException(409):')) {
-      displayMessage = displayMessage.replaceFirst('GameApiException(409):', '').trim();
+      displayMessage = displayMessage
+          .replaceFirst('GameApiException(409):', '')
+          .trim();
     }
 
     return Container(
@@ -201,7 +221,9 @@ class _VotingScreenState extends State<VotingScreen> {
           Icon(
             isEliminatedInfo ? Icons.info_outline : Icons.error_outline,
             size: 18,
-            color: isEliminatedInfo ? const Color(0xFFFCD34D) : Colors.redAccent,
+            color: isEliminatedInfo
+                ? const Color(0xFFFCD34D)
+                : Colors.redAccent,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -211,7 +233,9 @@ class _VotingScreenState extends State<VotingScreen> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: isEliminatedInfo ? const Color(0xFFFCD34D) : Colors.redAccent,
+                  color: isEliminatedInfo
+                      ? const Color(0xFFFCD34D)
+                      : Colors.redAccent,
                 ),
               ),
             ),

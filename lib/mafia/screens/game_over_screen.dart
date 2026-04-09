@@ -41,8 +41,10 @@ class _GameOverScreenState extends State<GameOverScreen>
       CurvedAnimation(parent: _bannerController, curve: Curves.elasticOut),
     );
     _bannerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _bannerController,
-          curve: const Interval(0, 0.4, curve: Curves.easeIn)),
+      CurvedAnimation(
+        parent: _bannerController,
+        curve: const Interval(0, 0.4, curve: Curves.easeIn),
+      ),
     );
 
     Future.delayed(const Duration(milliseconds: 200), () {
@@ -62,9 +64,11 @@ class _GameOverScreenState extends State<GameOverScreen>
     final gc = context.watch<GameController>();
     final isMafiaWin = gc.winner == 'MAFIA';
 
-    final winColor =
-        isMafiaWin ? const Color(0xFFEF4444) : const Color(0xFF22C55E);
+    final winColor = isMafiaWin
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF22C55E);
     final winEmoji = isMafiaWin ? '🔫' : '✅';
+    final winReason = gc.winReason;
     final winTitle = isMafiaWin ? 'Mafia Wins' : 'Citizens Win';
     final winSubtitle = isMafiaWin
         ? 'The Mafia controlled the town.'
@@ -80,111 +84,112 @@ class _GameOverScreenState extends State<GameOverScreen>
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0D121B),
-      body: Stack(
-        children: [
-          // Background particle burst
-          _ParticleBurst(
-            controller: _particleController,
-            color: winColor,
-          ),
+        body: Stack(
+          children: [
+            // Background particle burst
+            _ParticleBurst(controller: _particleController, color: winColor),
 
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── WINNER BANNER ────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-                  child: FadeTransition(
-                    opacity: _bannerFade,
-                    child: ScaleTransition(
-                      scale: _bannerScale,
-                      child: _WinnerBanner(
-                        emoji: winEmoji,
-                        title: winTitle,
-                        subtitle: winSubtitle,
-                        color: winColor,
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── WINNER BANNER ────────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                    child: FadeTransition(
+                      opacity: _bannerFade,
+                      child: ScaleTransition(
+                        scale: _bannerScale,
+                        child: _WinnerBanner(
+                          emoji: winEmoji,
+                          title: winTitle,
+                          subtitle: winSubtitle,
+                          color: winColor,
+                          winReason: isMafiaWin ? null : winReason,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 28),
+                  const SizedBox(height: 28),
 
-                // ── PLAYER ROSTER ────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'All Roles Revealed',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.45),
-                      letterSpacing: 1.5,
+                  // ── PLAYER ROSTER ────────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'All Roles Revealed',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.45),
+                        letterSpacing: 1.5,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: gc.players.isNotEmpty
-                        ? _PlayerRoster(
-                            players: gc.players,
-                            myUserId: gc.myUserId,
-                          )
-                        : Center(
-                            child: Text(
-                              'No player data',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.3),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: gc.players.isNotEmpty
+                          ? _PlayerRoster(
+                              players: gc.players,
+                              myUserId: gc.myUserId,
+                            )
+                          : Center(
+                              child: Text(
+                                'No player data',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
                             ),
-                          ),
+                    ),
                   ),
-                ),
 
-                // ── ACTIONS ──────────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Play Again
-                      _ActionButton(
-                        label: 'Play Again',
-                        icon: Icons.replay_rounded,
-                        onPressed: () {
-                          gc.leaveGame();
-                          // Dev 2's lobby screen handles play again
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/mafia/lobby',
-                            (r) => r.isFirst,
-                          );
-                        },
-                        isPrimary: true,
-                      ),
-                      const SizedBox(height: 12),
-                      // Home
-                      _ActionButton(
-                        label: 'Back to Home',
-                        icon: Icons.home_rounded,
-                        onPressed: () {
-                          gc.leaveGame();
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        },
-                        isPrimary: false,
-                      ),
-                    ],
+                  // ── ACTIONS ──────────────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Play Again
+                        _ActionButton(
+                          label: 'Play Again',
+                          icon: Icons.replay_rounded,
+                          onPressed: () {
+                            gc.leaveGame();
+                            // Dev 2's lobby screen handles play again
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/mafia/lobby',
+                              (r) => r.isFirst,
+                            );
+                          },
+                          isPrimary: true,
+                        ),
+                        const SizedBox(height: 12),
+                        // Home
+                        _ActionButton(
+                          label: 'Back to Home',
+                          icon: Icons.home_rounded,
+                          onPressed: () {
+                            gc.leaveGame();
+                            Navigator.popUntil(
+                              context,
+                              (route) => route.isFirst,
+                            );
+                          },
+                          isPrimary: false,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -197,12 +202,14 @@ class _WinnerBanner extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final String? winReason;
 
   const _WinnerBanner({
     required this.emoji,
     required this.title,
     required this.subtitle,
     required this.color,
+    this.winReason,
   });
 
   @override
@@ -214,10 +221,7 @@ class _WinnerBanner extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.18),
-            const Color(0xFF1C2333),
-          ],
+          colors: [color.withValues(alpha: 0.18), const Color(0xFF1C2333)],
         ),
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [
@@ -250,6 +254,28 @@ class _WinnerBanner extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.55),
             ),
           ),
+          if (winReason != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                winReason == 'PROPHET_WIN'
+                    ? '🔮 The Prophet\'s Foresight claimed victory'
+                    : '⚔️ All Mafias Eliminated',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -267,7 +293,8 @@ class _PlayerRoster extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Sort: alive first, then eliminated; mafia last
-    final sorted = [...players]..sort((a, b) {
+    final sorted = [...players]
+      ..sort((a, b) {
         if (a.isEliminated && !b.isEliminated) return 1;
         if (!a.isEliminated && b.isEliminated) return -1;
         return 0;
@@ -301,7 +328,9 @@ class _RosterTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: isMe
             ? Border.all(
-                color: const Color(0xFF135BEC).withValues(alpha: 0.4), width: 1.5)
+                color: const Color(0xFF135BEC).withValues(alpha: 0.4),
+                width: 1.5,
+              )
             : null,
       ),
       child: Row(
@@ -318,9 +347,7 @@ class _RosterTile extends StatelessWidget {
                 fontFamily: 'Inter',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: isEliminated
-                    ? const Color(0xFF6B7280)
-                    : Colors.white,
+                color: isEliminated ? const Color(0xFF6B7280) : Colors.white,
               ),
             ),
           ),
@@ -354,8 +381,7 @@ class _RosterTile extends StatelessWidget {
             ),
           ),
           // Role card (compact)
-          if (player.role != null)
-            RoleCard(role: player.role!, compact: true),
+          if (player.role != null) RoleCard(role: player.role!, compact: true),
         ],
       ),
     );
@@ -412,9 +438,7 @@ class _ActionButton extends StatelessWidget {
           fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -434,10 +458,7 @@ class _ParticleBurst extends StatelessWidget {
       animation: controller,
       builder: (context, _) {
         return CustomPaint(
-          painter: _ParticlePainter(
-            progress: controller.value,
-            color: color,
-          ),
+          painter: _ParticlePainter(progress: controller.value, color: color),
           size: MediaQuery.of(context).size,
         );
       },
@@ -466,12 +487,13 @@ class _ParticlePainter extends CustomPainter {
       final opacity = (1.0 - progress).clamp(0.0, 1.0);
       final radius = (4.0 + (i % 3) * 2.0) * (1.0 - progress * 0.5);
 
-      paint.color = (i % 3 == 0
-              ? color
-              : i % 3 == 1
+      paint.color =
+          (i % 3 == 0
+                  ? color
+                  : i % 3 == 1
                   ? Colors.white
                   : color.withValues(alpha: 0.6))
-          .withValues(alpha: opacity);
+              .withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }

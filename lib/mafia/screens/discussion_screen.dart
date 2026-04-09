@@ -6,7 +6,7 @@ import '../controller/game_controller.dart';
 import '../models/death_event.dart';
 import '../models/player_model.dart';
 import '../models/room_model.dart';
-import '../widgets/phase_timer.dart';
+import '../widgets/linear_phase_timer.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/dev_role_board.dart';
 
@@ -44,7 +44,9 @@ class _DiscussionScreenState extends State<DiscussionScreen>
 
   Future<void> _playAudio() async {
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(AssetSource('audio/piano_music-calm-morning-125568.mp3.mpeg'));
+    await _audioPlayer.play(
+      AssetSource('audio/piano_music-calm-morning-125568.mp3.mpeg'),
+    );
   }
 
   @override
@@ -197,106 +199,58 @@ class _DiscussionScreenState extends State<DiscussionScreen>
           // ── Main content ──────────────────────────────────────────────────
           Column(
             children: [
-              const SizedBox(height: 8),
-
-              // Synced phase timer
-              Center(
-                child: PhaseTimer(
-                  endTime: DateTime.now().add(
-                    Duration(
-                      seconds: game.timeRemaining > 0
-                          ? game.timeRemaining
-                          : 120,
-                    ),
-                  ),
-                  size: 90,
-                ),
-              ),
-
+              // Compact linear phase timer
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 24,
-                ),
-                child: Text(
-                  game.status.name == 'DISCUSSION'
-                      ? 'Who is the Mafia? Convince the others!'
-                      : 'Waiting for next phase...',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                child: LinearPhaseTimer(
+                  endTime:
+                      game.phaseEndsAt ??
+                      DateTime.now().add(
+                        Duration(
+                          seconds: game.timeRemaining > 0
+                              ? game.timeRemaining
+                              : 120,
+                        ),
+                      ),
+                  height: 6,
+                  textStyle: const TextStyle(
                     fontFamily: 'Inter',
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontStyle: FontStyle.italic,
-                    fontSize: 13,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),
 
-              // ── Chat tabs ───────────────────────────────────────────────
+              // ── Day timer adjustment (compact) ───────────────────────────────
               if (game.status == GameStatus.DISCUSSION && isAlive)
-                Container(
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF111827),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
-                  ),
-                  child: Column(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Adjust Day Timer',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      _CompactDayAdjustButton(
+                        symbol: '+',
+                        active: game.myDayTimeAdjustment == 1,
+                        color: const Color(0xFF22C55E),
+                        disabled:
+                            game.isAdjustingDayTime ||
+                            game.myDayTimeAdjustment != 0,
+                        onTap: () {
+                          game.adjustDiscussionTime(1);
+                        },
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Each alive player changes time by ${deltaSeconds}s',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white.withValues(alpha: 0.55),
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _DayAdjustButton(
-                              label: '+ Increase',
-                              active: game.myDayTimeAdjustment == 1,
-                              color: const Color(0xFF22C55E),
-                              disabled: game.isAdjustingDayTime,
-                              onTap: () {
-                                final next = game.myDayTimeAdjustment == 1
-                                    ? 0
-                                    : 1;
-                                game.adjustDiscussionTime(next);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _DayAdjustButton(
-                              label: '- Decrease',
-                              active: game.myDayTimeAdjustment == -1,
-                              color: const Color(0xFFEF4444),
-                              disabled: game.isAdjustingDayTime,
-                              onTap: () {
-                                final next = game.myDayTimeAdjustment == -1
-                                    ? 0
-                                    : -1;
-                                game.adjustDiscussionTime(next);
-                              },
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      _CompactDayAdjustButton(
+                        symbol: '−',
+                        active: game.myDayTimeAdjustment == -1,
+                        color: const Color(0xFFEF4444),
+                        disabled:
+                            game.isAdjustingDayTime ||
+                            game.myDayTimeAdjustment != 0,
+                        onTap: () {
+                          game.adjustDiscussionTime(-1);
+                        },
                       ),
                     ],
                   ),
@@ -402,6 +356,58 @@ class _DayAdjustButton extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? color : Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── COMPACT DAY ADJUST BUTTON ────────────────────────────────────────────────
+
+class _CompactDayAdjustButton extends StatelessWidget {
+  final String symbol;
+  final bool active;
+  final bool disabled;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CompactDayAdjustButton({
+    required this.symbol,
+    required this.active,
+    required this.disabled,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: active
+              ? color.withValues(alpha: 0.22)
+              : const Color(0xFF1F2937),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: active
+                ? color.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            symbol,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
               fontWeight: FontWeight.w700,
               color: active ? color : Colors.white.withValues(alpha: 0.8),
             ),
