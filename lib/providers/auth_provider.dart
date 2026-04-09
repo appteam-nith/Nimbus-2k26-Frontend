@@ -83,6 +83,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _fetchAndCacheProfile() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final profileData = await _apiService.getUserProfile();
       final userData = profileData['user'] as Map<String, dynamic>?;
       final name = (userData?['full_name'] ?? userData?['name']) as String?;
