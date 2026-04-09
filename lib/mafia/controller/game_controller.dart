@@ -100,6 +100,12 @@ class GameController extends ChangeNotifier {
   /// Bounty Hunter's VIP user ID (so the BH can see who their VIP is).
   String? bountyVipUserId;
 
+  /// Current global Mafia kill target selected this night.
+  String? mafiaTargetUserId;
+
+  /// Current Doctor heal target selected this night.
+  String? doctorSaveUserId;
+
   /// Local player's day-time adjustment vote: -1 decrease, 0 neutral, +1 increase.
   int myDayTimeAdjustment = 0;
 
@@ -221,6 +227,9 @@ class GameController extends ChangeNotifier {
     nurseMet = room.nurseMet;
     reporterUsed = room.reporterUsed;
     hitmanMetMafia = room.hitmanMetMafia;
+    bountyVipUserId = room.bountyVipUserId;
+    mafiaTargetUserId = room.mafiaTargetUserId;
+    doctorSaveUserId = room.doctorSaveUserId;
     devMode = room.devMode;
     myDayTimeAdjustment = room.myDayTimeAdjustment;
     dayTimeDeltaSeconds = room.dayTimeDeltaSeconds;
@@ -387,6 +396,8 @@ class GameController extends ChangeNotifier {
 
     myVoteTarget = null;
     voteTally = {};
+    mafiaTargetUserId = null;
+    doctorSaveUserId = null;
     hitmanStrikeEvent = null;
     investigationResult = null;
     reporterResult = null;
@@ -520,6 +531,20 @@ class GameController extends ChangeNotifier {
   // ─ Vote Updated (with tally) ──────────────────────────────────────────────────
 
   void _handleVoteUpdated(Map<String, dynamic> data) {
+    final voteType = data['voteType'] as String?;
+    final rawTargetId = data['targetId'];
+    final targetId = rawTargetId is String && rawTargetId.trim().isNotEmpty
+        ? rawTargetId
+        : null;
+
+    if (voteType == 'MAFIA_TARGET') {
+      mafiaTargetUserId = targetId;
+    } else if (voteType == 'DOC_SAVE') {
+      doctorSaveUserId = targetId;
+    } else if (voteType == 'BOUNTY_HUNTER_VIP') {
+      bountyVipUserId = targetId;
+    }
+
     // Backend sends tally as { playerId: count } map
     final rawTally = data['tally'] as Map<String, dynamic>?;
     if (rawTally != null) {
@@ -795,6 +820,8 @@ class GameController extends ChangeNotifier {
     pendingActionReport = null;
     myVoteTarget = null;
     voteTally = {};
+    mafiaTargetUserId = null;
+    doctorSaveUserId = null;
     nightDeaths = [];
     hitmanStrikeEvent = null;
     nurseMet = false;
@@ -804,6 +831,8 @@ class GameController extends ChangeNotifier {
     reporterResult = null;
     nurseCheckIsDoctor = null;
     bountyVipUserId = null;
+    mafiaTargetUserId = null;
+    doctorSaveUserId = null;
     myDayTimeAdjustment = 0;
     dayTimeDeltaSeconds = 0;
     isAdjustingDayTime = false;

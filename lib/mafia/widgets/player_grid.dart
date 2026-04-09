@@ -8,6 +8,8 @@ import '../models/player_model.dart';
 /// [showRoles]      - if true, shows role icon on each player's avatar.
 /// [voteCounts]     - map of userId -> vote count, shown as badges during voting.
 /// [vipUserId]      - Bounty Hunter's VIP, shown with a star marker.
+/// [mafiaTargetUserId] - current global Mafia target, shown with a red marker.
+/// [doctorHealUserId]  - current Doctor save target, shown with a heal marker.
 class PlayerGrid extends StatelessWidget {
   final List<PlayerModel> players;
   final String? selectedUserId;
@@ -17,6 +19,8 @@ class PlayerGrid extends StatelessWidget {
   final bool allowSelfSelect;
   final Map<String, int>? voteCounts;
   final String? vipUserId;
+  final String? mafiaTargetUserId;
+  final String? doctorHealUserId;
   final Set<String>? leftPlayerIds;
 
   const PlayerGrid({
@@ -29,6 +33,8 @@ class PlayerGrid extends StatelessWidget {
     this.allowSelfSelect = false,
     this.voteCounts,
     this.vipUserId,
+    this.mafiaTargetUserId,
+    this.doctorHealUserId,
     this.leftPlayerIds,
   });
 
@@ -50,6 +56,8 @@ class PlayerGrid extends StatelessWidget {
         final isMe = player.userId == myUserId;
         final isEliminated = player.isEliminated;
         final isVip = player.userId == vipUserId;
+        final isMafiaTarget = player.userId == mafiaTargetUserId;
+        final isDoctorHeal = player.userId == doctorHealUserId;
         final isLeft = leftPlayerIds?.contains(player.userId) ?? false;
         final voteCount = voteCounts?[player.userId] ?? 0;
 
@@ -71,12 +79,16 @@ class PlayerGrid extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFF135BEC)
+                    : isMafiaTarget
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.8)
+                    : isDoctorHeal
+                    ? const Color(0xFF22C55E).withValues(alpha: 0.8)
                     : isVip
                     ? const Color(0xFFF59E0B).withValues(alpha: 0.7)
                     : isMe
                     ? const Color(0xFF135BEC).withValues(alpha: 0.4)
                     : Colors.transparent,
-                width: isVip ? 2.5 : 2,
+                width: (isVip || isMafiaTarget || isDoctorHeal) ? 2.5 : 2,
               ),
             ),
             child: Padding(
@@ -183,6 +195,54 @@ class PlayerGrid extends StatelessWidget {
                             ),
                             child: const Icon(
                               Icons.star_rounded,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      // Global Mafia target marker (top-right)
+                      if (isMafiaTarget)
+                        Positioned(
+                          top: -6,
+                          right: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x66EF4444),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.gps_fixed_rounded,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      // Doctor heal target marker (bottom-left)
+                      if (isDoctorHeal)
+                        Positioned(
+                          bottom: -6,
+                          left: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF22C55E),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x6622C55E),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.medical_services_rounded,
                               color: Colors.white,
                               size: 12,
                             ),

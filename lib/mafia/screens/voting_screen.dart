@@ -120,6 +120,9 @@ class _VotingScreenState extends State<VotingScreen> {
                       onTap: controller.setVoteTarget,
                       showRoles: controller.devMode,
                       voteCounts: controller.voteTally,
+                      vipUserId: controller.myRole == GameRole.BOUNTY_HUNTER
+                          ? controller.bountyVipUserId
+                          : null,
                       allowSelfSelect: true,
                       leftPlayerIds: controller.leftPlayerIds,
                     ),
