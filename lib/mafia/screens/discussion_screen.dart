@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../controller/game_controller.dart';
 import '../models/death_event.dart';
 import '../models/player_model.dart';
@@ -26,10 +27,12 @@ class _DiscussionScreenState extends State<DiscussionScreen>
 
   late AnimationController _overlayFade;
   Timer? _autoDismissTimer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
+    _playAudio();
     _overlayFade = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -39,8 +42,14 @@ class _DiscussionScreenState extends State<DiscussionScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverlays());
   }
 
+  Future<void> _playAudio() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('audio/piano_music-calm-morning-125568.mp3.mpeg'));
+  }
+
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _autoDismissTimer?.cancel();
     _overlayFade.dispose();
     super.dispose();

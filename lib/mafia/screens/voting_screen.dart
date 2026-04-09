@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../controller/game_controller.dart';
 import '../models/player_model.dart';
@@ -8,8 +9,32 @@ import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
 import '../widgets/phase_timer.dart';
 
-class VotingScreen extends StatelessWidget {
+class VotingScreen extends StatefulWidget {
   const VotingScreen({super.key});
+
+  @override
+  State<VotingScreen> createState() => _VotingScreenState();
+}
+
+class _VotingScreenState extends State<VotingScreen> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playThriller();
+  }
+
+  Future<void> _playThriller() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('audio/thriller.mpeg'));
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
