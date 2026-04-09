@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/game_controller.dart';
 import '../models/death_event.dart';
+import '../models/player_model.dart';
+import '../models/room_model.dart';
 import '../widgets/phase_timer.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/dev_role_board.dart';
@@ -111,13 +113,31 @@ class _DiscussionScreenState extends State<DiscussionScreen>
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
     final myRole = game.myRole;
+    final me = game.players.firstWhere(
+      (p) => p.userId == game.myUserId,
+      orElse: () => const PlayerModel(
+        playerId: '',
+        userId: '',
+        name: '',
+        status: PlayerStatus.ELIMINATED,
+      ),
+    );
+    final isAlive = me.isAlive;
 
     // Determine if player can access team chat
     final bool hasMafiaChat =
         myRole?.name == 'MAFIA' || myRole?.name == 'MAFIA_HELPER';
     // (Hitman gets mafia chat only after meeting — backend enforces, show tab anyway)
     final bool hasHitmanMafiaChat = myRole?.name == 'HITMAN';
-    final bool hasDocChat = myRole?.name == 'DOCTOR' || myRole?.name == 'NURSE';
+    final bool hasDocChat =
+        (myRole?.name == 'DOCTOR' || myRole?.name == 'NURSE') &&
+        game.roomSize == 'TWELVE' &&
+        game.nurseMet;
+
+    final aliveCount = game.players.where((p) => p.isAlive).length;
+    final deltaSeconds = game.dayTimeDeltaSeconds > 0
+        ? game.dayTimeDeltaSeconds
+        : (aliveCount > 0 ? (120 / aliveCount).round() : 0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D121B),
@@ -175,7 +195,9 @@ class _DiscussionScreenState extends State<DiscussionScreen>
                 child: PhaseTimer(
                   endTime: DateTime.now().add(
                     Duration(
-                      seconds: game.timeRemaining > 0 ? game.timeRemaining : 30,
+                      seconds: game.timeRemaining > 0
+                          ? game.timeRemaining
+                          : 120,
                     ),
                   ),
                   size: 90,
@@ -202,6 +224,74 @@ class _DiscussionScreenState extends State<DiscussionScreen>
               ),
 
               // ── Chat tabs ───────────────────────────────────────────────
+              if (game.status == GameStatus.DISCUSSION && isAlive)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF111827),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Adjust Day Timer',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Each alive player changes time by ${deltaSeconds}s',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DayAdjustButton(
+                              label: '+ Increase',
+                              active: game.myDayTimeAdjustment == 1,
+                              color: const Color(0xFF22C55E),
+                              disabled: game.isAdjustingDayTime,
+                              onTap: () {
+                                final next = game.myDayTimeAdjustment == 1
+                                    ? 0
+                                    : 1;
+                                game.adjustDiscussionTime(next);
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _DayAdjustButton(
+                              label: '- Decrease',
+                              active: game.myDayTimeAdjustment == -1,
+                              color: const Color(0xFFEF4444),
+                              disabled: game.isAdjustingDayTime,
+                              onTap: () {
+                                final next = game.myDayTimeAdjustment == -1
+                                    ? 0
+                                    : -1;
+                                game.adjustDiscussionTime(next);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               if (hasMafiaChat || hasDocChat || hasHitmanMafiaChat)
                 _TeamChatBanner(
                   role: myRole?.name ?? '',
@@ -263,6 +353,55 @@ class _DiscussionScreenState extends State<DiscussionScreen>
 }
 
 // ─── TEAM CHAT BANNER ────────────────────────────────────────────────────────
+
+class _DayAdjustButton extends StatelessWidget {
+  final String label;
+  final bool active;
+  final bool disabled;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DayAdjustButton({
+    required this.label,
+    required this.active,
+    required this.disabled,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: active
+              ? color.withValues(alpha: 0.22)
+              : const Color(0xFF1F2937),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active
+                ? color.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? color : Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _TeamChatBanner extends StatelessWidget {
   final String role;

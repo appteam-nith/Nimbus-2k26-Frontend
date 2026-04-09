@@ -55,20 +55,31 @@ class _RevealScreenState extends State<RevealScreen>
       );
       _cardControllers.add(ctrl);
 
-      _blurAnims.add(Tween<double>(begin: 18, end: 0).animate(
-        CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
-      ));
-      _scaleAnims.add(Tween<double>(begin: 0.88, end: 1.0).animate(
-        CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
-      ));
-      _fadeAnims.add(Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-            parent: ctrl, curve: const Interval(0.4, 1.0, curve: Curves.easeIn)),
-      ));
-      _slideAnims.add(
-        Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
-          CurvedAnimation(parent: ctrl, curve: Curves.easeOut),
+      _blurAnims.add(
+        Tween<double>(
+          begin: 18,
+          end: 0,
+        ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut)),
+      );
+      _scaleAnims.add(
+        Tween<double>(
+          begin: 0.88,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut)),
+      );
+      _fadeAnims.add(
+        Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: ctrl,
+            curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
+          ),
         ),
+      );
+      _slideAnims.add(
+        Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut)),
       );
 
       // Stagger start
@@ -114,10 +125,10 @@ class _RevealScreenState extends State<RevealScreen>
             const SizedBox(height: 10),
             Text(
               deaths.isEmpty
-                  ? 'PEACEFUL MORNING'
+                  ? 'NO ELIMINATION'
                   : deaths.length == 1
-                      ? 'ONE FALLEN'
-                      : '${deaths.length} HAVE FALLEN',
+                  ? 'ONE FALLEN'
+                  : '${deaths.length} HAVE FALLEN',
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 22,
@@ -129,8 +140,8 @@ class _RevealScreenState extends State<RevealScreen>
             const SizedBox(height: 6),
             Text(
               deaths.isEmpty
-                  ? 'The town wakes undisturbed.'
-                  : 'The night claimed its victims.',
+                  ? 'The town failed to reach a conviction.'
+                  : 'The town has spoken.',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
@@ -172,7 +183,7 @@ class _RevealScreenState extends State<RevealScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Discussion begins soon',
+                    'Night begins soon',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12,
@@ -198,10 +209,10 @@ class _PeacefulMorning extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🌅', style: TextStyle(fontSize: 72)),
+          const Text('NO VOTE', style: TextStyle(fontSize: 36)),
           const SizedBox(height: 20),
           Text(
-            'No one was harmed.',
+            'No one was voted out today.',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 18,
@@ -211,7 +222,7 @@ class _PeacefulMorning extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Day breaks peacefully…',
+            'Night will begin shortly.',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14,
@@ -267,10 +278,7 @@ class _DeathCardList extends StatelessWidget {
                     sigmaX: blurAnims[i].value,
                     sigmaY: blurAnims[i].value,
                   ),
-                  child: _DeathCard(
-                    death: deaths[i],
-                    animation: fadeAnims[i],
-                  ),
+                  child: _DeathCard(death: deaths[i], animation: fadeAnims[i]),
                 ),
               ),
             );
@@ -300,15 +308,9 @@ class _DeathCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1C2333),
-            causeColor.withOpacity(0.08),
-          ],
+          colors: [const Color(0xFF1C2333), causeColor.withOpacity(0.08)],
         ),
-        border: Border.all(
-          color: causeColor.withOpacity(0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: causeColor.withOpacity(0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: causeColor.withOpacity(0.12),
@@ -373,8 +375,10 @@ class _DeathCard extends StatelessWidget {
 
                 // Cause badge
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: causeColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -465,8 +469,7 @@ class _RoleRevealBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_roleEmojis[role] ?? '?',
-              style: const TextStyle(fontSize: 13)),
+          Text(_roleEmojis[role] ?? '?', style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 6),
           Text(
             'Was the ${role.displayName}',

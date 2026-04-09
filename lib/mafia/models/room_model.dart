@@ -15,12 +15,22 @@ class RoomModel {
   final DateTime? phaseEndsAt;
   final int? timeRemaining; // seconds, precomputed by server
   final List<PlayerModel> players;
+
   /// True if the Nurse has already found the Doctor this game.
   final bool nurseMet;
+
   /// True if the Reporter has already used their one-time broadcast this game.
   final bool reporterUsed;
+
   /// True if the Hitman has successfully met the Mafia (used to authorize chat).
   final bool hitmanMetMafia;
+
+  /// Local player's discussion timer vote: -1 decrease, 0 neutral, +1 increase.
+  final int myDayTimeAdjustment;
+
+  /// How many seconds each alive player's vote adjusts the 2-minute day timer.
+  final int dayTimeDeltaSeconds;
+
   /// True if this room was started in developer mode (bots fill empty slots).
   final bool devMode;
 
@@ -39,6 +49,8 @@ class RoomModel {
     this.nurseMet = false,
     this.reporterUsed = false,
     this.hitmanMetMafia = false,
+    this.myDayTimeAdjustment = 0,
+    this.dayTimeDeltaSeconds = 0,
     this.devMode = false,
   });
 
@@ -70,6 +82,8 @@ class RoomModel {
       nurseMet: json['nurseMet'] as bool? ?? false,
       reporterUsed: json['reporterUsed'] as bool? ?? false,
       hitmanMetMafia: json['hitmanMetMafia'] as bool? ?? false,
+      myDayTimeAdjustment: json['myDayTimeAdjustment'] as int? ?? 0,
+      dayTimeDeltaSeconds: json['dayTimeDeltaSeconds'] as int? ?? 0,
       devMode: json['devMode'] as bool? ?? false,
     );
   }
@@ -80,10 +94,8 @@ class RoomModel {
   /// so reveal screens can display their name/role.
   PlayerModel? get eliminatedPlayer {
     if (eliminatedThisRound == null) return null;
-    // eliminatedThisRound is GamePlayer.id, not user_id.
-    // We identify by checking players list (server returns id as userId here).
     try {
-      return players.firstWhere((p) => p.userId == eliminatedThisRound);
+      return players.firstWhere((p) => p.playerId == eliminatedThisRound);
     } catch (_) {
       return null;
     }

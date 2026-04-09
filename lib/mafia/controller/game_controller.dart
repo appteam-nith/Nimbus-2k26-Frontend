@@ -31,9 +31,11 @@ class GameController extends ChangeNotifier {
   String? winner; // "MAFIA" | "CITIZENS"
   String? roomCode;
   String? myUserId;
+  String roomSize = 'FIVE';
   int round = 0;
   bool isReconnecting = false;
   bool isLoading = false;
+  bool isAdjustingDayTime = false;
   String? error;
 
   /// The player eliminated this round — set during REVEAL phase.
@@ -93,6 +95,12 @@ class GameController extends ChangeNotifier {
   /// Bounty Hunter's VIP user ID (so the BH can see who their VIP is).
   String? bountyVipUserId;
 
+  /// Local player's day-time adjustment vote: -1 decrease, 0 neutral, +1 increase.
+  int myDayTimeAdjustment = 0;
+
+  /// Seconds changed by one alive player's adjustment vote.
+  int dayTimeDeltaSeconds = 0;
+
   // ── Private ─────────────────────────────────────────────────────────────────
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
@@ -107,6 +115,7 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _reporterResultSub;
   StreamSubscription<Map<String, dynamic>>? _nurseCheckSub;
   StreamSubscription<Map<String, dynamic>>? _actionReportSub;
+  StreamSubscription<Map<String, dynamic>>? _dayTimeSub;
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -193,6 +202,7 @@ class GameController extends ChangeNotifier {
     players = room.players;
     winner = room.winner;
     round = room.round;
+    roomSize = room.roomSize;
     revealedPlayer = room.eliminatedPlayer;
     _phaseEndsAt = room.phaseEndsAt;
     timeRemaining = room.timeRemaining ?? 0;
@@ -200,6 +210,8 @@ class GameController extends ChangeNotifier {
     reporterUsed = room.reporterUsed;
     hitmanMetMafia = room.hitmanMetMafia;
     devMode = room.devMode;
+    myDayTimeAdjustment = room.myDayTimeAdjustment;
+    dayTimeDeltaSeconds = room.dayTimeDeltaSeconds;
   }
 
   // ─── PUSHER SUBSCRIPTIONS ───────────────────────────────────────────────────
@@ -215,6 +227,7 @@ class GameController extends ChangeNotifier {
     _reporterResultSub?.cancel();
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
+    _dayTimeSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
@@ -228,6 +241,7 @@ class GameController extends ChangeNotifier {
     _reporterResultSub = _pusher.onReporterResult.listen(_handleReporterResult);
     _nurseCheckSub = _pusher.onNurseCheckResult.listen(_handleNurseCheckResult);
     _actionReportSub = _pusher.onActionReport.listen(_handleActionReport);
+    _dayTimeSub = _pusher.onDayTimeUpdated.listen(_handleDayTimeUpdated);
   }
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
@@ -241,33 +255,33 @@ class GameController extends ChangeNotifier {
         ? DateTime.tryParse(phaseEndsAtRaw)
         : null;
 
-    // ─ Parse multi-death array (new format) ─────────────────────────────────────
     final rawDeaths = data['deaths'] as List<dynamic>?;
     if (rawDeaths != null && rawDeaths.isNotEmpty) {
       morningDeaths = rawDeaths
           .map((d) => DeathEvent.fromJson(d as Map<String, dynamic>, players))
           .toList();
-      // Mark eliminated players
-      final deadIds = morningDeaths.map((d) => d.player.userId).toSet();
+      final deadUserIds = morningDeaths.map((d) => d.player.userId).toSet();
+      final deadPlayerIds = morningDeaths.map((d) => d.player.playerId).toSet();
       players = players.map((p) {
-        if (deadIds.contains(p.userId)) {
+        if (deadUserIds.contains(p.userId) ||
+            deadPlayerIds.contains(p.playerId)) {
           return p.copyWith(status: PlayerStatus.ELIMINATED);
         }
         return p;
       }).toList();
     } else {
-      // ─ Backward compat: single killedPlayerId ─────────────────────────────────
       final killedId = data['killedPlayerId'] as String?;
       if (killedId != null) {
         players = players.map((p) {
-          if (p.userId == killedId) {
+          if (p.userId == killedId || p.playerId == killedId) {
             return p.copyWith(status: PlayerStatus.ELIMINATED);
           }
           return p;
         }).toList();
         final dead = players.firstWhere(
-          (p) => p.userId == killedId,
+          (p) => p.userId == killedId || p.playerId == killedId,
           orElse: () => PlayerModel(
+            playerId: killedId,
             userId: killedId,
             name: '?',
             status: PlayerStatus.ELIMINATED,
@@ -281,13 +295,8 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    // Mirror morning deaths into the legacy `nightDeaths` property so
-    // the Discussion screen's morning overlay logic works consistently.
     nightDeaths = morningDeaths;
 
-    // If backend included a reporterBroadcast payload inside the
-    // `phase-resolved` event, convert it to the local ReporterBroadcast
-    // object so the ReporterBroadcastListener overlay can show it.
     final rb = data['reporterBroadcast'];
     if (rb is Map<String, dynamic>) {
       final targetUserId = rb['targetUserId'] as String?;
@@ -297,7 +306,7 @@ class GameController extends ChangeNotifier {
       if (targetUserId != null) {
         try {
           final p = players.firstWhere((p) => p.userId == targetUserId);
-          playerName = p.name ?? '?';
+          playerName = p.name;
         } catch (_) {}
       }
 
@@ -311,23 +320,29 @@ class GameController extends ChangeNotifier {
       pendingBroadcast = ReporterBroadcast(playerName: playerName, role: role);
     }
 
-    // Legacy single-player compat
-    final eliminatedId = data['eliminatedPlayerId'] as String?;
-    revealedPlayer = eliminatedId != null
-        ? players.cast<PlayerModel?>().firstWhere(
-            (p) => p?.userId == eliminatedId,
-            orElse: () => null,
-          )
-        : morningDeaths.isNotEmpty
-        ? morningDeaths.first.player
-        : null;
+    final eliminatedUserId = data['eliminatedPlayerUserId'] as String?;
+    final eliminatedPlayerId = data['eliminatedPlayerId'] as String?;
+    if (eliminatedUserId != null) {
+      revealedPlayer = players.cast<PlayerModel?>().firstWhere(
+        (p) => p?.userId == eliminatedUserId,
+        orElse: () => null,
+      );
+    } else if (eliminatedPlayerId != null) {
+      revealedPlayer = players.cast<PlayerModel?>().firstWhere(
+        (p) => p?.playerId == eliminatedPlayerId,
+        orElse: () => null,
+      );
+    } else if (morningDeaths.isNotEmpty) {
+      revealedPlayer = morningDeaths.first.player;
+    } else {
+      revealedPlayer = null;
+    }
 
     status = GameStatus.values.firstWhere(
       (s) => s.name == phase,
       orElse: () => status,
     );
 
-    // ─ REVEAL phase: build death event from eliminatedPlayerId (voting kill) ─
     if (status == GameStatus.REVEAL &&
         revealedPlayer != null &&
         morningDeaths.isEmpty) {
@@ -337,7 +352,6 @@ class GameController extends ChangeNotifier {
           cause: DeathCause.VOTE_ELIMINATION,
         ),
       ];
-      // Also mark the player as eliminated in the local list
       players = players.map((p) {
         if (p.userId == revealedPlayer!.userId) {
           return p.copyWith(status: PlayerStatus.ELIMINATED);
@@ -346,10 +360,20 @@ class GameController extends ChangeNotifier {
       }).toList();
     }
 
-    // Reset local vote target when phase changes
+    if (status == GameStatus.DISCUSSION) {
+      final aliveCount = players.where((p) => p.isAlive).length;
+      dayTimeDeltaSeconds = aliveCount > 0
+          ? (120 / aliveCount).round().clamp(1, 120)
+          : 0;
+      myDayTimeAdjustment = 0;
+    } else {
+      myDayTimeAdjustment = 0;
+      dayTimeDeltaSeconds = 0;
+    }
+
     myVoteTarget = null;
     voteTally = {};
-    hitmanStrikeEvent = null; // clear between rounds
+    hitmanStrikeEvent = null;
     investigationResult = null;
     reporterResult = null;
     nurseCheckIsDoctor = null;
@@ -440,11 +464,20 @@ class GameController extends ChangeNotifier {
       final playerId = entry['playerId'] as String?;
       players = players.map((p) {
         if ((userId != null && p.userId == userId) ||
-            (playerId != null && p.userId == playerId)) {
+            (playerId != null && p.playerId == playerId)) {
           return p.copyWith(status: PlayerStatus.ELIMINATED);
         }
         return p;
       }).toList();
+    }
+    if (myVoteTarget != null) {
+      final selected = players.cast<PlayerModel?>().firstWhere(
+        (p) => p?.userId == myVoteTarget,
+        orElse: () => null,
+      );
+      if (selected == null || !selected.isAlive) {
+        myVoteTarget = null;
+      }
     }
 
     // Set the event so the _HitmanStrikeOverlay in night_screen.dart renders
@@ -486,6 +519,28 @@ class GameController extends ChangeNotifier {
 
   void _handleNurseCheckResult(Map<String, dynamic> data) {
     nurseCheckIsDoctor = data['isDoctor'] as bool? ?? false;
+    notifyListeners();
+  }
+
+  void _handleDayTimeUpdated(Map<String, dynamic> data) {
+    final phase = data['phase'] as String?;
+    if (phase != null && phase != 'DISCUSSION') return;
+
+    final phaseEndsAtRaw = data['phaseEndsAt'] as String?;
+    if (phaseEndsAtRaw != null) {
+      _phaseEndsAt = DateTime.tryParse(phaseEndsAtRaw);
+      if (_phaseEndsAt != null) {
+        _startCountdown(_phaseEndsAt!);
+      }
+    }
+
+    final delta = data['deltaSeconds'];
+    if (delta is int) {
+      dayTimeDeltaSeconds = delta;
+    } else if (delta is num) {
+      dayTimeDeltaSeconds = delta.round();
+    }
+
     notifyListeners();
   }
 
@@ -561,6 +616,18 @@ class GameController extends ChangeNotifier {
 
   /// Sets the local user's selected voting target.
   void setVoteTarget(String? userId) {
+    if (userId != null) {
+      final target = players.cast<PlayerModel?>().firstWhere(
+        (p) => p?.userId == userId,
+        orElse: () => null,
+      );
+      if (target == null || !target.isAlive) {
+        myVoteTarget = null;
+        notifyListeners();
+        return;
+      }
+    }
+
     if (myVoteTarget == userId) {
       myVoteTarget = null; // Tap again to deselect
     } else {
@@ -572,6 +639,57 @@ class GameController extends ChangeNotifier {
   void clearHitmanStrike() {
     hitmanStrikeEvent = null;
     notifyListeners();
+  }
+
+  Future<void> adjustDiscussionTime(int adjustment) async {
+    if (roomCode == null) return;
+    if (status != GameStatus.DISCUSSION) return;
+    if (![-1, 0, 1].contains(adjustment)) return;
+
+    final me = players.firstWhere(
+      (p) => p.userId == myUserId,
+      orElse: () => const PlayerModel(
+        playerId: '',
+        userId: '',
+        name: '',
+        status: PlayerStatus.ELIMINATED,
+      ),
+    );
+    if (!me.isAlive) return;
+
+    try {
+      isAdjustingDayTime = true;
+      error = null;
+      notifyListeners();
+
+      final result = await _api.adjustDayTime(roomCode!, adjustment);
+      final phaseEndsAtRaw = result['phaseEndsAt'] as String?;
+      if (phaseEndsAtRaw != null) {
+        _phaseEndsAt = DateTime.tryParse(phaseEndsAtRaw);
+        if (_phaseEndsAt != null) {
+          _startCountdown(_phaseEndsAt!);
+        }
+      }
+
+      final myAdjustment = result['adjustment'];
+      if (myAdjustment is int) {
+        myDayTimeAdjustment = myAdjustment;
+      } else if (myAdjustment is num) {
+        myDayTimeAdjustment = myAdjustment.round();
+      }
+
+      final delta = result['deltaSeconds'];
+      if (delta is int) {
+        dayTimeDeltaSeconds = delta;
+      } else if (delta is num) {
+        dayTimeDeltaSeconds = delta.round();
+      }
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isAdjustingDayTime = false;
+      notifyListeners();
+    }
   }
 
   /// Submits the vote via the API.
@@ -630,6 +748,7 @@ class GameController extends ChangeNotifier {
     _reporterResultSub?.cancel();
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
+    _dayTimeSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -638,6 +757,7 @@ class GameController extends ChangeNotifier {
     players = [];
     winner = null;
     roomCode = null;
+    roomSize = 'FIVE';
     roleCardSeen = false;
     morningDeaths = [];
     pendingBroadcast = null;
@@ -653,6 +773,9 @@ class GameController extends ChangeNotifier {
     reporterResult = null;
     nurseCheckIsDoctor = null;
     bountyVipUserId = null;
+    myDayTimeAdjustment = 0;
+    dayTimeDeltaSeconds = 0;
+    isAdjustingDayTime = false;
     notifyListeners();
   }
 
@@ -669,6 +792,7 @@ class GameController extends ChangeNotifier {
     _reporterResultSub?.cancel();
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
+    _dayTimeSub?.cancel();
     super.dispose();
   }
 }

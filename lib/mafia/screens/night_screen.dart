@@ -24,6 +24,7 @@ class NightScreen extends StatefulWidget {
 class _NightScreenState extends State<NightScreen> {
   // Single use lock tracking for COP and REPORTER
   bool _hasLockedAction = false;
+  int? _nightBannerRound;
 
   // Single select fallback if gameController's myVoteTarget isn't enough
   // but we usually rely on GameController for single selects.
@@ -76,6 +77,7 @@ class _NightScreenState extends State<NightScreen> {
     final me = gc.players.firstWhere(
       (p) => p.userId == gc.myUserId,
       orElse: () => const PlayerModel(
+        playerId: '',
         userId: '',
         name: '',
         status: PlayerStatus.ELIMINATED,
@@ -89,7 +91,9 @@ class _NightScreenState extends State<NightScreen> {
       team = 'mafia';
     } else if (role == GameRole.HITMAN && gc.hitmanMetMafia) {
       team = 'mafia';
-    } else if (role == GameRole.DOCTOR || role == GameRole.NURSE) {
+    } else if ((role == GameRole.DOCTOR || role == GameRole.NURSE) &&
+        gc.roomSize == 'TWELVE' &&
+        gc.nurseMet) {
       team = 'doc';
     } else if (role == GameRole.CITIZEN) {
       team = 'citizen';
@@ -126,13 +130,34 @@ class _NightScreenState extends State<NightScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _checkSubscription();
     final controller = context.watch<GameController>();
     final myRole = controller.myRole ?? GameRole.CITIZEN;
     final isNight = controller.status == GameStatus.NIGHT;
 
+    if (isNight &&
+        controller.timeRemaining >= 25 &&
+        _nightBannerRound != controller.round) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _nightBannerRound = controller.round;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Night begins. Complete your actions before dawn.',
+              style: TextStyle(fontFamily: 'Inter'),
+            ),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      });
+    }
+
     final me = controller.players.firstWhere(
       (p) => p.userId == controller.myUserId,
       orElse: () => const PlayerModel(
+        playerId: '',
         userId: '',
         name: '',
         status: PlayerStatus.ELIMINATED,

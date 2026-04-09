@@ -4,6 +4,7 @@
 /// [role] is only populated for the calling player themselves,
 /// or for ALL players once the game has ENDED or in dev mode.
 class PlayerModel {
+  final String playerId;
   final String userId;
   final String name;
   final PlayerStatus status;
@@ -11,6 +12,7 @@ class PlayerModel {
   final bool isBot;
 
   const PlayerModel({
+    required this.playerId,
     required this.userId,
     required this.name,
     required this.status,
@@ -19,8 +21,11 @@ class PlayerModel {
   });
 
   factory PlayerModel.fromJson(Map<String, dynamic> json) {
+    final userId = json['userId'] as String;
+    final playerId = (json['playerId'] as String?) ?? userId;
     return PlayerModel(
-      userId: json['userId'] as String,
+      playerId: playerId,
+      userId: userId,
       name: json['name'] as String,
       status: PlayerStatus.values.firstWhere(
         (s) => s.name == json['status'],
@@ -40,6 +45,7 @@ class PlayerModel {
   bool get isEliminated => status == PlayerStatus.ELIMINATED;
 
   PlayerModel copyWith({
+    String? playerId,
     String? userId,
     String? name,
     PlayerStatus? status,
@@ -47,6 +53,7 @@ class PlayerModel {
     bool? isBot,
   }) {
     return PlayerModel(
+      playerId: playerId ?? this.playerId,
       userId: userId ?? this.userId,
       name: name ?? this.name,
       status: status ?? this.status,
@@ -124,8 +131,7 @@ enum GameRole {
     }
   }
 
-  bool get isMafia =>
-      this == GameRole.MAFIA || this == GameRole.MAFIA_HELPER;
+  bool get isMafia => this == GameRole.MAFIA || this == GameRole.MAFIA_HELPER;
 
   bool get isSpecial =>
       this == GameRole.HITMAN ||

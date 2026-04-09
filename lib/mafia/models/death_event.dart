@@ -9,12 +9,18 @@ class DeathEvent {
   const DeathEvent({required this.player, required this.cause});
 
   factory DeathEvent.fromJson(
-      Map<String, dynamic> json, List<PlayerModel> allPlayers) {
-    final playerId = json['playerId'] as String;
+    Map<String, dynamic> json,
+    List<PlayerModel> allPlayers,
+  ) {
+    final playerId = json['playerId'] as String?;
+    final userId = json['userId'] as String?;
     final player = allPlayers.firstWhere(
-      (p) => p.userId == playerId,
+      (p) =>
+          (userId != null && p.userId == userId) ||
+          (playerId != null && p.playerId == playerId),
       orElse: () => PlayerModel(
-        userId: playerId,
+        playerId: playerId ?? userId ?? '',
+        userId: userId ?? playerId ?? '',
         name: json['name'] as String? ?? '?',
         status: PlayerStatus.ELIMINATED,
         role: json['role'] != null
@@ -25,11 +31,28 @@ class DeathEvent {
             : null,
       ),
     );
-    final cause = DeathCause.values.firstWhere(
-      (c) => c.name == (json['cause'] as String? ?? ''),
-      orElse: () => DeathCause.MAFIA_KILL,
-    );
+    final causeRaw =
+        (json['cause'] as String?) ?? (json['killedBy'] as String?);
+    final cause = _parseCause(causeRaw);
     return DeathEvent(player: player, cause: cause);
+  }
+
+  static DeathCause _parseCause(String? raw) {
+    switch (raw) {
+      case 'VOTE_ELIMINATION':
+      case 'VOTE':
+        return DeathCause.VOTE_ELIMINATION;
+      case 'HITMAN_KILL':
+      case 'HITMAN':
+        return DeathCause.HITMAN_KILL;
+      case 'BOUNTY_KILL':
+      case 'BOUNTY_HUNTER':
+        return DeathCause.BOUNTY_KILL;
+      case 'MAFIA_KILL':
+      case 'MAFIA':
+      default:
+        return DeathCause.MAFIA_KILL;
+    }
   }
 }
 

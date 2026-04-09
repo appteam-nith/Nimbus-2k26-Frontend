@@ -118,6 +118,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           _players = [
             ..._players,
             PlayerModel(
+              playerId: userId,
               userId: userId,
               name: name,
               status: PlayerStatus.ALIVE,

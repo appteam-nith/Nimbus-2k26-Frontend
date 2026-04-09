@@ -178,12 +178,16 @@ class GameApi {
   }
 
   /// POST /api/game/start — host only.
-  Future<void> startGame(String roomCode, {bool devMode = false, String? devHostRole}) async {
+  Future<void> startGame(
+    String roomCode, {
+    bool devMode = false,
+    String? devHostRole,
+  }) async {
     final token = await _getToken();
     if (token == null) throw const GameApiException('Not authenticated', 401);
 
     final uri = Uri.parse('$_baseUrl/api/game/start');
-    
+
     final payload = <String, dynamic>{
       'room_code': roomCode,
       'dev_mode': devMode,
@@ -193,11 +197,7 @@ class GameApi {
     }
 
     final response = await http
-        .post(
-          uri,
-          headers: _headers(token),
-          body: jsonEncode(payload),
-        )
+        .post(uri, headers: _headers(token), body: jsonEncode(payload))
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
@@ -256,6 +256,39 @@ class GameApi {
   }
 
   // ─── CHAT ───────────────────────────────────────────────────────────────────
+
+  /// POST /api/game/day-time
+  /// [adjustment] must be -1 (decrease), 0 (neutral), or +1 (increase).
+  Future<Map<String, dynamic>> adjustDayTime(
+    String roomCode,
+    int adjustment,
+  ) async {
+    final token = await _getToken();
+    if (token == null) throw const GameApiException('Not authenticated', 401);
+
+    final payload = <String, dynamic>{
+      'room_code': roomCode,
+      'adjustment': adjustment,
+    };
+
+    final uri = Uri.parse('$_baseUrl/api/game/day-time');
+    final response = await http
+        .post(uri, headers: _headers(token), body: jsonEncode(payload))
+        .timeout(const Duration(seconds: 12));
+
+    if (response.statusCode != 200) {
+      throw GameApiException(
+        _tryDecodeError(response.body),
+        response.statusCode,
+      );
+    }
+
+    try {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return const <String, dynamic>{};
+    }
+  }
 
   /// POST /api/game/chat
   /// [channel] is one of: null (global), 'mafia', 'doc'

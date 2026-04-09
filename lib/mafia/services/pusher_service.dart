@@ -56,7 +56,9 @@ class PusherService extends ChangeNotifier {
       StreamController<Map<String, dynamic>>.broadcast();
   final _nurseCheckController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _actionReportController = 
+  final _actionReportController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _dayTimeUpdatedController =
       StreamController<Map<String, dynamic>>.broadcast();
   // Global room list events (for the browse rooms screen)
   final _roomOpenedController =
@@ -98,6 +100,8 @@ class PusherService extends ChangeNotifier {
   /// Public action report (mafia kill, bounty hunter kill, doctor save, etc)
   Stream<Map<String, dynamic>> get onActionReport =>
       _actionReportController.stream;
+  Stream<Map<String, dynamic>> get onDayTimeUpdated =>
+      _dayTimeUpdatedController.stream;
 
   Stream<Map<String, dynamic>> get onRoomOpened => _roomOpenedController.stream;
   Stream<Map<String, dynamic>> get onRoomClosed => _roomClosedController.stream;
@@ -217,10 +221,7 @@ class PusherService extends ChangeNotifier {
   Future<void> subscribeToTeamChannel(String roomCode, String team) async {
     final channelName = 'private-$team-$roomCode';
     try {
-      await _pusher.subscribe(
-        channelName: channelName,
-        onEvent: _onRoomEvent,
-      );
+      await _pusher.subscribe(channelName: channelName, onEvent: _onRoomEvent);
       debugPrint('[Pusher] Subscribed to team channel: $channelName');
     } catch (e) {
       debugPrint('[Pusher] Failed to subscribe to $channelName: $e');
@@ -271,6 +272,9 @@ class PusherService extends ChangeNotifier {
         break;
       case 'action-report':
         _actionReportController.add(data);
+        break;
+      case 'day-time-updated':
+        _dayTimeUpdatedController.add(data);
         break;
       case 'game-started':
         _gameStartedController.add(data);
@@ -369,6 +373,7 @@ class PusherService extends ChangeNotifier {
     _reporterResultController.close();
     _nurseCheckController.close();
     _actionReportController.close();
+    _dayTimeUpdatedController.close();
     _roomOpenedController.close();
     _roomClosedController.close();
     super.dispose();

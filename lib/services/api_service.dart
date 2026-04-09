@@ -58,9 +58,13 @@ class ApiService {
       body = jsonDecode(response.body);
     } catch (e) {
       if (response.statusCode >= 500) {
-         throw Exception('Server is temporarily unavailable (Status ${response.statusCode}). Please try again shortly.');
+        throw Exception(
+          'Server is temporarily unavailable (Status ${response.statusCode}). Please try again shortly.',
+        );
       }
-      throw Exception('Unexpected server response (Status ${response.statusCode}): ${response.body.length > 50 ? '${response.body.substring(0, 50)}...' : response.body}');
+      throw Exception(
+        'Unexpected server response (Status ${response.statusCode}): ${response.body.length > 50 ? '${response.body.substring(0, 50)}...' : response.body}',
+      );
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -82,19 +86,21 @@ class ApiService {
   /// Send Firebase ID token to backend for verification and receive a JWT.
   Future<Map<String, dynamic>> googleSignIn(String idToken) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/users/auth/google'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({'idToken': idToken}),
-      ).timeout(
-        const Duration(seconds: 90),
-        onTimeout: () => throw Exception(
-          'Server is waking up — this can take up to 60 seconds on first login. Please try again.',
-        ),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/users/auth/google'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'idToken': idToken}),
+          )
+          .timeout(
+            const Duration(seconds: 90),
+            onTimeout: () => throw Exception(
+              'Server is waking up — this can take up to 60 seconds on first login. Please try again.',
+            ),
+          );
 
       final data = _handleResponse(response);
       if (data['token'] != null) {
@@ -107,13 +113,23 @@ class ApiService {
   }
 
   /// Sign up with email
-  Future<Map<String, dynamic>> emailSignUp(String name, String email, String password) async {
+  Future<Map<String, dynamic>> emailSignUp(
+    String name,
+    String email,
+    String password,
+  ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/users/auth/signup'),
-        headers: _getHeaders(),
-        body: jsonEncode({'name': name, 'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/users/auth/signup'),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
       return _handleResponse(response);
     } on Exception {
       rethrow;
@@ -123,11 +139,13 @@ class ApiService {
   /// Login with email
   Future<Map<String, dynamic>> emailLogin(String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/users/auth/login'),
-        headers: _getHeaders(),
-        body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/users/auth/login'),
+            headers: _getHeaders(),
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 30));
 
       final data = _handleResponse(response);
       if (data['token'] != null) {
@@ -142,11 +160,13 @@ class ApiService {
   /// Request password reset email
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/users/auth/forgot-password'),
-        headers: _getHeaders(),
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/users/auth/forgot-password'),
+            headers: _getHeaders(),
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 30));
       return _handleResponse(response);
     } on Exception {
       rethrow;
@@ -154,19 +174,23 @@ class ApiService {
   }
 
   /// Reset password using token
-  Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+  Future<Map<String, dynamic>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/users/auth/reset-password?token=$token'),
-        headers: _getHeaders(),
-        body: jsonEncode({'newPassword': newPassword}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/users/auth/reset-password?token=$token'),
+            headers: _getHeaders(),
+            body: jsonEncode({'newPassword': newPassword}),
+          )
+          .timeout(const Duration(seconds: 30));
       return _handleResponse(response);
     } on Exception {
       rethrow;
     }
   }
-
 
   /// Logout - clears token locally (no backend logout route)
   Future<void> logout() async {
@@ -176,10 +200,9 @@ class ApiService {
   /// Wake up the backend before the user taps sign in.
   Future<void> warmUp() async {
     try {
-      await http.get(
-        Uri.parse("$baseUrl/api/coreteam"),
-        headers: _getHeaders(),
-      ).timeout(const Duration(seconds: 12));
+      await http
+          .get(Uri.parse("$baseUrl/api/coreteam"), headers: _getHeaders())
+          .timeout(const Duration(seconds: 12));
     } catch (_) {
       // Warm-up is best effort only.
     }
@@ -190,10 +213,12 @@ class ApiService {
   /// Get user profile (requires auth)
   Future<Map<String, dynamic>> getUserProfile() async {
     await _loadToken(); // ensure latest token
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/users/profile'),
-      headers: _getHeaders(requiresAuth: true),
-    ).timeout(const Duration(seconds: 30));
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/api/users/profile'),
+          headers: _getHeaders(requiresAuth: true),
+        )
+        .timeout(const Duration(seconds: 30));
     return _handleResponse(response);
   }
 
@@ -211,10 +236,12 @@ class ApiService {
   /// Permanently delete the current user's account and all their data
   Future<void> deleteAccount() async {
     await _loadToken();
-    final response = await http.delete(
-      Uri.parse('$baseUrl/api/users/profile'),
-      headers: _getHeaders(requiresAuth: true),
-    ).timeout(const Duration(seconds: 30));
+    final response = await http
+        .delete(
+          Uri.parse('$baseUrl/api/users/profile'),
+          headers: _getHeaders(requiresAuth: true),
+        )
+        .timeout(const Duration(seconds: 30));
     _handleResponse(response);
   }
 
@@ -239,5 +266,29 @@ class ApiService {
     );
     final data = _handleResponse(response);
     return data['data'] ?? [];
+  }
+
+  /// Get leaderboard (public)
+  /// Returns a paginated response from /api/users/leaderboard
+  Future<Map<String, dynamic>> getLeaderboard({
+    int page = 1,
+    int perPage = 15,
+    String? q,
+  }) async {
+    try {
+      final params = <String, String>{
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+      };
+      if (q != null && q.isNotEmpty) params['q'] = q;
+
+      final uri = Uri.parse(
+        '$baseUrl/api/users/leaderboard',
+      ).replace(queryParameters: params);
+      final response = await http.get(uri, headers: _getHeaders());
+      return _handleResponse(response);
+    } on Exception {
+      rethrow;
+    }
   }
 }
