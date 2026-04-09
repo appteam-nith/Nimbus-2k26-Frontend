@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -676,101 +677,103 @@ class _LobbyScreenState extends State<LobbyScreen>
           ),
           const SizedBox(height: 20),
           // ── Developer Mode toggle ─────────────────────────────────────────
-          GestureDetector(
-            onTap: () => setState(() => _devMode = !_devMode),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: _devMode
-                    ? const Color(0xFFF59E0B).withOpacity(0.08)
-                    : _surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
+          if (kDebugMode) ...[
+            GestureDetector(
+              onTap: () => setState(() => _devMode = !_devMode),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
                   color: _devMode
-                      ? const Color(0xFFF59E0B).withOpacity(0.4)
-                      : _border,
+                      ? const Color(0xFFF59E0B).withOpacity(0.08)
+                      : _surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _devMode
+                        ? const Color(0xFFF59E0B).withOpacity(0.4)
+                        : _border,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: _devMode
+                            ? const Color(0xFFF59E0B).withOpacity(0.15)
+                            : _border,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.bug_report_outlined,
+                        size: 18,
+                        color: _devMode
+                            ? const Color(0xFFF59E0B)
+                            : _textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Developer Mode',
+                                style: TextStyle(
+                                  color: _devMode
+                                      ? const Color(0xFFF59E0B)
+                                      : _textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if (_devMode) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF59E0B)
+                                        .withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text('⚡ DEV',
+                                      style: TextStyle(
+                                          color: Color(0xFFF59E0B),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700)),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Fill empty slots with bots. All roles visible.',
+                            style: TextStyle(
+                              color: _devMode
+                                  ? const Color(0xFFF59E0B).withOpacity(0.7)
+                                  : _textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _devMode,
+                      onChanged: (v) => setState(() => _devMode = v),
+                      activeColor: const Color(0xFFF59E0B),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: _devMode
-                          ? const Color(0xFFF59E0B).withOpacity(0.15)
-                          : _border,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.bug_report_outlined,
-                      size: 18,
-                      color: _devMode
-                          ? const Color(0xFFF59E0B)
-                          : _textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Developer Mode',
-                              style: TextStyle(
-                                color: _devMode
-                                    ? const Color(0xFFF59E0B)
-                                    : _textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (_devMode) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF59E0B)
-                                      .withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text('⚡ DEV',
-                                    style: TextStyle(
-                                        color: Color(0xFFF59E0B),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700)),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Fill empty slots with bots. All roles visible.',
-                          style: TextStyle(
-                            color: _devMode
-                                ? const Color(0xFFF59E0B).withOpacity(0.7)
-                                : _textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: _devMode,
-                    onChanged: (v) => setState(() => _devMode = v),
-                    activeColor: const Color(0xFFF59E0B),
-                  ),
-                ],
-              ),
             ),
-          ),
-          if (_devMode) ...[
-            const SizedBox(height: 10),
-            _buildDevHostRoleDropdown(),
+            if (_devMode) ...[
+              const SizedBox(height: 10),
+              _buildDevHostRoleDropdown(),
+            ],
           ],
           const SizedBox(height: 14),
           _PrimaryButton(

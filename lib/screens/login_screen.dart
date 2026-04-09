@@ -69,7 +69,7 @@ class LoginScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               const Text(
-                                'Sign in with your @nith.ac.in account',
+                                'Sign in to your account',
                                 style: TextStyle(
                                   fontSize: 15,
                                   color: Colors.white70,
@@ -133,7 +133,7 @@ class LoginScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 14),
                                       const Text(
-                                        'Use your NITH Google account',
+                                        'Use your Google account',
                                         style: TextStyle(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
@@ -143,7 +143,7 @@ class LoginScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 8),
                                       const Text(
-                                        'Sign in instantly with your @nith.ac.in\nGoogle account - no password needed.',
+                                        'Sign in instantly with your\nGoogle account - no password needed.',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Color(0xFF6B7280),
@@ -338,40 +338,40 @@ class LoginScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFECFDF5),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Wrap(
-                                    alignment: WrapAlignment.center,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: 5,
-                                    runSpacing: 4,
-                                    children: [
-                                      Icon(
-                                        Icons.lock_outline,
-                                        size: 13,
-                                        color: Color(0xFF059669),
-                                      ),
-                                      Text(
-                                        'Restricted to @nith.ac.in only. Reviewer login is allowed with reviewer@nith.ac.in.',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF059669),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                // const SizedBox(height: 8),
+                                // Container(
+                                //   width: double.infinity,
+                                //   padding: const EdgeInsets.symmetric(
+                                //     horizontal: 14,
+                                //     vertical: 7,
+                                //   ),
+                                //   decoration: BoxDecoration(
+                                //     color: const Color(0xFFECFDF5),
+                                //     borderRadius: BorderRadius.circular(20),
+                                //   ),
+                                //   child: const Wrap(
+                                //     alignment: WrapAlignment.center,
+                                //     crossAxisAlignment:
+                                //         WrapCrossAlignment.center,
+                                //     spacing: 5,
+                                //     runSpacing: 4,
+                                //     children: [
+                                //       Icon(
+                                //         Icons.lock_outline,
+                                //         size: 13,
+                                //         color: Color(0xFF059669),
+                                //       ),
+                                //       Text(
+                                //         'Restricted to @nith.ac.in only. Reviewer login is allowed with reviewer@nith.ac.in.',
+                                //         style: TextStyle(
+                                //           fontSize: 12,
+                                //           fontWeight: FontWeight.w600,
+                                //           color: Color(0xFF059669),
+                                //         ),
+                                //       ),
+                                //     ],
+                                //   ),
+                                // ),
                               ],
                             );
                           },

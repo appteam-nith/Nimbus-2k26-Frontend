@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+
 
 import 'timeline/controller/timeline_controller.dart';
 import 'models/profile_model.dart';
@@ -87,6 +91,48 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
   Future<void> _startBootstrap() async {
     // Splash delay so the logo has time to render
     await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+
+    // ── Update Check ──────────────────────────────────────────────────────────
+    try {
+      final response = await http
+          .get(Uri.parse('https://nimbus-2k26-backend-olhw.onrender.com/api/config/update'))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final requiredVersionCode = data['requiredVersionCode'] ?? 7;
+        const currentVersionCode = 7; // Increment this when making new releases
+        if (currentVersionCode < requiredVersionCode) {
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => PopScope(
+              canPop: false,
+              child: AlertDialog(
+                title: const Text('Update Required'),
+                content: const Text('A mandatory update is available for Nimbus 2k26. Please update to continue.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      final url = data['playStoreUrl'];
+                      if (url != null && url.isNotEmpty) {
+                        launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text('Update Now'),
+                  ),
+                ],
+              ),
+            ),
+          );
+          return; // Do not proceed to load app
+        }
+      }
+    } catch (_) {
+      // Silently proceed if network fails, or could show network error.
+    }
 
     if (!mounted) return;
 
