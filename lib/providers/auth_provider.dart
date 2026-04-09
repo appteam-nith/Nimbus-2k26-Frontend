@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   String? _userName;
   String? _userEmail;
+  String? _userNickname;
   int? _mafiaPoints;
   int? _mafiaRank;
 
@@ -26,6 +27,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
+  String? get userNickname => _userNickname;
   int? get mafiaPoints => _mafiaPoints;
   int? get mafiaRank => _mafiaRank;
   User? get user => FirebaseAuth.instance.currentUser;
@@ -65,8 +67,9 @@ class AuthProvider extends ChangeNotifier {
       _isAuthenticated = true;
       _userName = prefs.getString('user_name');
       _userEmail = prefs.getString('user_email');
+      _userNickname = prefs.getString('user_nickname');
       debugPrint(
-        '[Auth] _checkExistingAuth: name=$_userName, email=$_userEmail',
+        '[Auth] _checkExistingAuth: name=$_userName, email=$_userEmail, nickname=$_userNickname',
       );
       _apiService.setToken(token);
       notifyListeners();
@@ -84,6 +87,8 @@ class AuthProvider extends ChangeNotifier {
       final userData = profileData['user'] as Map<String, dynamic>?;
       final name = (userData?['full_name'] ?? userData?['name']) as String?;
       final email = userData?['email'] as String?;
+      final nicknameRaw = userData?['nickname'];
+      final nickname = nicknameRaw is String ? nicknameRaw.trim() : null;
       final pointsCandidate =
           profileData['points'] ??
           profileData['mafia_points'] ??
@@ -103,6 +108,13 @@ class AuthProvider extends ChangeNotifier {
         }
         _userName = name;
         _userEmail = email;
+      }
+      if (nickname != null && nickname.isNotEmpty) {
+        await prefs.setString('user_nickname', nickname);
+        _userNickname = nickname;
+      } else {
+        await prefs.remove('user_nickname');
+        _userNickname = null;
       }
 
       if (pointsCandidate != null) {
@@ -273,6 +285,10 @@ class AuthProvider extends ChangeNotifier {
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
+      final nicknameRaw = userData['nickname'];
+      _userNickname = nicknameRaw is String && nicknameRaw.trim().isNotEmpty
+          ? nicknameRaw.trim()
+          : null;
       final userId = userData['user_id'] ?? userData['id'] as String?;
 
       debugPrint(
@@ -284,6 +300,11 @@ class AuthProvider extends ChangeNotifier {
       }
       if (_userEmail != null) {
         await prefs.setString('user_email', _userEmail!);
+      }
+      if (_userNickname != null) {
+        await prefs.setString('user_nickname', _userNickname!);
+      } else {
+        await prefs.remove('user_nickname');
       }
       if (userId != null) {
         await prefs.setString('user_id', userId);
@@ -348,11 +369,20 @@ class AuthProvider extends ChangeNotifier {
 
       _userName = (userData['name'] ?? userData['full_name']) as String?;
       _userEmail = userData['email'] as String?;
+      final nicknameRaw = userData['nickname'];
+      _userNickname = nicknameRaw is String && nicknameRaw.trim().isNotEmpty
+          ? nicknameRaw.trim()
+          : null;
       final userId = (userData['user_id'] ?? userData['id']) as String?;
 
       final prefs = await SharedPreferences.getInstance();
       if (_userName != null) await prefs.setString('user_name', _userName!);
       if (_userEmail != null) await prefs.setString('user_email', _userEmail!);
+      if (_userNickname != null) {
+        await prefs.setString('user_nickname', _userNickname!);
+      } else {
+        await prefs.remove('user_nickname');
+      }
       if (userId != null) await prefs.setString('user_id', userId);
       await prefs.setString('auth_token', token);
 
@@ -411,6 +441,36 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateNickname(String nickname) async {
+    final trimmedNickname = nickname.trim();
+
+    _errorMessage = null;
+    try {
+      final response = await _apiService.updateUserProfile(
+        nickname: trimmedNickname,
+      );
+      final userData = response['user'];
+      final updatedNickname = userData is Map<String, dynamic>
+          ? (userData['nickname'] as String?)?.trim()
+          : trimmedNickname;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (updatedNickname != null && updatedNickname.isNotEmpty) {
+        _userNickname = updatedNickname;
+        await prefs.setString('user_nickname', updatedNickname);
+      } else {
+        _userNickname = null;
+        await prefs.remove('user_nickname');
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setStatus(AuthStatus.error, error: _cleanError(e.toString()));
+      return false;
+    }
+  }
+
   Future<bool> deleteAccount() async {
     _setStatus(AuthStatus.loading);
     try {
@@ -432,12 +492,14 @@ class AuthProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_name');
       await prefs.remove('user_email');
+      await prefs.remove('user_nickname');
       await prefs.remove('auth_token');
       await _apiService.clearToken();
 
       _isAuthenticated = false;
       _userName = null;
       _userEmail = null;
+      _userNickname = null;
       _errorMessage = null;
       _status = AuthStatus.idle;
       notifyListeners();
@@ -470,12 +532,14 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_name');
     await prefs.remove('user_email');
+    await prefs.remove('user_nickname');
     await prefs.remove('auth_token');
     await _apiService.clearToken();
 
     _isAuthenticated = false;
     _userName = null;
     _userEmail = null;
+    _userNickname = null;
     _errorMessage = null;
     _status = AuthStatus.idle;
     notifyListeners();

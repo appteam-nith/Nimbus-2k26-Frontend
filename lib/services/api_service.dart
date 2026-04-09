@@ -222,13 +222,25 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  /// Update user profile — only supports {name} for now
-  Future<Map<String, dynamic>> updateUserProfile({required String name}) async {
+  /// Update user profile fields.
+  /// Pass one or both of `name` and `nickname`.
+  Future<Map<String, dynamic>> updateUserProfile({
+    String? name,
+    String? nickname,
+  }) async {
+    if (name == null && nickname == null) {
+      throw Exception('No profile fields provided for update.');
+    }
+
     await _loadToken();
+    final payload = <String, dynamic>{};
+    if (name != null) payload['name'] = name;
+    if (nickname != null) payload['nickname'] = nickname;
+
     final response = await http.put(
       Uri.parse('$baseUrl/api/users/profile'),
       headers: _getHeaders(requiresAuth: true),
-      body: jsonEncode({'name': name}),
+      body: jsonEncode(payload),
     );
     return _handleResponse(response);
   }

@@ -40,6 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
         final handle = email.isNotEmpty
             ? '@${email.split('@').first}'
             : '@nimbus_user';
+        final chatNickname = auth.userNickname?.trim();
         final avatarUrl = profile.avatarPath.isNotEmpty
             ? profile.avatarPath
             : user?.photoURL;
@@ -84,6 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   profile,
                   displayName,
                   handle,
+                  chatNickname,
                   email,
                   avatarUrl,
                   initials,
@@ -107,6 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileModel profile,
     String displayName,
     String handle,
+    String? chatNickname,
     String email,
     String? avatarUrl,
     String initials,
@@ -217,6 +220,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: const TextStyle(
                   fontSize: 13,
                   color: NimbusColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: NimbusColors.border),
+                ),
+                child: Text(
+                  'Chat nickname: ${chatNickname == null || chatNickname.isEmpty ? 'Not set' : chatNickname}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: NimbusColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -429,6 +452,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 currentName:
                     auth.userName ?? auth.user?.displayName ?? 'Nimbus User',
                 currentBio: profile.bio,
+                currentNickname: auth.userNickname ?? '',
               );
             },
             style: ElevatedButton.styleFrom(
@@ -807,9 +831,11 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileModel profile, {
     required String currentName,
     required String currentBio,
+    required String currentNickname,
   }) async {
     final nameController = TextEditingController(text: currentName);
     final bioController = TextEditingController(text: currentBio);
+    final nicknameController = TextEditingController(text: currentNickname);
 
     await showDialog<void>(
       context: context,
@@ -885,6 +911,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             maxLines: 3,
                           ),
                           const SizedBox(height: 16),
+                          _buildEditField(
+                            controller: nicknameController,
+                            label: 'Chat Nickname',
+                            hint: 'Name shown in chat rooms',
+                            icon: Icons.badge_outlined,
+                            maxLines: 1,
+                          ),
+                          const SizedBox(height: 16),
                           // Info Text
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -952,6 +986,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           onPressed: () async {
                             final newName = nameController.text.trim();
                             final newBio = bioController.text.trim();
+                            final newNickname = nicknameController.text.trim();
                             Navigator.pop(dialogContext);
 
                             await _saveProfileChanges(
@@ -960,8 +995,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               profile,
                               newName,
                               newBio,
+                              newNickname,
                               currentName,
                               currentBio,
+                              currentNickname,
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -994,6 +1031,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     nameController.dispose();
     bioController.dispose();
+    nicknameController.dispose();
   }
 
   Widget _buildEditField({
@@ -1058,8 +1096,10 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileModel profile,
     String newName,
     String newBio,
+    String newNickname,
     String currentName,
     String currentBio,
+    String currentNickname,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
 
@@ -1084,6 +1124,15 @@ class _ProfilePageState extends State<ProfilePage> {
       // Update bio if changed
       if (newBio != currentBio) {
         await profile.updateBio(newBio);
+      }
+
+      // Update chat nickname if changed (blank clears it)
+      if (newNickname != currentNickname.trim()) {
+        final updated = await auth.updateNickname(newNickname);
+        if (!updated && auth.errorMessage != null) {
+          messenger.showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+          return;
+        }
       }
 
       if (!context.mounted) return;
