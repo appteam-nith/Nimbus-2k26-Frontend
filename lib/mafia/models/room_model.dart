@@ -25,6 +25,15 @@ class RoomModel {
   /// True if the Hitman has successfully met the Mafia (used to authorize chat).
   final bool hitmanMetMafia;
 
+  /// Latest globally selected Mafia target user ID for current night.
+  final String? mafiaTargetUserId;
+
+  /// Latest Doctor save target user ID for current night.
+  final String? doctorSaveUserId;
+
+  /// Bounty Hunter's selected VIP (stored in room meta, persisted across rounds).
+  final String? bountyVipUserId;
+
   /// Local player's discussion timer vote: -1 decrease, 0 neutral, +1 increase.
   final int myDayTimeAdjustment;
 
@@ -49,6 +58,9 @@ class RoomModel {
     this.nurseMet = false,
     this.reporterUsed = false,
     this.hitmanMetMafia = false,
+    this.mafiaTargetUserId,
+    this.doctorSaveUserId,
+    this.bountyVipUserId,
     this.myDayTimeAdjustment = 0,
     this.dayTimeDeltaSeconds = 0,
     this.devMode = false,
@@ -82,6 +94,9 @@ class RoomModel {
       nurseMet: json['nurseMet'] as bool? ?? false,
       reporterUsed: json['reporterUsed'] as bool? ?? false,
       hitmanMetMafia: json['hitmanMetMafia'] as bool? ?? false,
+      mafiaTargetUserId: json['mafiaTargetUserId'] as String?,
+      doctorSaveUserId: json['doctorSaveUserId'] as String?,
+      bountyVipUserId: json['bountyVipUserId'] as String?,
       myDayTimeAdjustment: json['myDayTimeAdjustment'] as int? ?? 0,
       dayTimeDeltaSeconds: json['dayTimeDeltaSeconds'] as int? ?? 0,
       devMode: json['devMode'] as bool? ?? false,

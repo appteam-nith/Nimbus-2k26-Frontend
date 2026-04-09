@@ -388,7 +388,18 @@ class _NightScreenState extends State<NightScreen> {
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
                         showRoles: controller.devMode,
-                        vipUserId: controller.bountyVipUserId,
+                        vipUserId: myRole == GameRole.BOUNTY_HUNTER
+                            ? controller.bountyVipUserId
+                            : null,
+                        mafiaTargetUserId:
+                            (myRole == GameRole.MAFIA ||
+                                (myRole == GameRole.HITMAN &&
+                                    controller.hitmanMetMafia))
+                            ? controller.mafiaTargetUserId
+                            : null,
+                        doctorHealUserId: myRole == GameRole.DOCTOR
+                            ? controller.doctorSaveUserId
+                            : null,
                         leftPlayerIds: controller.leftPlayerIds,
                       ),
                     ),

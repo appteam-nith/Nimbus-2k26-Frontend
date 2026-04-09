@@ -35,10 +35,7 @@ class _ActionReportListenerState extends State<ActionReportListener> {
   void _showOverlay(ActionReport report) {
     _removeOverlay();
     _overlayEntry = OverlayEntry(
-      builder: (_) => _ActionReportOverlay(
-        report: report,
-        onDismiss: _dismiss,
-      ),
+      builder: (_) => _ActionReportOverlay(report: report, onDismiss: _dismiss),
     );
     Overlay.of(context).insert(_overlayEntry!);
   }
@@ -73,10 +70,7 @@ class _ActionReportOverlay extends StatefulWidget {
   final ActionReport report;
   final VoidCallback onDismiss;
 
-  const _ActionReportOverlay({
-    required this.report,
-    required this.onDismiss,
-  });
+  const _ActionReportOverlay({required this.report, required this.onDismiss});
 
   @override
   State<_ActionReportOverlay> createState() => _ActionReportOverlayState();
@@ -98,9 +92,10 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
     _slideAnim = Tween<double>(begin: 0.1, end: 0.0).animate(
       CurvedAnimation(parent: _enterController, curve: Curves.easeOutCubic),
     );
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _enterController, curve: Curves.easeOut),
-    );
+    _fadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _enterController, curve: Curves.easeOut));
 
     _enterController.forward();
   }
@@ -126,14 +121,15 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           return Opacity(
             opacity: _fadeAnim.value,
             child: Transform.translate(
-              offset: Offset(0, _slideAnim.value * MediaQuery.of(context).size.height),
+              offset: Offset(
+                0,
+                _slideAnim.value * MediaQuery.of(context).size.height,
+              ),
               child: GestureDetector(
                 onTap: _handleDismiss,
                 child: Container(
                   color: const Color(0xFF0A0E17), // Deep space background
-                  child: SafeArea(
-                    child: _buildReportContent(context),
-                  ),
+                  child: SafeArea(child: _buildReportContent(context)),
                 ),
               ),
             ),
@@ -227,13 +223,19 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(accentColor: accentColor),
-          _buildLocationBlock(accentColor: accentColor, location: 'DARK ALLEY', status: 'CASE CLOSED'),
+          _buildLocationBlock(
+            accentColor: accentColor,
+            location: 'DARK ALLEY',
+            status: 'CASE CLOSED',
+          ),
           const SizedBox(height: 20),
           _buildImagePlaceholder(
             accentColor: accentColor,
             imagePath: 'assets/images/mafia/kill_success.png',
             icon: Icons.person_off_rounded,
-            title: widget.report.title.isNotEmpty ? widget.report.title : 'TERMINATED',
+            title: widget.report.title.isNotEmpty
+                ? widget.report.title
+                : 'TERMINATED',
             subtitle: widget.report.targetName ?? 'UNKNOWN ASSET',
           ),
           const SizedBox(height: 20),
@@ -244,7 +246,10 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
             subtitle: widget.report.description,
           ),
           const SizedBox(height: 20),
-          _buildMetricsGrid(accentColor: accentColor, precision: widget.report.precision ?? 98.2),
+          _buildMetricsGrid(
+            accentColor: accentColor,
+            precision: widget.report.precision ?? 98.2,
+          ),
           const Spacer(),
           _buildTapToDismiss(),
         ],
@@ -265,7 +270,9 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
             accentColor: accentColor,
             imagePath: 'assets/images/mafia/bounty_claimed.png',
             icon: Icons.monetization_on_rounded,
-            title: widget.report.title.isNotEmpty ? widget.report.title : 'BOUNTY CLAIMED',
+            title: widget.report.title.isNotEmpty
+                ? widget.report.title
+                : 'BOUNTY CLAIMED',
             subtitle: widget.report.description,
           ),
           const SizedBox(height: 20),
@@ -300,6 +307,11 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
   // ─── DOCTOR SAVE UI ────────────────────────────────────────────────────────
   Widget _buildDoctorSaveUI() {
     const accentColor = Color(0xFF22C55E); // Green
+    final savedTarget = (widget.report.targetName ?? '').trim();
+    final doctorSaveSubtitle = savedTarget.isNotEmpty
+        ? 'Doctor saved $savedTarget from Mafia.'
+        : 'Doctor saved a player from Mafia.';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
       child: Column(
@@ -308,10 +320,12 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           _buildHeader(accentColor: accentColor),
           _buildImagePlaceholder(
             accentColor: accentColor,
-            imagePath: 'assets/images/mafia/doctor_cure.png',
+            imagePath: 'assets/images/doc_cure.png',
             icon: Icons.medical_services_rounded,
-            title: widget.report.title.isNotEmpty ? widget.report.title : 'TARGET SAVED',
-            subtitle: widget.report.description,
+            title: widget.report.title.isNotEmpty
+                ? widget.report.title
+                : 'DOCTOR SAVED A PLAYER',
+            subtitle: doctorSaveSubtitle,
           ),
           const SizedBox(height: 20),
           _buildActionLogBlock(
@@ -343,7 +357,9 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
             accentColor: accentColor,
             imagePath: 'assets/images/mafia/investigate_success.png',
             icon: Icons.fingerprint_rounded,
-            title: widget.report.title.isNotEmpty ? widget.report.title : 'INVESTIGATION: SUCCESS',
+            title: widget.report.title.isNotEmpty
+                ? widget.report.title
+                : 'INVESTIGATION: SUCCESS',
             subtitle: widget.report.description,
           ),
           const SizedBox(height: 20),
@@ -376,7 +392,9 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
             accentColor: accentColor,
             imagePath: 'assets/images/mafia/doctor_meet.png',
             icon: Icons.group_add_rounded,
-            title: widget.report.title.isNotEmpty ? widget.report.title : 'CONTACT ESTABLISHED',
+            title: widget.report.title.isNotEmpty
+                ? widget.report.title
+                : 'CONTACT ESTABLISHED',
             subtitle: widget.report.description,
           ),
           const SizedBox(height: 20),
@@ -395,7 +413,11 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
 
   // ─── REUSABLE UI WIDGETS ────────────────────────────────────────────────────
 
-  Widget _buildLocationBlock({required Color accentColor, required String location, required String status}) {
+  Widget _buildLocationBlock({
+    required Color accentColor,
+    required String location,
+    required String status,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: const Color(0xFF161B26),
@@ -405,19 +427,47 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('LOCATION', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 1)),
+              Text(
+                'LOCATION',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 10,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(location, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              Text(
+                location,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('STATUS', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 1)),
+              Text(
+                'STATUS',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 10,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(status, style: TextStyle(color: accentColor, fontSize: 14, fontWeight: FontWeight.w800)),
+              Text(
+                status,
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -436,7 +486,9 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
         color: const Color(0xFF1A1F2B),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
-        boxShadow: [BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 20)],
+        boxShadow: [
+          BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 20),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -448,17 +500,30 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
                 imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Center(
-                  child: Icon(icon, size: 80, color: accentColor.withOpacity(0.2)),
+                  child: Icon(
+                    icon,
+                    size: 80,
+                    color: accentColor.withOpacity(0.2),
+                  ),
                 ),
               )
             else
-              Center(child: Icon(icon, size: 80, color: accentColor.withOpacity(0.2))),
+              Center(
+                child: Icon(
+                  icon,
+                  size: 80,
+                  color: accentColor.withOpacity(0.2),
+                ),
+              ),
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
@@ -521,14 +586,20 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricsGrid({required Color accentColor, required double precision}) {
+  Widget _buildMetricsGrid({
+    required Color accentColor,
+    required double precision,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: const Color(0xFF161B26),
@@ -548,22 +619,54 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, letterSpacing: 1)),
-        Text(value, style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w700)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 12,
+            letterSpacing: 1,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildMetricCard({required Color accentColor, required String label, required String value}) {
+  Widget _buildMetricCard({
+    required Color accentColor,
+    required String label,
+    required String value,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: const Color(0xFF161B26),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 1)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: 8),
           Container(height: 2, color: accentColor, width: double.infinity),
         ],
@@ -571,7 +674,11 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
     );
   }
 
-  Widget _buildActionLogBlock({required Color accentColor, required String title, required List<String> logEntries}) {
+  Widget _buildActionLogBlock({
+    required Color accentColor,
+    required String title,
+    required List<String> logEntries,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -603,10 +710,14 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
               padding: const EdgeInsets.only(bottom: 12.0),
               child: Text(
                 log,
-                style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13, height: 1.5),
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
             ),
-          ]
+          ],
         ],
       ),
     );
@@ -623,7 +734,14 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
             children: [
               Icon(Icons.emoji_events, color: accentColor, size: 20),
               const SizedBox(width: 8),
-              const Text('MISSION INTEL', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+              const Text(
+                'MISSION INTEL',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
