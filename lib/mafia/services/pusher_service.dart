@@ -279,6 +279,9 @@ class PusherService extends ChangeNotifier {
       case 'game-started':
         _gameStartedController.add(data);
         break;
+      case 'player-left':
+        _playerLeftController.add(data);
+        break;
     }
   }
 

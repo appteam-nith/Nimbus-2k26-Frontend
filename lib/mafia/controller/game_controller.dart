@@ -29,6 +29,11 @@ class GameController extends ChangeNotifier {
   GameRole? myRole;
   List<PlayerModel> players = [];
   String? winner; // "MAFIA" | "CITIZENS"
+
+  /// UserIds of players who explicitly left the game mid-session.
+  /// Populated via Pusher `player-left` on the game channel.
+  Set<String> leftPlayerIds = {};
+  String? winReason; // "MAFIA_ELIMINATED" | "PROPHET_WIN" | null
   String? roomCode;
   String? myUserId;
   String roomSize = 'FIVE';
@@ -105,6 +110,12 @@ class GameController extends ChangeNotifier {
   Timer? _countdownTimer;
   DateTime? _phaseEndsAt;
 
+  /// The absolute UTC time at which the current phase ends.
+  /// Prefer this over computing [DateTime.now().add(timeRemaining)] in the UI
+  /// so widgets receive a stable reference that only changes when the backend
+  /// actually updates the phase end-time.
+  DateTime? get phaseEndsAt => _phaseEndsAt;
+
   StreamSubscription<Map<String, dynamic>>? _phaseSub;
   StreamSubscription<Map<String, dynamic>>? _roleSub;
   StreamSubscription<Map<String, dynamic>>? _gameEndSub;
@@ -116,6 +127,7 @@ class GameController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _nurseCheckSub;
   StreamSubscription<Map<String, dynamic>>? _actionReportSub;
   StreamSubscription<Map<String, dynamic>>? _dayTimeSub;
+  StreamSubscription<Map<String, dynamic>>? _playerLeftSub;
 
   final GameApi _api = GameApi.instance;
   final PusherService _pusher = PusherService.instance;
@@ -228,6 +240,7 @@ class GameController extends ChangeNotifier {
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
     _dayTimeSub?.cancel();
+    _playerLeftSub?.cancel();
 
     _phaseSub = _pusher.onPhaseResolved.listen(_handlePhaseResolved);
     _roleSub = _pusher.onRoleAssigned.listen(_handleRoleAssigned);
@@ -242,6 +255,7 @@ class GameController extends ChangeNotifier {
     _nurseCheckSub = _pusher.onNurseCheckResult.listen(_handleNurseCheckResult);
     _actionReportSub = _pusher.onActionReport.listen(_handleActionReport);
     _dayTimeSub = _pusher.onDayTimeUpdated.listen(_handleDayTimeUpdated);
+    _playerLeftSub = _pusher.onPlayerLeft.listen(_handlePlayerLeft);
   }
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
@@ -399,6 +413,7 @@ class GameController extends ChangeNotifier {
 
   void _handleGameEnded(Map<String, dynamic> data) {
     winner = data['winner'] as String?;
+    winReason = data['winReason'] as String?;
     status = GameStatus.ENDED;
 
     // Reveal all roles
@@ -417,6 +432,18 @@ class GameController extends ChangeNotifier {
     _api.clearActiveRoom();
 
     _navigate('/mafia/game-over');
+  }
+
+  void _handlePlayerLeft(Map<String, dynamic> data) {
+    final userId = data['userId'] as String?;
+    // Only track mid-game departures (not lobby player-left events which
+    // carry the same event name but fire before the game starts).
+    if (userId != null &&
+        status != GameStatus.LOBBY &&
+        status != GameStatus.ENDED) {
+      leftPlayerIds.add(userId);
+      notifyListeners();
+    }
   }
 
   // ─ Reporter Broadcast ────────────────────────────────────────────────────────────
@@ -645,6 +672,7 @@ class GameController extends ChangeNotifier {
     if (roomCode == null) return;
     if (status != GameStatus.DISCUSSION) return;
     if (![-1, 0, 1].contains(adjustment)) return;
+    if (myDayTimeAdjustment != 0) return; // vote already cast – irreversible
 
     final me = players.firstWhere(
       (p) => p.userId == myUserId,
@@ -749,6 +777,7 @@ class GameController extends ChangeNotifier {
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
     _dayTimeSub?.cancel();
+    _playerLeftSub?.cancel();
     await _pusher.disconnect();
     await _api.clearActiveRoom();
     // Reset state
@@ -756,6 +785,8 @@ class GameController extends ChangeNotifier {
     myRole = null;
     players = [];
     winner = null;
+    leftPlayerIds = {};
+    winReason = null;
     roomCode = null;
     roomSize = 'FIVE';
     roleCardSeen = false;
@@ -793,6 +824,7 @@ class GameController extends ChangeNotifier {
     _nurseCheckSub?.cancel();
     _actionReportSub?.cancel();
     _dayTimeSub?.cancel();
+    _playerLeftSub?.cancel();
     super.dispose();
   }
 }

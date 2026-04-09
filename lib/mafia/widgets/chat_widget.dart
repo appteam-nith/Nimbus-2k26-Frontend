@@ -123,24 +123,40 @@ class _ChatWidgetState extends State<ChatWidget> {
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: p.isAlive ? Colors.blue.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+                          backgroundColor: p.isAlive
+                              ? Colors.blue.withValues(alpha: 0.2)
+                              : Colors.red.withValues(alpha: 0.2),
                           child: Text(
                             p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                            style: TextStyle(color: p.isAlive ? Colors.blueAccent : Colors.redAccent),
+                            style: TextStyle(
+                              color: p.isAlive
+                                  ? Colors.blueAccent
+                                  : Colors.redAccent,
+                            ),
                           ),
                         ),
                         title: Text(
                           p.name,
                           style: TextStyle(
-                             color: p.isAlive ? Colors.white : Colors.white54,
-                             decoration: p.isAlive ? null : TextDecoration.lineThrough,
-                             fontFamily: 'Inter',
-                             fontWeight: FontWeight.w600,
+                            color: p.isAlive ? Colors.white : Colors.white54,
+                            decoration: p.isAlive
+                                ? null
+                                : TextDecoration.lineThrough,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        trailing: p.isAlive 
-                            ? const Icon(Icons.check_circle, color: Colors.green, size: 16)
-                            : const Icon(Icons.cancel, color: Colors.red, size: 16),
+                        trailing: p.isAlive
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 16,
+                              )
+                            : const Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                                size: 16,
+                              ),
                       ),
                     );
                   },
@@ -181,8 +197,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                        color: channelColor.withValues(alpha: 0.5),
-                        blurRadius: 6),
+                      color: channelColor.withValues(alpha: 0.5),
+                      blurRadius: 6,
+                    ),
                   ],
                 ),
               ),
@@ -217,10 +234,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '💬',
-                        style: TextStyle(fontSize: 32),
-                      ),
+                      Text('💬', style: TextStyle(fontSize: 32)),
                       const SizedBox(height: 8),
                       Text(
                         'No messages yet',
@@ -237,10 +251,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                   controller: _scrollController,
                   reverse: true,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final msg = _messages[index];
+                    if (msg.isSystem) {
+                      return _SystemBubble(msg: msg);
+                    }
                     final isMe = msg.senderId == myUserId;
                     return _MessageBubble(
                       msg: msg,
@@ -254,13 +273,15 @@ class _ChatWidgetState extends State<ChatWidget> {
         // ── Error ─────────────────────────────────────────────────────────────
         if (_error != null)
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             color: const Color(0xFFEF4444).withValues(alpha: 0.1),
             child: Row(
               children: [
-                const Icon(Icons.error_outline,
-                    size: 14, color: Color(0xFFEF4444)),
+                const Icon(
+                  Icons.error_outline,
+                  size: 14,
+                  color: Color(0xFFEF4444),
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -274,8 +295,11 @@ class _ChatWidgetState extends State<ChatWidget> {
                 ),
                 GestureDetector(
                   onTap: () => setState(() => _error = null),
-                  child: const Icon(Icons.close,
-                      size: 14, color: Color(0xFFEF4444)),
+                  child: const Icon(
+                    Icons.close,
+                    size: 14,
+                    color: Color(0xFFEF4444),
+                  ),
                 ),
               ],
             ),
@@ -283,8 +307,7 @@ class _ChatWidgetState extends State<ChatWidget> {
 
         // ── Input ─────────────────────────────────────────────────────────────
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF111827),
             border: Border(
@@ -301,7 +324,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                       color: const Color(0xFF1C2333),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08)),
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -322,7 +346,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                               ),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
                             ),
                             maxLines: null,
                             keyboardType: TextInputType.text,
@@ -331,7 +357,11 @@ class _ChatWidgetState extends State<ChatWidget> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.add, color: Colors.white54, size: 20),
+                          icon: const Icon(
+                            Icons.add,
+                            color: Colors.white54,
+                            size: 20,
+                          ),
                           onPressed: _showPlayersList,
                         ),
                       ],
@@ -347,7 +377,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF1C2333),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                     child: const Icon(
                       Icons.group_rounded,
@@ -364,18 +396,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: _isSending
-                          ? Colors.white12
-                          : channelColor,
+                      color: _isSending ? Colors.white12 : channelColor,
                       shape: BoxShape.circle,
                       boxShadow: _isSending
                           ? null
                           : [
                               BoxShadow(
-                                color:
-                                    channelColor.withValues(alpha: 0.4),
+                                color: channelColor.withValues(alpha: 0.4),
                                 blurRadius: 8,
-                              )
+                              ),
                             ],
                     ),
                     child: _isSending
@@ -386,8 +415,11 @@ class _ChatWidgetState extends State<ChatWidget> {
                               color: Colors.white54,
                             ),
                           )
-                        : const Icon(Icons.send_rounded,
-                            color: Colors.white, size: 18),
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                   ),
                 ),
               ],
@@ -410,9 +442,7 @@ class _ChatWidgetState extends State<ChatWidget> {
           decoration: const BoxDecoration(
             color: Color(0xFF030712),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border(
-              top: BorderSide(color: Color(0xFF1C2333), width: 2),
-            ),
+            border: Border(top: BorderSide(color: Color(0xFF1C2333), width: 2)),
           ),
           child: Column(
             children: [
@@ -441,7 +471,10 @@ class _ChatWidgetState extends State<ChatWidget> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white54,
+                      ),
                       onPressed: () => Navigator.of(ctx).pop(),
                     ),
                   ],
@@ -450,7 +483,10 @@ class _ChatWidgetState extends State<ChatWidget> {
               const SizedBox(height: 8),
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   itemCount: gc.players.length,
                   itemBuilder: (context, index) {
                     final p = gc.players[index];
@@ -462,7 +498,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         color: const Color(0xFF111827),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isAlive 
+                          color: isAlive
                               ? Colors.white.withValues(alpha: 0.05)
                               : const Color(0xFFEF4444).withValues(alpha: 0.1),
                         ),
@@ -493,16 +529,25 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: isAlive ? Colors.white : Colors.white54,
-                                decoration: isAlive ? null : TextDecoration.lineThrough,
+                                decoration: isAlive
+                                    ? null
+                                    : TextDecoration.lineThrough,
                               ),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: isAlive 
-                                  ? const Color(0xFF22C55E).withValues(alpha: 0.1)
-                                  : const Color(0xFFEF4444).withValues(alpha: 0.1),
+                              color: isAlive
+                                  ? const Color(
+                                      0xFF22C55E,
+                                    ).withValues(alpha: 0.1)
+                                  : const Color(
+                                      0xFFEF4444,
+                                    ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -512,7 +557,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1,
-                                color: isAlive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                                color: isAlive
+                                    ? const Color(0xFF22C55E)
+                                    : const Color(0xFFEF4444),
                               ),
                             ),
                           ),
@@ -578,8 +625,9 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -619,7 +667,9 @@ class _MessageBubble extends StatelessWidget {
                   ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 9),
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
                   decoration: BoxDecoration(
                     color: isMe
                         ? channelColor.withValues(alpha: 0.18)
@@ -627,10 +677,8 @@ class _MessageBubble extends StatelessWidget {
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
-                      bottomLeft:
-                          Radius.circular(isMe ? 16 : 4),
-                      bottomRight:
-                          Radius.circular(isMe ? 4 : 16),
+                      bottomLeft: Radius.circular(isMe ? 16 : 4),
+                      bottomRight: Radius.circular(isMe ? 4 : 16),
                     ),
                     border: Border.all(
                       color: isMe
@@ -672,5 +720,53 @@ class _MessageBubble extends StatelessWidget {
     final h = local.hour.toString().padLeft(2, '0');
     final m = local.minute.toString().padLeft(2, '0');
     return '$h:$m';
+  }
+}
+
+// ─── SYSTEM MESSAGE BUBBLE ────────────────────────────────────────────────────
+
+class _SystemBubble extends StatelessWidget {
+  final ChatMessage msg;
+
+  const _SystemBubble({required this.msg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 11,
+                color: Colors.white.withValues(alpha: 0.45),
+              ),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  msg.message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

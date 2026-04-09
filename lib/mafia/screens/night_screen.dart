@@ -9,7 +9,7 @@ import '../models/player_model.dart';
 import '../models/room_model.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/vote_button.dart';
-import '../widgets/phase_timer.dart';
+import '../widgets/linear_phase_timer.dart';
 import '../widgets/dev_role_board.dart';
 import '../widgets/chat_widget.dart';
 import '../services/pusher_service.dart';
@@ -36,6 +36,7 @@ class _NightScreenState extends State<NightScreen> {
   StreamSubscription? _investigationSub;
   StreamSubscription? _reporterResultSub;
   StreamSubscription? _nurseCheckSub;
+  Timer? _investigationTimeout;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
@@ -47,6 +48,7 @@ class _NightScreenState extends State<NightScreen> {
       data,
     ) {
       if (!mounted) return;
+      _cancelInvestigationTimeout();
       _showResultDialog(context, data['result'] as String? ?? 'UNKNOWN');
     });
     _reporterResultSub = PusherService.instance.onReporterResult.listen((data) {
@@ -67,9 +69,16 @@ class _NightScreenState extends State<NightScreen> {
     });
   }
 
+  void _cancelInvestigationTimeout() {
+    _investigationTimeout?.cancel();
+    _investigationTimeout = null;
+  }
+
   Future<void> _playAudio() async {
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(AssetSource('audio/onetent-morning-relaxing-144011.mp3.mpeg'));
+    await _audioPlayer.play(
+      AssetSource('audio/onetent-morning-relaxing-144011.mp3.mpeg'),
+    );
   }
 
   @override
@@ -125,6 +134,7 @@ class _NightScreenState extends State<NightScreen> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _cancelInvestigationTimeout();
     if (_subscribedTeam != null && _cachedRoomCode != null) {
       PusherService.instance.unsubscribeFromTeamChannel(
         _cachedRoomCode!,
@@ -322,20 +332,26 @@ class _NightScreenState extends State<NightScreen> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 16),
-                // ── DevRoleBoard (dev mode only) ──────────────────────────
-                // Injected below; the actual widget is in the Positioned overlay
-
+                const SizedBox(height: 12),
                 // Timer
                 if (controller.timeRemaining > 0)
-                  PhaseTimer(
-                    endTime: DateTime.now().add(
-                      Duration(seconds: controller.timeRemaining),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: LinearPhaseTimer(
+                      endTime: DateTime.now().add(
+                        Duration(seconds: controller.timeRemaining),
+                      ),
+                      height: 6,
+                      textStyle: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                    size: 80,
                   ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -366,11 +382,16 @@ class _NightScreenState extends State<NightScreen> {
                       child: PlayerGrid(
                         players: controller.players,
                         myUserId: controller.myUserId,
-                        allowSelfSelect: myRole == GameRole.DOCTOR,
+                        allowSelfSelect:
+                            myRole == GameRole.DOCTOR ||
+                            myRole == GameRole.MAFIA ||
+                            myRole == GameRole.MAFIA_HELPER ||
+                            myRole == GameRole.BOUNTY_HUNTER,
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
                         showRoles: controller.devMode,
                         vipUserId: controller.bountyVipUserId,
+                        leftPlayerIds: controller.leftPlayerIds,
                       ),
                     ),
                   )
@@ -438,7 +459,21 @@ class _NightScreenState extends State<NightScreen> {
                                 );
                                 if (!context.mounted) return;
 
-                                // HTTP return can be a fallback, but Pusher handles most of these now
+                                // For cop investigation, use HTTP result as fallback if Pusher is delayed
+                                if (voteType == 'COP_INVESTIGATE' &&
+                                    result != null) {
+                                  _cancelInvestigationTimeout();
+                                  _investigationTimeout = Timer(
+                                    const Duration(seconds: 2),
+                                    () {
+                                      if (mounted) {
+                                        _showResultDialog(context, result);
+                                      }
+                                    },
+                                  );
+                                }
+
+                                // HTTP return can be a fallback for other action types
                                 if (result != null &&
                                     result != 'CITIZEN' &&
                                     result != 'MAFIA' &&
