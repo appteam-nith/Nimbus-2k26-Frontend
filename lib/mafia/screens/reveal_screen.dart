@@ -29,12 +29,17 @@ class _RevealScreenState extends State<RevealScreen>
   final List<Animation<double>> _scaleAnims = [];
   final List<Animation<double>> _fadeAnims = [];
   final List<Animation<Offset>> _slideAnims = [];
+  int _lastDeathCount = -1;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final gc = context.read<GameController>();
-    _buildAnimations(gc.morningDeaths.length);
+    final count = gc.morningDeaths.length;
+    if (count != _lastDeathCount) {
+      _lastDeathCount = count;
+      _buildAnimations(count);
+    }
   }
 
   void _buildAnimations(int count) {
