@@ -182,7 +182,6 @@ class _CompactCard extends StatelessWidget {
 Color _glowColor(GameRole role) {
   switch (role) {
     case GameRole.MAFIA:
-    case GameRole.MAFIA_HELPER:
     case GameRole.HITMAN:
       return const Color(0xFFEF4444);
     case GameRole.DOCTOR:
@@ -208,8 +207,6 @@ String _roleEmoji(GameRole role) {
   switch (role) {
     case GameRole.MAFIA:
       return '\uD83D\uDD2B'; // 🔫
-    case GameRole.MAFIA_HELPER:
-      return '\uD83D\uDDE1\uFE0F'; // 🗡️
     case GameRole.DOCTOR:
       return '\uD83D\uDC89'; // 💉
     case GameRole.NURSE:

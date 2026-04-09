@@ -104,7 +104,7 @@ class _NightScreenState extends State<NightScreen> {
 
     String? team;
     final role = gc.myRole;
-    if (role == GameRole.MAFIA || role == GameRole.MAFIA_HELPER) {
+    if (role == GameRole.MAFIA) {
       team = 'mafia';
     } else if (role == GameRole.HITMAN && gc.hitmanMetMafia) {
       team = 'mafia';
@@ -215,7 +215,6 @@ class _NightScreenState extends State<NightScreen> {
     } else {
       switch (myRole) {
         case GameRole.MAFIA:
-        case GameRole.MAFIA_HELPER:
           title = 'Mafia Kill';
           subtitle = 'Select a player to eliminate. Your team must agree.';
           themeColor = const Color(0xFFEF4444);
@@ -385,7 +384,6 @@ class _NightScreenState extends State<NightScreen> {
                         allowSelfSelect:
                             myRole == GameRole.DOCTOR ||
                             myRole == GameRole.MAFIA ||
-                            myRole == GameRole.MAFIA_HELPER ||
                             myRole == GameRole.BOUNTY_HUNTER,
                         selectedUserId: myVoteTarget,
                         onTap: controller.setVoteTarget,
@@ -665,7 +663,7 @@ class _InvestigationResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMafia = result == 'MAFIA' || result == 'MAFIA_HELPER';
+    final isMafia = result == 'MAFIA';
     final isHitman = result == 'HITMAN';
     final isSuccessDoc = result == 'SUCCESS_DOC'; // Nurse
 

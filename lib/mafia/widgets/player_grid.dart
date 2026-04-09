@@ -278,8 +278,6 @@ class _RoleIconBadge extends StatelessWidget {
     switch (role) {
       case GameRole.MAFIA:
         return 'assets/images/mafia/role_mafia.png';
-      case GameRole.MAFIA_HELPER:
-        return 'assets/images/mafia/role_mafia_helper.png';
       case GameRole.HITMAN:
         return 'assets/images/mafia/role_hitman.png';
       case GameRole.CITIZEN:

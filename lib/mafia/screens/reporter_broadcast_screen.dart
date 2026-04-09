@@ -361,7 +361,6 @@ class _ReporterBroadcastOverlayState extends State<_ReporterBroadcastOverlay>
   Color _roleColor(GameRole role) {
     switch (role) {
       case GameRole.MAFIA:
-      case GameRole.MAFIA_HELPER:
         return const Color(0xFFEF4444);
       case GameRole.DOCTOR:
         return const Color(0xFF22C55E);
@@ -386,8 +385,6 @@ class _ReporterBroadcastOverlayState extends State<_ReporterBroadcastOverlay>
     switch (role) {
       case GameRole.MAFIA:
         return '🔫';
-      case GameRole.MAFIA_HELPER:
-        return '🗡️';
       case GameRole.DOCTOR:
         return '💉';
       case GameRole.NURSE:

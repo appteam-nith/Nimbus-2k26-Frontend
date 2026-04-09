@@ -41,18 +41,7 @@ const _roleMeta = <GameRole, _RoleMeta>{
     ],
     imagePath: 'assets/images/mafia/role_mafia.png',
   ),
-  GameRole.MAFIA_HELPER: _RoleMeta(
-    className: 'SYNDICATE',
-    id: 'MF-091',
-    description:
-        'Loyal enforcer operating in the shadows. Executes orders without hesitation.',
-    stats: [
-      _RoleStat('INFLUENCE', 6),
-      _RoleStat('STEALTH', 8),
-      _RoleStat('COMBAT', 9),
-    ],
-    imagePath: 'assets/images/mafia/role_mafia_helper.png',
-  ),
+
   GameRole.DOCTOR: _RoleMeta(
     className: 'STRATEGIST',
     id: 'DR-092',
@@ -176,7 +165,7 @@ class _RoleScreenState extends State<RoleScreen> with TickerProviderStateMixin {
   late final Animation<double> _pulseAnim;
 
   Timer? _autoNavTimer;
-  int _countdown = 30;
+  int _countdown = 7;
   Timer? _countdownTimer;
 
   @override
@@ -219,7 +208,7 @@ class _RoleScreenState extends State<RoleScreen> with TickerProviderStateMixin {
         return;
       }
       setState(() {
-        _countdown = (_countdown - 1).clamp(0, 30);
+        _countdown = (_countdown - 1).clamp(0, 7);
       });
       if (_countdown == 0) {
         t.cancel();
@@ -333,7 +322,6 @@ class _RoleScreenState extends State<RoleScreen> with TickerProviderStateMixin {
   Color _accentFor(GameRole role) {
     switch (role) {
       case GameRole.MAFIA:
-      case GameRole.MAFIA_HELPER:
       case GameRole.HITMAN:
         return const Color(0xFFEF4444);
       case GameRole.DOCTOR:
@@ -764,7 +752,7 @@ class _SelectRoleButton extends StatelessWidget {
                 letterSpacing: 2.5,
               ),
             ),
-            if (countdown < 30) ...[
+            if (countdown < 7) ...[
               const SizedBox(width: 10),
               Container(
                 padding:

@@ -455,7 +455,6 @@ class _RoleRevealBadge extends StatelessWidget {
 
   static final _roleColors = {
     GameRole.MAFIA: Color(0xFFEF4444),
-    GameRole.MAFIA_HELPER: Color(0xFFEF4444),
     GameRole.DOCTOR: Color(0xFF22C55E),
     GameRole.NURSE: Color(0xFF34D399),
     GameRole.COP: Color(0xFF3B82F6),
@@ -468,7 +467,6 @@ class _RoleRevealBadge extends StatelessWidget {
 
   static final _roleEmojis = {
     GameRole.MAFIA: '🔫',
-    GameRole.MAFIA_HELPER: '🗡️',
     GameRole.DOCTOR: '💉',
     GameRole.NURSE: '🩺',
     GameRole.COP: '🔍',

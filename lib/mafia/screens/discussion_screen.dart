@@ -136,8 +136,7 @@ class _DiscussionScreenState extends State<DiscussionScreen>
     final isAlive = me.isAlive;
 
     // Determine if player can access team chat
-    final bool hasMafiaChat =
-        myRole?.name == 'MAFIA' || myRole?.name == 'MAFIA_HELPER';
+    final bool hasMafiaChat = myRole?.name == 'MAFIA';
     // (Hitman gets mafia chat only after meeting — backend enforces, show tab anyway)
     final bool hasHitmanMafiaChat = myRole?.name == 'HITMAN';
     final bool hasDocChat =

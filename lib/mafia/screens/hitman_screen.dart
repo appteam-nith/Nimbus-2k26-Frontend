@@ -41,7 +41,6 @@ class _HitmanScreenState extends State<HitmanScreen> {
   // Valid role guesses the hitman can pick from (excluding COP — cannot target COP)
   static const _guessableRoles = [
     'MAFIA',
-    'MAFIA_HELPER',
     'DOCTOR',
     'NURSE',
     'BOUNTY_HUNTER',

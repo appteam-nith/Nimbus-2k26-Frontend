@@ -860,17 +860,23 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildRulesHint() {
+    // (emoji, displayName, tagline, roleImagePath, accentColor)
     final roles = [
-      ('🔪', 'Mafia', 'Kills at night'),
-      ('🩺', 'Doctor', 'Saves one player'),
-      ('🔎', 'Cop', 'Investigates a player'),
-      ('👤', 'Citizen', 'Vote out mafia'),
+      ('🔪', 'Mafia',   'Kills at night',        'assets/images/mafia/role_mafia.png',          const Color(0xFFEF4444)),
+      ('🩺', 'Doctor',  'Saves one player',       'assets/images/mafia/role_doctor.png',         const Color(0xFF22C55E)),
+      ('🔎', 'Cop',     'Investigates a player',  'assets/images/mafia/role_cop.png',            const Color(0xFF3B82F6)),
+      ('👤', 'Citizen', 'Vote out mafia',          'assets/images/mafia/role_citizen.png',        const Color(0xFF9CA3AF)),
+      ('🩹', 'Nurse',   'Assists the Doctor',     'assets/images/mafia/role_nurse.png',          const Color(0xFF34D399)),
+      ('🎯', 'Hitman',  'Silent assassin',        'assets/images/mafia/role_hitman.png',         const Color(0xFFF97316)),
+      ('💰', 'Bounty Hunter', 'Tracks targets',   'assets/images/mafia/role_bounty_hunter.png',  const Color(0xFFF59E0B)),
+      ('🔮', 'Prophet', 'Sees alignments',        'assets/images/mafia/role_prophet.png',        const Color(0xFFA855F7)),
+      ('📡', 'Reporter','Broadcasts identity',   'assets/images/mafia/role_reporter.png',       const Color(0xFF06B6D4)),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ROLES',
+          'ROLES — tap to preview',
           style: TextStyle(
             color: _textSecondary,
             fontSize: 11,
@@ -882,50 +888,125 @@ class _LobbyScreenState extends State<LobbyScreen>
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: roles
-              .map(
-                (r) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _border),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(r.$1, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 6),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            r.$2,
-                            style: const TextStyle(
-                              color: _textPrimary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            r.$3,
-                            style: const TextStyle(
-                              color: _textSecondary,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+          children: roles.map((r) {
+            final emoji = r.$1;
+            final name  = r.$2;
+            final tag   = r.$3;
+            final img   = r.$4;
+            final color = r.$5;
+            return GestureDetector(
+              onTap: () => _showRoleCard(context, name, img, color),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: color.withValues(alpha: 0.35)),
                 ),
-              )
-              .toList(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            color: _textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          tag,
+                          style: const TextStyle(
+                            color: _textSecondary,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(Icons.open_in_new_rounded, size: 12, color: color.withValues(alpha: 0.6)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
+    );
+  }
+
+  void _showRoleCard(BuildContext context, String name, String imagePath, Color accent) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Card header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.15),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                border: Border.all(color: accent.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.shield_rounded, color: accent, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    name.toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: Icon(Icons.close_rounded, color: accent.withValues(alpha: 0.6), size: 20),
+                  ),
+                ],
+              ),
+            ),
+            // Role image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+              child: Image.asset(
+                imagePath,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  height: 220,
+                  color: const Color(0xFF111827),
+                  child: Center(
+                    child: Text(
+                      name,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

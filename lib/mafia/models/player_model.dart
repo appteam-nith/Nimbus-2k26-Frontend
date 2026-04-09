@@ -69,7 +69,6 @@ enum PlayerStatus { ALIVE, ELIMINATED }
 
 enum GameRole {
   MAFIA,
-  MAFIA_HELPER,
   CITIZEN,
   DOCTOR,
   COP,
@@ -84,8 +83,6 @@ enum GameRole {
     switch (this) {
       case GameRole.MAFIA:
         return 'Mafia';
-      case GameRole.MAFIA_HELPER:
-        return 'Mafia Helper';
       case GameRole.CITIZEN:
         return 'Citizen';
       case GameRole.DOCTOR:
@@ -110,8 +107,6 @@ enum GameRole {
     switch (this) {
       case GameRole.MAFIA:
         return 'Each night, vote with your team to eliminate a citizen.';
-      case GameRole.MAFIA_HELPER:
-        return 'Assist the Mafia. Your vote counts toward the night kill.';
       case GameRole.CITIZEN:
         return 'Survive, observe, and expose the Mafia during discussion.';
       case GameRole.DOCTOR:
@@ -131,7 +126,7 @@ enum GameRole {
     }
   }
 
-  bool get isMafia => this == GameRole.MAFIA || this == GameRole.MAFIA_HELPER;
+  bool get isMafia => this == GameRole.MAFIA;
 
   bool get isSpecial =>
       this == GameRole.HITMAN ||
