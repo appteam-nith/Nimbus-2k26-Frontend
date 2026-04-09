@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../models/profile_model.dart';
 import '../providers/auth_provider.dart';
+import 'leaderboard_screen.dart';
 
 // ── Nimbus color tokens ──────────────────────────────────────────────────────
 class NimbusColors {
@@ -353,6 +354,21 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: _statItem(rank != null ? '#$rank' : '--', 'RANK'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (ctx) => const LeaderboardScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('View full leaderboard'),
+                ),
               ),
               if (points == null || rank == null)
                 const Padding(
