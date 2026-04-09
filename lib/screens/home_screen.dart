@@ -70,18 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: const Color(0xFF9D5EF5).withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: const NimbusCityLogo(size: 54),
-                    ),
+                    const NimbusCityLogo(size: 54),
                     const SizedBox(width: 16),
                     const Expanded(
                       child: Column(
