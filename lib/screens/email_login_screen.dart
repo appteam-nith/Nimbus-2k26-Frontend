@@ -15,10 +15,6 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  bool _isAllowedLoginEmail(String email) {
-    return AuthProvider.isAllowedEmail(email);
-  }
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -163,9 +159,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                         if (!value.contains('@')) {
                           return 'Please enter a valid email';
                         }
-                        if (!_isAllowedLoginEmail(value.trim())) {
-                          return 'Please use @nith.ac.in or reviewer@nith.ac.in';
-                        }
+
                         return null;
                       },
                     ),
@@ -274,46 +268,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: auth.status == AuthStatus.loading
-                            ? null
-                            : () {
-                                setState(() {
-                                  _emailController.text =
-                                      AuthProvider.reviewerAllowedEmail;
-                                  _passwordController.text =
-                                      AuthProvider.reviewerPassword;
-                                });
-                              },
-                        icon: const Icon(Icons.person_search, size: 20),
-                        label: const Text(
-                          'Use reviewer credentials',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Reviewer login:\nreviewer@nith.ac.in\nPassword: NimbusReviewer@2026#Secure!',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF1D4ED8),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+
                   ],
                 ),
               ),
