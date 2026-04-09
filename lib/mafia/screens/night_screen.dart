@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../controller/game_controller.dart';
 import '../models/player_model.dart';
@@ -35,10 +36,12 @@ class _NightScreenState extends State<NightScreen> {
   StreamSubscription? _investigationSub;
   StreamSubscription? _reporterResultSub;
   StreamSubscription? _nurseCheckSub;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
+    _playAudio();
     // Listen for private result events directly to pop dialogs
     _investigationSub = PusherService.instance.onInvestigationResult.listen((
       data,
@@ -62,6 +65,11 @@ class _NightScreenState extends State<NightScreen> {
             : 'That player is not the Doctor.',
       );
     });
+  }
+
+  Future<void> _playAudio() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('audio/onetent-morning-relaxing-144011.mp3.mpeg'));
   }
 
   @override
@@ -116,6 +124,7 @@ class _NightScreenState extends State<NightScreen> {
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     if (_subscribedTeam != null && _cachedRoomCode != null) {
       PusherService.instance.unsubscribeFromTeamChannel(
         _cachedRoomCode!,
