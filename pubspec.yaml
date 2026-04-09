@@ -1,6 +1,6 @@
 name: nimbus_2k26_frontend
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+7
 
@@ -47,6 +47,7 @@ flutter:
     - assets/images/
     - assets/images/mafia/
     - assets/audio/
+    - assets/game/NimbusCity/
 
   fonts:
     - family: Inter

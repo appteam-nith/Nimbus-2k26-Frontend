@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../widgets/nimbus_city_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -296,8 +297,10 @@ class _LobbyScreenState extends State<LobbyScreen>
       builder: (ctx) => AlertDialog(
         backgroundColor: _surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Leave Room?',
-            style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w700)),
+        title: const Text(
+          'Leave Room?',
+          style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w700),
+        ),
         content: Text(
           _isHost
               ? 'You are the host. Leaving will transfer host or delete the room if you are the last player.'
@@ -312,7 +315,10 @@ class _LobbyScreenState extends State<LobbyScreen>
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: _red),
-            child: const Text('Leave', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Leave',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -348,9 +354,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       },
       child: Scaffold(
         backgroundColor: _bg,
-        body: SafeArea(
-          child: _inRoom ? _buildWaitingRoom() : _buildEntry(),
-        ),
+        body: SafeArea(child: _inRoom ? _buildWaitingRoom() : _buildEntry()),
       ),
     );
   }
@@ -385,9 +389,7 @@ class _LobbyScreenState extends State<LobbyScreen>
             ],
           ),
         ),
-        Expanded(
-          child: _entryTab == 0 ? _buildPlayTab() : _buildBrowseTab(),
-        ),
+        Expanded(child: _entryTab == 0 ? _buildPlayTab() : _buildBrowseTab()),
       ],
     );
   }
@@ -424,14 +426,19 @@ class _LobbyScreenState extends State<LobbyScreen>
           children: [
             const Text('🎭', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
-            const Text('No open rooms',
-                style: TextStyle(
-                    color: _textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700)),
+            const Text(
+              'No open rooms',
+              style: TextStyle(
+                color: _textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
-            const Text('Be the first — create a room!',
-                style: TextStyle(color: _textSecondary, fontSize: 13)),
+            const Text(
+              'Be the first — create a room!',
+              style: TextStyle(color: _textSecondary, fontSize: 13),
+            ),
             const SizedBox(height: 24),
             _PrimaryButton(
               label: 'Create Room',
@@ -466,9 +473,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                   color: _surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isFull
-                        ? _border
-                        : _accent.withOpacity(0.35),
+                    color: isFull ? _border : _accent.withOpacity(0.35),
                   ),
                 ),
                 child: Row(
@@ -481,11 +486,16 @@ class _LobbyScreenState extends State<LobbyScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        size == 'FIVE' ? '5' : size == 'EIGHT' ? '8' : '12',
+                        size == 'FIVE'
+                            ? '5'
+                            : size == 'EIGHT'
+                            ? '8'
+                            : '12',
                         style: const TextStyle(
-                            color: _accentGlow,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900),
+                          color: _accentGlow,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -493,46 +503,63 @@ class _LobbyScreenState extends State<LobbyScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(code,
-                              style: const TextStyle(
-                                  color: _textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 2)),
+                          Text(
+                            code,
+                            style: const TextStyle(
+                              color: _textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2,
+                            ),
+                          ),
                           const SizedBox(height: 3),
-                          Text('$count / $max players',
-                              style: const TextStyle(
-                                  color: _textSecondary, fontSize: 12)),
+                          Text(
+                            '$count / $max players',
+                            style: const TextStyle(
+                              color: _textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     if (isFull)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: _gold.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text('FULL',
-                            style: TextStyle(
-                                color: _gold,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+                        child: const Text(
+                          'FULL',
+                          style: TextStyle(
+                            color: _gold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       )
                     else
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: _accent.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text('JOIN',
-                            style: TextStyle(
-                                color: _accentGlow,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+                        child: const Text(
+                          'JOIN',
+                          style: TextStyle(
+                            color: _accentGlow,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -555,8 +582,11 @@ class _LobbyScreenState extends State<LobbyScreen>
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _border),
         ),
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            color: _textSecondary, size: 16),
+        child: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: _textSecondary,
+          size: 16,
+        ),
       ),
     );
   }
@@ -565,33 +595,10 @@ class _LobbyScreenState extends State<LobbyScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ScaleTransition(
-          scale: _pulse,
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4C1D95), _accentGlow],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                    color: _accent.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    spreadRadius: 2),
-              ],
-            ),
-            child: const Center(
-              child: Text('🎭', style: TextStyle(fontSize: 34)),
-            ),
-          ),
-        ),
+        ScaleTransition(scale: _pulse, child: NimbusCityLogo(size: 72)),
         const SizedBox(height: 20),
         const Text(
-          'Nimbus Mafia',
+          'Nimbus City',
           style: TextStyle(
             color: _textPrimary,
             fontSize: 32,
@@ -621,35 +628,45 @@ class _LobbyScreenState extends State<LobbyScreen>
                   color: _accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.add_circle_outline,
-                    color: _accentGlow, size: 22),
+                child: const Icon(
+                  Icons.add_circle_outline,
+                  color: _accentGlow,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 14),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Create Room',
-                        style: TextStyle(
-                            color: _textPrimary,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700)),
+                    Text(
+                      'Create Room',
+                      style: TextStyle(
+                        color: _textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     SizedBox(height: 2),
-                    Text('Host a new game for your group',
-                        style:
-                            TextStyle(color: _textSecondary, fontSize: 12)),
+                    Text(
+                      'Host a new game for your group',
+                      style: TextStyle(color: _textSecondary, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          const Text('Room size',
-              style: TextStyle(
-                  color: _textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5)),
+          const Text(
+            'Room size',
+            style: TextStyle(
+              color: _textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -682,7 +699,10 @@ class _LobbyScreenState extends State<LobbyScreen>
               onTap: () => setState(() => _devMode = !_devMode),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _devMode
                       ? const Color(0xFFF59E0B).withOpacity(0.08)
@@ -733,17 +753,23 @@ class _LobbyScreenState extends State<LobbyScreen>
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF59E0B)
-                                        .withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(6),
+                                    horizontal: 6,
+                                    vertical: 2,
                                   ),
-                                  child: const Text('⚡ DEV',
-                                      style: TextStyle(
-                                          color: Color(0xFFF59E0B),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700)),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFF59E0B,
+                                    ).withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    '⚡ DEV',
+                                    style: TextStyle(
+                                      color: Color(0xFFF59E0B),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ],
@@ -807,25 +833,26 @@ class _LobbyScreenState extends State<LobbyScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Join Room',
-                        style: TextStyle(
-                            color: _textPrimary,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700)),
+                    Text(
+                      'Join Room',
+                      style: TextStyle(
+                        color: _textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     SizedBox(height: 2),
-                    Text('Enter a 6-character room code',
-                        style:
-                            TextStyle(color: _textSecondary, fontSize: 12)),
+                    Text(
+                      'Enter a 6-character room code',
+                      style: TextStyle(color: _textSecondary, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _JoinCodeButton(
-            onJoin: _joinRoom,
-            loading: _loading,
-          ),
+          _JoinCodeButton(onJoin: _joinRoom, loading: _loading),
         ],
       ),
     );
@@ -841,47 +868,60 @@ class _LobbyScreenState extends State<LobbyScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('ROLES',
-            style: TextStyle(
-                color: _textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2)),
+        const Text(
+          'ROLES',
+          style: TextStyle(
+            color: _textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: roles
-              .map((r) => Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: _surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(r.$1,
-                            style: const TextStyle(fontSize: 14)),
-                        const SizedBox(width: 6),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(r.$2,
-                                style: const TextStyle(
-                                    color: _textPrimary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600)),
-                            Text(r.$3,
-                                style: const TextStyle(
-                                    color: _textSecondary, fontSize: 10)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ))
+              .map(
+                (r) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(r.$1, style: const TextStyle(fontSize: 14)),
+                      const SizedBox(width: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.$2,
+                            style: const TextStyle(
+                              color: _textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            r.$3,
+                            style: const TextStyle(
+                              color: _textSecondary,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -896,8 +936,7 @@ class _LobbyScreenState extends State<LobbyScreen>
         _buildRoomHeader(),
         Expanded(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Column(
               children: [
                 if (_error != null) ...[
@@ -934,48 +973,65 @@ class _LobbyScreenState extends State<LobbyScreen>
             children: [
               GestureDetector(
                 onTap: _leaveRoom,
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: _textSecondary, size: 18),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: _textSecondary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 12),
-              const Text('Waiting Room',
-                  style: TextStyle(
-                      color: _textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700)),
+              const Text(
+                'Waiting Room',
+                style: TextStyle(
+                  color: _textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const Spacer(),
               if (_isHost)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('HOST',
-                      style: TextStyle(
-                          color: _accentGlow,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8)),
+                  child: const Text(
+                    'HOST',
+                    style: TextStyle(
+                      color: _accentGlow,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                 ),
               if (_devMode)
                 Container(
                   margin: const EdgeInsets.only(left: 6),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF59E0B).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                      color: const Color(0xFFF59E0B).withOpacity(0.3),
+                    ),
                   ),
-                  child: const Text('⚡ DEV',
-                      style: TextStyle(
-                          color: Color(0xFFF59E0B),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8)),
+                  child: const Text(
+                    '⚡ DEV',
+                    style: TextStyle(
+                      color: Color(0xFFF59E0B),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -993,8 +1049,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               );
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF1E1040), Color(0xFF2D1A5E)],
@@ -1008,12 +1063,15 @@ class _LobbyScreenState extends State<LobbyScreen>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('ROOM CODE',
-                          style: TextStyle(
-                              color: _textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1)),
+                      const Text(
+                        'ROOM CODE',
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         _roomCode ?? '------',
@@ -1026,8 +1084,11 @@ class _LobbyScreenState extends State<LobbyScreen>
                       ),
                     ],
                   ),
-                  const Icon(Icons.copy_rounded,
-                      color: _textSecondary, size: 20),
+                  const Icon(
+                    Icons.copy_rounded,
+                    color: _textSecondary,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -1049,9 +1110,10 @@ class _LobbyScreenState extends State<LobbyScreen>
         Text(
           '${_players.length}',
           style: const TextStyle(
-              color: _textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w800),
+            color: _textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         Text(
           ' / $_maxPlayers',
@@ -1060,18 +1122,20 @@ class _LobbyScreenState extends State<LobbyScreen>
         const Spacer(),
         if (_roomFull)
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: _gold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text('FULL',
-                style: TextStyle(
-                    color: _gold,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8)),
+            child: const Text(
+              'FULL',
+              style: TextStyle(
+                color: _gold,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+            ),
           ),
       ],
     );
@@ -1087,8 +1151,10 @@ class _LobbyScreenState extends State<LobbyScreen>
           border: Border.all(color: _border),
         ),
         child: const Center(
-          child: Text('Waiting for players to join...',
-              style: TextStyle(color: _textSecondary, fontSize: 14)),
+          child: Text(
+            'Waiting for players to join...',
+            style: TextStyle(color: _textSecondary, fontSize: 14),
+          ),
         ),
       );
     }
@@ -1103,14 +1169,12 @@ class _LobbyScreenState extends State<LobbyScreen>
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _players.length,
-        separatorBuilder: (_, _) =>
-            const Divider(height: 1, color: _border),
+        separatorBuilder: (_, _) => const Divider(height: 1, color: _border),
         itemBuilder: (_, i) {
           final p = _players[i];
           final isMe = p.userId == _myUserId;
           return Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Container(
@@ -1120,22 +1184,18 @@ class _LobbyScreenState extends State<LobbyScreen>
                     gradient: LinearGradient(
                       colors: isMe
                           ? [const Color(0xFF4C1D95), _accentGlow]
-                          : [
-                              const Color(0xFF1E293B),
-                              const Color(0xFF334155)
-                            ],
+                          : [const Color(0xFF1E293B), const Color(0xFF334155)],
                     ),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Text(
-                      p.name.isNotEmpty
-                          ? p.name[0].toUpperCase()
-                          : '?',
+                      p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),
@@ -1146,19 +1206,20 @@ class _LobbyScreenState extends State<LobbyScreen>
                     style: TextStyle(
                       color: isMe ? _accentGlow : _textPrimary,
                       fontSize: 14,
-                      fontWeight: isMe
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                      fontWeight: isMe ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ),
                 if (i == 0)
-                  const Text('HOST',
-                      style: TextStyle(
-                          color: _textSecondary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8)),
+                  const Text(
+                    'HOST',
+                    style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
               ],
             ),
           );
@@ -1171,9 +1232,15 @@ class _LobbyScreenState extends State<LobbyScreen>
     // In dev mode: can always start (bots will fill remaining slots)
     // Normal mode: need a full room
     final canStart = (_roomFull || _devMode) && !_loading;
-    final roomMax = _roomSize == 'FIVE' ? 5 : _roomSize == 'EIGHT' ? 8 : 12;
+    final roomMax = _roomSize == 'FIVE'
+        ? 5
+        : _roomSize == 'EIGHT'
+        ? 8
+        : 12;
     final label = _devMode
-        ? (_roomFull ? 'Start Game' : 'Start with Bots (${_players.length}/$roomMax)')
+        ? (_roomFull
+              ? 'Start Game'
+              : 'Start with Bots (${_players.length}/$roomMax)')
         : (_roomFull ? 'Start Game' : 'Waiting for players...');
     return _PrimaryButton(
       label: label,
@@ -1195,8 +1262,11 @@ class _LobbyScreenState extends State<LobbyScreen>
         children: [
           ScaleTransition(
             scale: _pulse,
-            child: const Icon(Icons.hourglass_bottom_rounded,
-                color: _textSecondary, size: 18),
+            child: const Icon(
+              Icons.hourglass_bottom_rounded,
+              color: _textSecondary,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
           const Expanded(
@@ -1223,7 +1293,10 @@ class _LobbyScreenState extends State<LobbyScreen>
         child: DropdownButton<GameRole?>(
           value: _devHostRole,
           dropdownColor: _card,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFF59E0B)),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Color(0xFFF59E0B),
+          ),
           isExpanded: true,
           hint: const Text(
             'Host Role (Random)',
@@ -1232,12 +1305,18 @@ class _LobbyScreenState extends State<LobbyScreen>
           items: [
             const DropdownMenuItem<GameRole?>(
               value: null,
-              child: Text('Host Role (Random)', style: TextStyle(color: Color(0xFFF59E0B))),
+              child: Text(
+                'Host Role (Random)',
+                style: TextStyle(color: Color(0xFFF59E0B)),
+              ),
             ),
             ...GameRole.values.map(
               (r) => DropdownMenuItem(
                 value: r,
-                child: Text(r.name, style: const TextStyle(color: _textPrimary)),
+                child: Text(
+                  r.name,
+                  style: const TextStyle(color: _textPrimary),
+                ),
               ),
             ),
           ],
@@ -1256,8 +1335,10 @@ class _LobbyScreenState extends State<LobbyScreen>
         foregroundColor: _red,
         minimumSize: const Size.fromHeight(44),
       ),
-      child: const Text('Leave Room',
-          style: TextStyle(fontWeight: FontWeight.w600)),
+      child: const Text(
+        'Leave Room',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
     );
   }
 
@@ -1277,9 +1358,8 @@ class _LobbyScreenState extends State<LobbyScreen>
           const Icon(Icons.error_outline, color: _red, size: 18),
           const SizedBox(width: 10),
           Expanded(
-              child: Text(msg,
-                  style:
-                      const TextStyle(color: _red, fontSize: 13))),
+            child: Text(msg, style: const TextStyle(color: _red, fontSize: 13)),
+          ),
           GestureDetector(
             onTap: () => setState(() => _error = null),
             child: const Icon(Icons.close, color: _red, size: 16),
@@ -1341,19 +1421,25 @@ class _SizeChip extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(label,
-                  style: TextStyle(
-                    color: selected ? _accentGlow : _textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  )),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? _accentGlow : _textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(sublabel,
-                  style: TextStyle(
-                    color: selected ? _accentGlow.withValues(alpha: 0.7) : _textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  )),
+              Text(
+                sublabel,
+                style: TextStyle(
+                  color: selected
+                      ? _accentGlow.withValues(alpha: 0.7)
+                      : _textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
@@ -1396,9 +1482,10 @@ class _PrimaryButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                      color: _accent.withValues(alpha: 0.35),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4))
+                    color: _accent.withValues(alpha: 0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
                 ]
               : null,
         ),
@@ -1408,7 +1495,9 @@ class _PrimaryButton extends StatelessWidget {
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2.5, color: Colors.white),
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1479,15 +1568,19 @@ class _JoinCodeButton extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Enter Room Code',
-                  style: TextStyle(
-                      color: _textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700)),
+              const Text(
+                'Enter Room Code',
+                style: TextStyle(
+                  color: _textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 6),
-              const Text('Ask your host for the 6-character code',
-                  style:
-                      TextStyle(color: _textSecondary, fontSize: 13)),
+              const Text(
+                'Ask your host for the 6-character code',
+                style: TextStyle(color: _textSecondary, fontSize: 13),
+              ),
               const SizedBox(height: 20),
               TextField(
                 controller: controller,
@@ -1504,7 +1597,10 @@ class _JoinCodeButton extends StatelessWidget {
                   counterText: '',
                   hintText: '------',
                   hintStyle: const TextStyle(
-                      color: _border, fontSize: 26, letterSpacing: 8),
+                    color: _border,
+                    fontSize: 26,
+                    letterSpacing: 8,
+                  ),
                   filled: true,
                   fillColor: _card,
                   border: OutlineInputBorder(
@@ -1516,7 +1612,9 @@ class _JoinCodeButton extends StatelessWidget {
                     borderSide: const BorderSide(color: _accentGlow),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 18),
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -1538,17 +1636,21 @@ class _JoinCodeButton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                          color: _accent.withValues(alpha: 0.35),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4))
+                        color: _accent.withValues(alpha: 0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: const Center(
-                    child: Text('Join Room',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      'Join Room',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1592,17 +1694,18 @@ class _EntryTab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: selected ? _accentGlow : _textSecondary),
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? _accentGlow : _textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 color: selected ? _accentGlow : _textSecondary,
                 fontSize: 13,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
