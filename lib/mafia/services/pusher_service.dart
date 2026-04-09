@@ -241,7 +241,7 @@ class PusherService extends ChangeNotifier {
   Future<void> triggerLobbyChat(String roomCode, Map<String, dynamic> data) async {
     try {
       await _pusher.trigger(PusherEvent(
-        channelName: 'room-$roomCode',
+        channelName: 'private-lobby-$roomCode',
         eventName: 'client-chat-message',
         data: jsonEncode(data),
       ));
@@ -274,6 +274,7 @@ class PusherService extends ChangeNotifier {
         _playerJoinedController.add(data);
         break;
       case 'chat-message':
+      case 'client-chat-message':
         _chatController.add(data);
         break;
       case 'reporter-broadcast':

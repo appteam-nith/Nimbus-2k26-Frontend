@@ -1494,11 +1494,14 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
   void initState() {
     super.initState();
     _sub = PusherService.instance.onChatMessage.listen(_onMsg);
+    // Subscribe to a dedicated private channel for lobby chat client-events
+    PusherService.instance.subscribeToTeamChannel(widget.roomCode, 'lobby');
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    PusherService.instance.unsubscribeFromTeamChannel(widget.roomCode, 'lobby');
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -1517,28 +1520,20 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
     if (text.isEmpty || _sending || widget.roomCode.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await GameApi.instance.sendChat(widget.roomCode, text, channel: 'lobby');
+      await GameApi.instance.sendChat(widget.roomCode, text);
       _input.clear();
     } catch (e) {
-      debugPrint('[LobbyChat] API Send failed: $e. Falling back to Pusher trigger.');
-      
-      // Fallback to manual pusher client event if backend API throws (e.g. game not started)
-      try {
-        final authParams = context.read<AuthProvider>();
-        final name = authParams.userName ?? 'Player';
-        final payload = {
-          'channel': 'lobby',
-          'message': text,
-          'senderName': name,
-          'senderId': name, // fallback id
-          'isSystem': false,
-          'timestamp': DateTime.now().toIso8601String(),
-        };
-        await PusherService.instance.triggerLobbyChat(widget.roomCode, payload);
-        _msgs.insert(0, ChatMessage.fromJson(payload));
-        _input.clear();
-      } catch (pusherErr) {
-        debugPrint('[LobbyChat] Pusher fallback failed: $pusherErr');
+      debugPrint('[LobbyChat] API Send failed: $e');
+      if (mounted) {
+        String msg = e.toString();
+        if (msg.contains('Exception:')) msg = msg.split('Exception:').last.trim();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send: $msg'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);

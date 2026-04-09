@@ -100,8 +100,8 @@ class AuthProvider extends ChangeNotifier {
           userData?['rank'] ??
           userData?['mafia_rank'];
 
+      final prefs = await SharedPreferences.getInstance();
       if (name != null && name.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_name', name);
         if (email != null) {
           await prefs.setString('user_email', email);
