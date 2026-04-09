@@ -16,9 +16,26 @@ class ChatRoomScreen extends StatefulWidget {
 
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final TextEditingController _messageController = TextEditingController();
+  bool _joined = false;
+  CommunityChatProvider? _joinedChatProvider;
+  String? _joinedUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _joinCurrentRoom();
+    });
+  }
 
   @override
   void dispose() {
+    if (_joined && _joinedChatProvider != null && _joinedUserId != null) {
+      _joinedChatProvider!.leaveRoom(
+        roomName: widget.roomName,
+        userId: _joinedUserId!,
+      );
+    }
     _messageController.dispose();
     super.dispose();
   }
@@ -31,7 +48,83 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     return 'local-user';
   }
 
+  Future<void> _joinCurrentRoom() async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
+    final chat = context.read<CommunityChatProvider>();
+    final userId = _currentUserId(auth);
+
+    final nickname = auth.userNickname?.trim();
+    if (nickname == null || nickname.isEmpty) return;
+
+    final error = await chat.joinRoom(
+      roomName: widget.roomName,
+      userId: userId,
+      nickname: nickname,
+    );
+    if (!mounted) return;
+    if (error == null) {
+      _joined = true;
+      _joinedChatProvider = chat;
+      _joinedUserId = userId;
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  void _showParticipantsSheet(List<String> participants) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'People in room (${participants.length})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (participants.isEmpty)
+                  const Text(
+                    'No active participants.',
+                    style: TextStyle(color: Colors.grey),
+                  )
+                else
+                  ...participants.map(
+                    (name) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(name),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _updateNickname(AuthProvider auth) async {
+    final chat = context.read<CommunityChatProvider>();
     final controller = TextEditingController(text: auth.userNickname ?? '');
     final nickname = await showDialog<String>(
       context: context,
@@ -65,6 +158,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (!mounted || nickname == null) return;
     final ok = await auth.updateNickname(nickname);
     if (!mounted) return;
+    if (ok) {
+      await chat.joinRoom(
+        roomName: widget.roomName,
+        userId: _currentUserId(auth),
+        nickname: nickname,
+      );
+      if (!mounted) return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -188,6 +289,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         }
 
         final myNickname = auth.userNickname?.trim() ?? '';
+        final participants = chat.participantsInRoom(room.name);
         final canManageLock =
             !room.isPublic && room.createdById == _currentUserId(auth);
 
@@ -195,6 +297,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           appBar: AppBar(
             title: Text(room.name),
             actions: [
+              IconButton(
+                tooltip: 'Participants',
+                onPressed: () => _showParticipantsSheet(participants),
+                icon: const Icon(Icons.groups_outlined),
+              ),
               if (canManageLock)
                 IconButton(
                   tooltip: room.isLocked ? 'Unlock room' : 'Lock room',
@@ -223,7 +330,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ? 'Public room (always open)'
                       : room.isLocked
                       ? 'Locked room: password required to enter'
-                      : 'Created by ${room.createdByName}',
+                      : 'Created by ${room.createdByName} • ${participants.length} online',
                   style: const TextStyle(
                     color: Color(0xFF1A3BB3),
                     fontWeight: FontWeight.w600,

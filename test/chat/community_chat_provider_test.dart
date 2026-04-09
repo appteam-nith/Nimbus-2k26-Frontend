@@ -233,5 +233,39 @@ void main() {
         );
       },
     );
+
+    test(
+      'join/leave emits system messages, shows participants, and deletes empty custom room',
+      () async {
+        final provider = CommunityChatProvider();
+        await provider.ensureInitialized();
+
+        await provider.createRoom(
+          name: 'Presence Room',
+          createdById: 'owner-id',
+          createdByName: 'Owner',
+          lockRoom: false,
+        );
+
+        final joinResult = await provider.joinRoom(
+          roomName: 'Presence Room',
+          userId: 'user-1',
+          nickname: 'Nick1',
+        );
+        expect(joinResult, isNull);
+        expect(provider.participantsInRoom('Presence Room'), contains('Nick1'));
+        expect(
+          provider.roomByName('Presence Room')!.messages.last.text,
+          equals('Nick1 joined'),
+        );
+        expect(
+          provider.roomByName('Presence Room')!.messages.last.isSystem,
+          isTrue,
+        );
+
+        await provider.leaveRoom(roomName: 'Presence Room', userId: 'user-1');
+        expect(provider.roomByName('Presence Room'), isNull);
+      },
+    );
   });
 }
