@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 
-
 import 'timeline/controller/timeline_controller.dart';
 import 'models/profile_model.dart';
 import 'providers/auth_provider.dart';
@@ -13,7 +12,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_page.dart';
 import 'timeline/screens/timeline_screen.dart';
-import 'events_page.dart';
+
 import 'departmental_clubs_page.dart';
 import 'widgets/bottom_nav.dart';
 
@@ -61,14 +60,24 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MainNavigationScreen(),
         '/login': (context) => const LoginScreen(),
         // ── Mafia game screens ───────────────────────────────────────────────
-        '/mafia/role': (_) => ActionReportListener(child: ReporterBroadcastListener(child: const RoleScreen())),
-        '/mafia/reveal': (_) => ActionReportListener(child: ReporterBroadcastListener(child: const RevealScreen())),
+        '/mafia/role': (_) => ActionReportListener(
+          child: ReporterBroadcastListener(child: const RoleScreen()),
+        ),
+        '/mafia/reveal': (_) => ActionReportListener(
+          child: ReporterBroadcastListener(child: const RevealScreen()),
+        ),
         '/mafia/game-over': (_) => const GameOverScreen(),
         // Real game screens wrapped with ReporterBroadcastListener
-        '/mafia/night': (_) => ActionReportListener(child: ReporterBroadcastListener(child: const NightScreen())),
-        '/mafia/discussion': (_) => ActionReportListener(child: ReporterBroadcastListener(child: const DiscussionScreen())),
-        '/mafia/voting': (_) => ActionReportListener(child: ReporterBroadcastListener(child: const VotingScreen())),
-        '/mafia/lobby': (_) => const LobbyScreen(),      // Dev 2 ✅
+        '/mafia/night': (_) => ActionReportListener(
+          child: ReporterBroadcastListener(child: const NightScreen()),
+        ),
+        '/mafia/discussion': (_) => ActionReportListener(
+          child: ReporterBroadcastListener(child: const DiscussionScreen()),
+        ),
+        '/mafia/voting': (_) => ActionReportListener(
+          child: ReporterBroadcastListener(child: const VotingScreen()),
+        ),
+        '/mafia/lobby': (_) => const LobbyScreen(), // Dev 2 ✅
       },
     );
   }
@@ -97,7 +106,11 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
     // ── Update Check ──────────────────────────────────────────────────────────
     try {
       final response = await http
-          .get(Uri.parse('https://nimbus-2k26-backend-olhw.onrender.com/api/config/update'))
+          .get(
+            Uri.parse(
+              'https://nimbus-2k26-backend-olhw.onrender.com/api/config/update',
+            ),
+          )
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -112,13 +125,18 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
               canPop: false,
               child: AlertDialog(
                 title: const Text('Update Required'),
-                content: const Text('A mandatory update is available for Nimbus 2k26. Please update to continue.'),
+                content: const Text(
+                  'A mandatory update is available for Nimbus 2k26. Please update to continue.',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       final url = data['playStoreUrl'];
                       if (url != null && url.isNotEmpty) {
-                        launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                        launchUrl(
+                          Uri.parse(url),
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     child: const Text('Update Now'),
@@ -235,7 +253,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    return auth.isAuthenticated ? const MainNavigationScreen() : const LoginScreen();
+    return auth.isAuthenticated
+        ? const MainNavigationScreen()
+        : const LoginScreen();
   }
 }
 
@@ -250,7 +270,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const TimelineScreen(),
-    const EventsScreen(),
     const DepartmentalClubsPage(),
     const ProfilePage(),
   ];
