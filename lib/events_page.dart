@@ -372,16 +372,3 @@ class _EventsScreenState extends State<EventsScreen> {
     );
   }
 }
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xffF5F6FA),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: children,
-        ),
-      ),
-    );
-  }
-}

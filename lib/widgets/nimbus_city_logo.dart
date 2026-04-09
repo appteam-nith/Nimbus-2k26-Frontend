@@ -11,16 +11,20 @@ import 'package:flutter/material.dart';
 ///   NimbusCityLogo(size: 54)   // home screen game card
 class NimbusCityLogo extends StatelessWidget {
   final double size;
+  final VoidCallback? onTap;
 
-  const NimbusCityLogo({super.key, this.size = 72});
+  const NimbusCityLogo({super.key, this.size = 72, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/game/NimbusCity/logo.png',
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
+    return GestureDetector(
+      onTap: onTap ?? () => Navigator.pushNamed(context, '/mafia/lobby'),
+      child: Image.asset(
+        'assets/game/NimbusCity/logo.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      ),
     );
   }
 }
