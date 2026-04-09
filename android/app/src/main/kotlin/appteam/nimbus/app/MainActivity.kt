@@ -1,4 +1,4 @@
-package com.appteam.nimbus_2k26_frontend
+package appteam.nimbus.app
 
 import io.flutter.embedding.android.FlutterActivity
 

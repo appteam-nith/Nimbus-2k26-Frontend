@@ -1,57 +1,41 @@
 {
   "project_info": {
-    "project_number": "332925057609",
-    "project_id": "nimbus-2k26-6d468",
-    "storage_bucket": "nimbus-2k26-6d468.firebasestorage.app"
+    "project_number": "874867001359",
+    "project_id": "nimbus-2k26-7823c",
+    "storage_bucket": "nimbus-2k26-7823c.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:332925057609:android:4f30d3fae396fcab261d98",
+        "mobilesdk_app_id": "1:874867001359:android:1228b1c93072f2a3fafb7a",
         "android_client_info": {
-          "package_name": "com.appteam.nimbus_2k26_frontend"
+          "package_name": "appteam.nimbus.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "332925057609-0tr730v0lhm6644ho8klmnffvqop8g94.apps.googleusercontent.com",
+          "client_id": "874867001359-bs5c6rj00hr7hoiueagv6vvjjvi59t58.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.appteam.nimbus_2k26_frontend",
-            "certificate_hash": "17355cd001e72dc1253cc857611dff12313841bc"
-          }
-        },
-        {
-          "client_id": "332925057609-8oi5huqebddcmoca8u9bv4e6hrerlr4n.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.appteam.nimbus_2k26_frontend",
-            "certificate_hash": "59b6abfa9fe53348e47e35dae3ebc6f7da2580e7"
-          }
-        },
-        {
-          "client_id": "332925057609-qsqm30fltrfkanra9kub87dt02ml144v.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.appteam.nimbus_2k26_frontend",
+            "package_name": "appteam.nimbus.app",
             "certificate_hash": "c4d57e87b8f0c2c21242dd6f636e819de7aaa599"
           }
         },
         {
-          "client_id": "332925057609-0v2n5ct0suce1u60hc67kdaaqt9gd4jj.apps.googleusercontent.com",
+          "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBFDQW61dfw8MfZ8vO00etDZIMN_-oiHfw"
+          "current_key": "AIzaSyCmCs0hL1WUzFrWkB4BnFv398vIp4GejzE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "332925057609-0v2n5ct0suce1u60hc67kdaaqt9gd4jj.apps.googleusercontent.com",
+              "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
