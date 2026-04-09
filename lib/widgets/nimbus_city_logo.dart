@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Hexagonal badge logo for Nimbus City.
 ///
-/// Clips [assets/game/NimbusCity/logo.jpeg] into a flat-top hexagon shape
-/// that matches the hexagonal badge artwork in the source image.
+/// Clips [assets/game/NimbusCity/logo.jpeg] into a pointy-top hexagon shape
+/// (vertex at top and bottom, flat edges on left and right) — matching the
+/// orientation of the hexagonal badge artwork in the source image.
 ///
 /// Usage:
 ///   NimbusCityLogo(size: 72)   // lobby hero header
@@ -31,28 +32,29 @@ class NimbusCityLogo extends StatelessWidget {
   }
 }
 
-/// Clips a rectangle into a flat-top hexagon:
+/// Clips a rectangle into a pointy-top hexagon:
 ///
-///     ___________
-///    /           \
-///   |             |
-///   |             |
-///    \___________/
+///        /\
+///       /  \
+///      |    |
+///      |    |
+///       \  /
+///        \/
 ///
 /// Vertices (as fractions of width × height):
-///   (0.25, 0) → (0.75, 0) → (1, 0.5) → (0.75, 1) → (0.25, 1) → (0, 0.5)
+///   (0.5, 0) → (1, 0.25) → (1, 0.75) → (0.5, 1) → (0, 0.75) → (0, 0.25)
 class _HexClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final w = size.width;
     final h = size.height;
     return Path()
-      ..moveTo(w * 0.25, 0)
-      ..lineTo(w * 0.75, 0)
-      ..lineTo(w, h * 0.5)
-      ..lineTo(w * 0.75, h)
-      ..lineTo(w * 0.25, h)
-      ..lineTo(0, h * 0.5)
+      ..moveTo(w * 0.5, 0)
+      ..lineTo(w, h * 0.25)
+      ..lineTo(w, h * 0.75)
+      ..lineTo(w * 0.5, h)
+      ..lineTo(0, h * 0.75)
+      ..lineTo(0, h * 0.25)
       ..close();
   }
 
