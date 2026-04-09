@@ -44,22 +44,8 @@ class TimelineApi {
       startTime: DateTime.parse(e['event_time'] as String),
       location: e['venue'] as String? ?? '',
       imageUrl: e['image_url'] as String? ?? '',
-      // isLive = true if the event started in the last 30 minutes
-      isLive: _isEventLive(e['event_time'] as String),
       // day is stored in extra_details.day; defaults to 1 if not set
       day: (extra['day'] as num?)?.toInt() ?? 1,
     );
-  }
-
-  /// Returns true if the event start time is within 30 minutes in the past.
-  bool _isEventLive(String eventTimeStr) {
-    try {
-      final eventTime = DateTime.parse(eventTimeStr);
-      final now = DateTime.now();
-      final diff = now.difference(eventTime).inMinutes;
-      return diff >= 0 && diff <= 30;
-    } catch (_) {
-      return false;
-    }
   }
 }

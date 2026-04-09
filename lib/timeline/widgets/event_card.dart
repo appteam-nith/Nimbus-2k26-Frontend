@@ -239,12 +239,13 @@ class TimelineEventCard extends StatelessWidget {
   }
 
   String _formatTime(DateTime dt) {
-    int hour = dt.hour;
-    final minute = dt.minute.toString().padLeft(2, '0');
+    final istTime = dt.toUtc().add(const Duration(hours: 5, minutes: 30));
+    int hour = istTime.hour;
+    final minute = istTime.minute.toString().padLeft(2, '0');
     final isPm = hour >= 12;
     hour = hour % 12;
     if (hour == 0) hour = 12;
     final suffix = isPm ? 'PM' : 'AM';
-    return '$hour:$minute $suffix';
+    return '$hour:$minute $suffix IST';
   }
 }

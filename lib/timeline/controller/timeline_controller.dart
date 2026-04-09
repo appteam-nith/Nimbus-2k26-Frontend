@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/timeline_event.dart';
 import '../services/timeline_api.dart';
@@ -6,11 +7,26 @@ class TimelineController extends ChangeNotifier {
   final TimelineApi _api = TimelineApi();
 
   final List<TimelineEvent> _allEvents = [];
+  Timer? _timer;
 
   bool _isLoading = false;
   String? _error;
 
   int _selectedDay = 1;
+
+  TimelineController() {
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (_allEvents.isNotEmpty) {
+        notifyListeners();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -38,6 +54,15 @@ class TimelineController extends ChangeNotifier {
       _allEvents
         ..clear()
         ..addAll(result);
+
+      // Auto-select Day based on current events
+      final liveEvent = _allEvents.cast<TimelineEvent?>().firstWhere(
+        (e) => e != null && e.isLive, 
+        orElse: () => null
+      );
+      if (liveEvent != null) {
+        _selectedDay = liveEvent.day;
+      }
     } catch (e) {
       _error = 'Failed to load timeline';
     }

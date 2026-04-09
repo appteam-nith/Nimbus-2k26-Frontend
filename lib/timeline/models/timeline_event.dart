@@ -5,7 +5,6 @@ class TimelineEvent {
   final DateTime startTime;
   final String location;
   final String imageUrl;
-  final bool isLive;
   final int day;
 
   TimelineEvent({
@@ -15,9 +14,15 @@ class TimelineEvent {
     required this.startTime,
     required this.location,
     required this.imageUrl,
-    required this.isLive,
     required this.day,
   });
+
+  bool get isLive {
+    final now = DateTime.now().toUtc();
+    final diff = now.difference(startTime.toUtc()).inMinutes;
+    // Event is live from exactly when it starts, up to 60 minutes
+    return diff >= 0 && diff <= 60;
+  }
 
   factory TimelineEvent.fromJson(Map<String, dynamic> json) {
     return TimelineEvent(
@@ -27,7 +32,6 @@ class TimelineEvent {
       startTime: DateTime.parse(json['startTime']),
       location: json['location'],
       imageUrl: json['imageUrl'] ?? '',
-      isLive: json['isLive'],
       day: json['day'],
     );
   }
@@ -40,7 +44,6 @@ class TimelineEvent {
       'startTime': startTime.toIso8601String(),
       'location': location,
       'imageUrl': imageUrl,
-      'isLive': isLive,
       'day': day,
     };
   }

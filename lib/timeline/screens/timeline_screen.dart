@@ -95,9 +95,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
             children: [
               Row(
                 children: [
-                  _dayTab(title: 'Day 1', date: '11 Apr', index: 0),
-                  _dayTab(title: 'Day 2', date: '12 Apr', index: 1),
-                  _dayTab(title: 'Day 3', date: '13 Apr', index: 2),
+                  _dayTab(title: 'Day 1', date: '10 Apr', index: 0),
+                  _dayTab(title: 'Day 2', date: '11 Apr', index: 1),
+                  _dayTab(title: 'Day 3', date: '12 Apr', index: 2),
                 ],
               ),
               AnimatedPositioned(
