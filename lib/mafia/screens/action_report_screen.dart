@@ -231,6 +231,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           const SizedBox(height: 20),
           _buildImagePlaceholder(
             accentColor: accentColor,
+            imagePath: 'assets/images/mafia/kill_success.png',
             icon: Icons.person_off_rounded,
             title: widget.report.title.isNotEmpty ? widget.report.title : 'TERMINATED',
             subtitle: widget.report.targetName ?? 'UNKNOWN ASSET',
@@ -262,6 +263,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           _buildHeader(accentColor: accentColor),
           _buildImagePlaceholder(
             accentColor: accentColor,
+            imagePath: 'assets/images/mafia/bounty_claimed.png',
             icon: Icons.monetization_on_rounded,
             title: widget.report.title.isNotEmpty ? widget.report.title : 'BOUNTY CLAIMED',
             subtitle: widget.report.description,
@@ -306,6 +308,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           _buildHeader(accentColor: accentColor),
           _buildImagePlaceholder(
             accentColor: accentColor,
+            imagePath: 'assets/images/mafia/doctor_cure.png',
             icon: Icons.medical_services_rounded,
             title: widget.report.title.isNotEmpty ? widget.report.title : 'TARGET SAVED',
             subtitle: widget.report.description,
@@ -338,6 +341,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           _buildHeader(accentColor: accentColor),
           _buildImagePlaceholder(
             accentColor: accentColor,
+            imagePath: 'assets/images/mafia/investigate_success.png',
             icon: Icons.fingerprint_rounded,
             title: widget.report.title.isNotEmpty ? widget.report.title : 'INVESTIGATION: SUCCESS',
             subtitle: widget.report.description,
@@ -370,6 +374,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
           _buildHeader(accentColor: accentColor),
           _buildImagePlaceholder(
             accentColor: accentColor,
+            imagePath: 'assets/images/mafia/doctor_meet.png',
             icon: Icons.group_add_rounded,
             title: widget.report.title.isNotEmpty ? widget.report.title : 'CONTACT ESTABLISHED',
             subtitle: widget.report.description,
@@ -423,6 +428,7 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
     required IconData icon,
     required String title,
     required String subtitle,
+    String? imagePath,
   }) {
     return Container(
       height: 200,
@@ -432,45 +438,58 @@ class _ActionReportOverlayState extends State<_ActionReportOverlay>
         border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
         boxShadow: [BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 20)],
       ),
-      child: Stack(
-        children: [
-          Center(child: Icon(icon, size: 80, color: accentColor.withOpacity(0.2))),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (imagePath != null)
+              Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Icon(icon, size: 80, color: accentColor.withOpacity(0.2)),
+                ),
+              )
+            else
+              Center(child: Icon(icon, size: 80, color: accentColor.withOpacity(0.2))),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: accentColor,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title.toUpperCase(),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: accentColor,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -137,6 +137,20 @@ class _RevealScreenState extends State<RevealScreen>
                 letterSpacing: 1,
               ),
             ),
+            const SizedBox(height: 16),
+            if (deaths.isNotEmpty)
+              Container(
+                height: 120,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/mafia/vote_out.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+              ),
             const SizedBox(height: 6),
             Text(
               deaths.isEmpty
