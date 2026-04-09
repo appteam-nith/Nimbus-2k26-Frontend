@@ -1,5 +1,6 @@
 // ignore: depend_on_referenced_packages
 import 'package:flutter/material.dart';
+import '../widgets/nimbus_city_logo.dart';
 import 'package:provider/provider.dart';
 import '../widgets/header.dart';
 import '../widgets/search_bar_widget.dart';
@@ -79,9 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: const Color(0xFF9D5EF5).withValues(alpha: 0.4),
                         ),
                       ),
-                      child: const Center(
-                        child: Text('🎭', style: TextStyle(fontSize: 26)),
-                      ),
+                      child: const NimbusCityLogo(size: 54),
                     ),
                     const SizedBox(width: 16),
                     const Expanded(
@@ -89,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Nimbus Mafia',
+                            'Nimbus City',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 17,
