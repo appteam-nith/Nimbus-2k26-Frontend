@@ -11,6 +11,7 @@ import '../models/chat_model.dart';
 import '../models/player_model.dart';
 import '../services/game_api.dart';
 import '../services/pusher_service.dart';
+import '../../providers/auth_provider.dart';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -596,7 +597,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ScaleTransition(scale: _pulse, child: NimbusCityLogo(size: 72)),
+        ScaleTransition(scale: _pulse, child: NimbusCityLogo(size: 72, onTap: () {})),
         const SizedBox(height: 20),
         const Text(
           'Nimbus City',
@@ -860,17 +861,17 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildRulesHint() {
-    // (emoji, displayName, tagline, roleImagePath, accentColor)
+    // (emoji, displayName, tagline, description, roleImagePath, accentColor)
     final roles = [
-      ('🔪', 'Mafia',   'Kills at night',        'assets/images/mafia/role_mafia.png',          const Color(0xFFEF4444)),
-      ('🩺', 'Doctor',  'Saves one player',       'assets/images/mafia/role_doctor.png',         const Color(0xFF22C55E)),
-      ('🔎', 'Cop',     'Investigates a player',  'assets/images/mafia/role_cop.png',            const Color(0xFF3B82F6)),
-      ('👤', 'Citizen', 'Vote out mafia',          'assets/images/mafia/role_citizen.png',        const Color(0xFF9CA3AF)),
-      ('🩹', 'Nurse',   'Assists the Doctor',     'assets/images/mafia/role_nurse.png',          const Color(0xFF34D399)),
-      ('🎯', 'Hitman',  'Silent assassin',        'assets/images/mafia/role_hitman.png',         const Color(0xFFF97316)),
-      ('💰', 'Bounty Hunter', 'Tracks targets',   'assets/images/mafia/role_bounty_hunter.png',  const Color(0xFFF59E0B)),
-      ('🔮', 'Prophet', 'Sees alignments',        'assets/images/mafia/role_prophet.png',        const Color(0xFFA855F7)),
-      ('📡', 'Reporter','Broadcasts identity',   'assets/images/mafia/role_reporter.png',       const Color(0xFF06B6D4)),
+      ('🔪', 'Mafia', 'Kills at night', 'Kill a player each night.', 'assets/images/mafia/role_mafia.png', const Color(0xFFEF4444)),
+      ('🩺', 'Doctor', 'Saves one player', 'Save (Delayed): Select one player to heal each night. You can change this target until the night timer hits zero.\n\nLimitation: Prevents standard Mafia kills, but cannot stop a Hitman\'s double-kill or a Bounty Hunter\'s revenge shot.', 'assets/images/mafia/role_doctor.png', const Color(0xFF22C55E)),
+      ('🔎', 'Cop', 'Investigates a player', 'Investigate (Instant): Select one player per night to immediately learn their alignment ("CITIZEN", "MAFIA", or "HITMAN").\n\nLimitation: The Hitman has a one-time immunity shield. If you investigate the Hitman on Night 1 or Night 2, your result will falsely show "CITIZEN".', 'assets/images/mafia/role_cop.png', const Color(0xFF3B82F6)),
+      ('👤', 'Citizen', 'Vote out mafia', 'Day Voting: You have no special night abilities. Your power lies in analyzing chat, finding contradictions, and casting your vote to lynch during the Day phase.', 'assets/images/mafia/role_citizen.png', const Color(0xFF9CA3AF)),
+      ('🩹', 'Nurse', 'Assists the Doctor', 'Investigate (Instant): Check one player per night to see if they are the Doctor.\n\nThe Shield: If you find the Doctor, you permanently "meet" them and unlock a secret Nurse-Doctor chat. From then on, you automatically shield the Doctor. The Mafia cannot kill the Doctor unless they eliminate you first.', 'assets/images/mafia/role_nurse.png', const Color(0xFF34D399)),
+      ('🎯', 'Hitman', 'Silent assassin', 'Cop Immunity (Passive): The first time the Cop investigates you (if on Night 1 or 2), you appear as a "CITIZEN". This expires at the end of Night 2.\n\nDouble Kill: Once per night, select exactly two players and guess their exact roles. If both guesses are 100% correct, both targets die instantly.\n\nMeet Mafia: If one of your two guesses correctly identifies a Mafia member, your kill is canceled but you permanently join the Mafia chat.', 'assets/images/mafia/role_hitman.png', const Color(0xFFF97316)),
+      ('💰', 'Bounty Hunter', 'Tracks targets', 'Mark VIP (Night 1): Select one player to protect as your VIP.\n\nRevenge Kill (Delayed): If your VIP dies at any point (except vote out), your lethal ability unlocks. On subsequent nights, you may select one player to shoot. Your bullet ignores Doctor heals but cannot pierce the Nurse+Doc shield.', 'assets/images/mafia/role_bounty_hunter.png', const Color(0xFFF59E0B)),
+      ('🔮', 'Prophet', 'Sees alignments', 'The Clock (Passive): If you survive until the start of Day 4, the game ends immediately and the Citizens win.\n\nThe Blocker (Passive): As long as you remain alive, the Mafia cannot trigger their win condition, even if they outnumber the Citizens.', 'assets/images/mafia/role_prophet.png', const Color(0xFFA855F7)),
+      ('📡', 'Reporter', 'Broadcasts identity', 'Investigate (Delayed): Select one player per night. At the start of the next day, their exact role is publicly broadcasted to all players.', 'assets/images/mafia/role_reporter.png', const Color(0xFF06B6D4)),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -892,10 +893,10 @@ class _LobbyScreenState extends State<LobbyScreen>
             final emoji = r.$1;
             final name  = r.$2;
             final tag   = r.$3;
-            final img   = r.$4;
-            final color = r.$5;
+            final img   = r.$5;
+            final color = r.$6;
             return GestureDetector(
-              onTap: () => _showRoleCard(context, name, img, color),
+              onTap: () => _showRoleCard(context, name, img, color, r.$4),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
@@ -940,12 +941,13 @@ class _LobbyScreenState extends State<LobbyScreen>
     );
   }
 
-  void _showRoleCard(BuildContext context, String name, String imagePath, Color accent) {
+  void _showRoleCard(BuildContext context, String name, String imagePath, Color accent, String description) {
     showDialog(
       context: context,
       barrierColor: Colors.black87,
       builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF161D2B), // Changed to solid color from transparent to support bottom content
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -956,7 +958,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.15),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                border: Border.all(color: accent.withValues(alpha: 0.4)),
+                border: Border(bottom: BorderSide(color: accent.withValues(alpha: 0.4))),
               ),
               child: Row(
                 children: [
@@ -981,26 +983,40 @@ class _LobbyScreenState extends State<LobbyScreen>
               ),
             ),
             // Role image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-              child: Image.asset(
-                imagePath,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  height: 220,
-                  color: const Color(0xFF111827),
-                  child: Center(
-                    child: Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: accent,
-                      ),
+            Image.asset(
+              imagePath,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                height: 220,
+                color: const Color(0xFF111827),
+                child: Center(
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: accent,
                     ),
                   ),
+                ),
+              ),
+            ),
+            // Role Description
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+              ),
+              child: Text(
+                description,
+                style: const TextStyle(
+                  color: Color(0xFFEEF2FF),
+                  fontSize: 13,
+                  height: 1.4,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -1501,10 +1517,29 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
     if (text.isEmpty || _sending || widget.roomCode.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await GameApi.instance.sendChat(widget.roomCode, text);
+      await GameApi.instance.sendChat(widget.roomCode, text, channel: 'lobby');
       _input.clear();
-    } catch (_) {
-      // Fail silently in lobby
+    } catch (e) {
+      debugPrint('[LobbyChat] API Send failed: $e. Falling back to Pusher trigger.');
+      
+      // Fallback to manual pusher client event if backend API throws (e.g. game not started)
+      try {
+        final authParams = context.read<AuthProvider>();
+        final name = authParams.userName ?? 'Player';
+        final payload = {
+          'channel': 'lobby',
+          'message': text,
+          'senderName': name,
+          'senderId': name, // fallback id
+          'isSystem': false,
+          'timestamp': DateTime.now().toIso8601String(),
+        };
+        await PusherService.instance.triggerLobbyChat(widget.roomCode, payload);
+        _msgs.insert(0, ChatMessage.fromJson(payload));
+        _input.clear();
+      } catch (pusherErr) {
+        debugPrint('[LobbyChat] Pusher fallback failed: $pusherErr');
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }

@@ -238,6 +238,18 @@ class PusherService extends ChangeNotifier {
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────
 
+  Future<void> triggerLobbyChat(String roomCode, Map<String, dynamic> data) async {
+    try {
+      await _pusher.trigger(PusherEvent(
+        channelName: 'room-$roomCode',
+        eventName: 'client-chat-message',
+        data: jsonEncode(data),
+      ));
+    } catch (e) {
+      debugPrint('[Pusher] Trigger failed: $e');
+    }
+  }
+
   // pusher_channels_flutter ^2.x passes events as `dynamic` (PusherEvent),
   // so we accept dynamic and cast to avoid subtype errors at runtime.
 
@@ -300,6 +312,10 @@ class PusherService extends ChangeNotifier {
         break;
       case 'player-left':
         _playerLeftController.add(data);
+        break;
+      case 'chat-message':
+      case 'client-chat-message':
+        _chatController.add(data);
         break;
       case 'game-started':
         _gameStartedController.add(data);
