@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import '../../../widgets/nimbus_city_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../controller/game_controller.dart';
 import '../models/chat_model.dart';
 import '../models/player_model.dart';
+import '../models/room_model.dart';
 import '../services/game_api.dart';
 import '../services/pusher_service.dart';
 import '../../providers/auth_provider.dart';
@@ -40,11 +41,12 @@ class LobbyScreen extends StatefulWidget {
 }
 
 class _LobbyScreenState extends State<LobbyScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // ── State ──────────────────────────────────────────────────────────────────
   bool _inRoom = false;
   String? _roomCode;
   String? _myUserId;
+  String? _hostUserId;
   bool _isHost = false;
   String _roomSize = 'FIVE'; // FIVE | EIGHT | TWELVE
   List<PlayerModel> _players = [];
@@ -77,6 +79,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -95,6 +98,7 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _joinSub?.cancel();
     _leaveSub?.cancel();
     _startSub?.cancel();
@@ -102,6 +106,66 @@ class _LobbyScreenState extends State<LobbyScreen>
     _roomClosedSub?.cancel();
     _pulseController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App returned from background: re-sync lobby snapshot so missed realtime
+    // events (e.g. player-joined) are reconciled immediately.
+    if (state == AppLifecycleState.resumed && _inRoom) {
+      unawaited(_resyncLobbyState(reconnectRealtime: true));
+    }
+  }
+
+  Future<void> _resyncLobbyState({bool reconnectRealtime = false}) async {
+    if (!_inRoom || _roomCode == null) return;
+
+    try {
+      var userId = _myUserId;
+      if (userId == null || userId.isEmpty) {
+        userId = context.read<AuthProvider>().user?.uid;
+        if (userId == null || userId.isEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          userId = prefs.getString('user_id');
+        }
+        if (mounted && userId != null && userId.isNotEmpty) {
+          setState(() => _myUserId = userId);
+        }
+      }
+
+      if ((reconnectRealtime || !_pusher.isConnected) &&
+          userId != null &&
+          userId.isNotEmpty) {
+        await _pusher.connect(roomCode: _roomCode!, userId: userId);
+        _subscribeLobbyEvents();
+      }
+
+      final room = await _api.getRoomState(_roomCode!);
+      if (!mounted) return;
+
+      // If game started while app was backgrounded, hand off to GameController.
+      if (room.status != GameStatus.LOBBY &&
+          userId != null &&
+          userId.isNotEmpty) {
+        await context.read<GameController>().init(
+              _roomCode!,
+              userId,
+              reconnect: true,
+            );
+        return;
+      }
+
+      setState(() {
+        _roomSize = room.roomSize;
+        _players = room.players;
+        _hostUserId = room.hostId;
+        if (userId != null && userId.isNotEmpty) {
+          _isHost = room.hostId == userId;
+        }
+      });
+    } catch (_) {
+      // Best-effort sync; keep current UI if refresh fails.
+    }
   }
 
   // ── Pusher lobby subscriptions ─────────────────────────────────────────────
@@ -130,6 +194,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           ];
         });
       }
+      unawaited(_resyncLobbyState());
     });
 
     // player-left → remove from list
@@ -142,7 +207,11 @@ class _LobbyScreenState extends State<LobbyScreen>
         if (newHostId != null && newHostId == _myUserId) {
           _isHost = true;
         }
+        if (newHostId != null) {
+          _hostUserId = newHostId;
+        }
       });
+      unawaited(_resyncLobbyState());
     });
 
     // game-started → GameController takes over and navigates to role screen
@@ -244,7 +313,8 @@ class _LobbyScreenState extends State<LobbyScreen>
 
     setState(() {
       _roomCode = code;
-      _isHost = isHost;
+      _hostUserId = room.hostId;
+      _isHost = room.hostId == _myUserId || isHost;
       _roomSize = room.roomSize;
       _players = room.players;
       _inRoom = true;
@@ -287,6 +357,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     setState(() {
       _inRoom = false;
       _roomCode = null;
+      _hostUserId = null;
       _isHost = false;
       _players = [];
       _error = null;
@@ -1101,42 +1172,64 @@ class _LobbyScreenState extends State<LobbyScreen>
           final filled = i < _players.length;
           final p = filled ? _players[i] : null;
           final isMe = p?.userId == _myUserId;
+          final isHostPlayer = p?.userId == _hostUserId;
           return Container(
             margin: const EdgeInsets.only(right: 8),
             width: 38,
             height: 38,
-            decoration: BoxDecoration(
-              gradient: filled
-                  ? LinearGradient(
-                      colors: isMe
-                          ? [const Color(0xFF4C1D95), _accentGlow]
-                          : [const Color(0xFF1E293B), const Color(0xFF334155)],
-                    )
-                  : null,
-              color: filled ? null : _bg,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: filled ? _accent.withValues(alpha: 0.4) : _border,
-              ),
-            ),
-            child: Center(
-              child: filled
-                  ? Text(
-                      p!.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    )
-                  : Text(
-                      '${i + 1}',
-                      style: const TextStyle(
-                        color: _border,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: filled
+                        ? LinearGradient(
+                            colors: isMe
+                                ? [const Color(0xFF4C1D95), _accentGlow]
+                                : [
+                                    const Color(0xFF1E293B),
+                                    const Color(0xFF334155),
+                                  ],
+                          )
+                        : null,
+                    color: filled ? null : _bg,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: filled ? _accent.withValues(alpha: 0.4) : _border,
                     ),
+                  ),
+                  child: Center(
+                    child: filled
+                        ? Text(
+                            p!.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          )
+                        : Text(
+                            '${i + 1}',
+                            style: const TextStyle(
+                              color: _border,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                if (filled && isHostPlayer)
+                  const Positioned(
+                    right: -2,
+                    top: -4,
+                    child: Text(
+                      '👑',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
           );
         },
@@ -1469,12 +1562,13 @@ class _LobbyScreenState extends State<LobbyScreen>
     );
   }
 }
-
 // ─── LOBBY CHAT WIDGET ────────────────────────────────────────────────────────
 
 /// Pre-game lobby chat — works without GameController.
 /// Uses [PusherService] for receiving and [GameApi] for sending, both of
 /// which are already connected when the waiting room is active.
+/// Tap the expand icon to open a full-screen chat so messages remain
+/// visible while the keyboard is open.
 class _LobbyChatWidget extends StatefulWidget {
   final String roomCode;
   const _LobbyChatWidget({required this.roomCode});
@@ -1485,6 +1579,269 @@ class _LobbyChatWidget extends StatefulWidget {
 
 class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
   final List<ChatMessage> _msgs = [];
+  final ScrollController _scroll = ScrollController();
+  StreamSubscription<Map<String, dynamic>>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = PusherService.instance.onChatMessage.listen(_onMsg);
+    PusherService.instance.subscribeToTeamChannel(widget.roomCode, 'lobby');
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    PusherService.instance.unsubscribeFromTeamChannel(widget.roomCode, 'lobby');
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _onMsg(Map<String, dynamic> data) {
+    if (!mounted) return;
+    final ch = data['channel'] as String? ?? 'global';
+    if (ch != 'global' && ch != 'lobby') return;
+    setState(() => _msgs.insert(0, ChatMessage.fromJson(data)));
+  }
+
+  /// Opens the full-screen chat modal with slide-up animation.
+  void _openFullScreen() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black87,
+        pageBuilder: (ctx, anim, _) => _FullScreenChatModal(
+          roomCode: widget.roomCode,
+          initialMsgs: List<ChatMessage>.from(_msgs),
+        ),
+        transitionDuration: const Duration(milliseconds: 280),
+        transitionsBuilder: (ctx, anim, _, child) => SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // ── Header strip (tappable → opens full-screen) ─────────────────
+        GestureDetector(
+          onTap: _openFullScreen,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: const Color(0xFF0D0B1E),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: _accentGlow,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  '💬  LOBBY CHAT',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: _accentGlow,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_msgs.length} messages',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 10,
+                    color: _textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: _accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: _accent.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.open_in_full_rounded,
+                    size: 13,
+                    color: _accentGlow,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // ── Messages (tap anywhere → opens full-screen) ─────────────────
+        Expanded(
+          child: GestureDetector(
+            onTap: _openFullScreen,
+            behavior: HitTestBehavior.translucent,
+            child: _msgs.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('💬', style: TextStyle(fontSize: 32)),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'No messages yet.\nSay hi while you wait!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _accent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _accent.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.open_in_full_rounded,
+                                size: 12,
+                                color: _accentGlow,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Tap to open chat',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  color: _accentGlow,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scroll,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    itemCount: _msgs.length,
+                    itemBuilder: (_, i) {
+                      final m = _msgs[i];
+                      if (m.isSystem) return _LobbySystemBubble(msg: m);
+                      return _LobbyMsgBubble(msg: m);
+                    },
+                  ),
+          ),
+        ),
+        // ── Input tap-target → opens full-screen modal ──────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: const BoxDecoration(
+            color: _bg,
+            border: Border(top: BorderSide(color: _border)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: _openFullScreen,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _surface,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: _border),
+                    ),
+                    child: const Text(
+                      'Chat while you wait...',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: _textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _openFullScreen,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _accent.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── FULL-SCREEN CHAT MODAL ───────────────────────────────────────────────────
+
+/// Full-screen overlay for lobby chat.
+/// resizeToAvoidBottomInset: true ensures the keyboard pushes messages up
+/// so they are always visible while typing.
+class _FullScreenChatModal extends StatefulWidget {
+  final String roomCode;
+  final List<ChatMessage> initialMsgs;
+
+  const _FullScreenChatModal({
+    required this.roomCode,
+    required this.initialMsgs
+  });
+
+  @override
+  State<_FullScreenChatModal> createState() => _FullScreenChatModalState();
+}
+
+class _FullScreenChatModalState extends State<_FullScreenChatModal> {
+  late final List<ChatMessage> _msgs;
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
   StreamSubscription<Map<String, dynamic>>? _sub;
@@ -1493,15 +1850,13 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
   @override
   void initState() {
     super.initState();
+    _msgs = List<ChatMessage>.from(widget.initialMsgs);
     _sub = PusherService.instance.onChatMessage.listen(_onMsg);
-    // Subscribe to a dedicated private channel for lobby chat client-events
-    PusherService.instance.subscribeToTeamChannel(widget.roomCode, 'lobby');
   }
 
   @override
   void dispose() {
     _sub?.cancel();
-    PusherService.instance.unsubscribeFromTeamChannel(widget.roomCode, 'lobby');
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -1509,10 +1864,10 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
 
   void _onMsg(Map<String, dynamic> data) {
     if (!mounted) return;
-    // Show only global / lobby channel messages in the waiting room
     final ch = data['channel'] as String? ?? 'global';
     if (ch != 'global' && ch != 'lobby') return;
-    setState(() => _msgs.insert(0, ChatMessage.fromJson(data)));
+    final msg = ChatMessage.fromJson(data);
+    setState(() => _msgs.insert(0, msg));
   }
 
   Future<void> _send() async {
@@ -1523,7 +1878,7 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
       await GameApi.instance.sendChat(widget.roomCode, text);
       _input.clear();
     } catch (e) {
-      debugPrint('[LobbyChat] API Send failed: $e');
+      debugPrint('[FullScreenChat] Send failed: $e');
       if (mounted) {
         String msg = e.toString();
         if (msg.contains('Exception:')) msg = msg.split('Exception:').last.trim();
@@ -1542,162 +1897,190 @@ class _LobbyChatWidgetState extends State<_LobbyChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // ── Header strip ────────────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-          color: const Color(0xFF0D0B1E),
-          child: Row(
-            children: [
-              Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(
-                  color: _accentGlow,
-                  shape: BoxShape.circle,
-                ),
+    return Scaffold(
+      backgroundColor: _bg,
+      // KEY FIX: keyboard pushes content up so messages stay visible
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Modal header ───────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0D0B1E),
+                border: Border(bottom: BorderSide(color: _border)),
               ),
-              const SizedBox(width: 8),
-              const Text(
-                '💬  LOBBY CHAT',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: _accentGlow,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_msgs.length} messages',
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 10,
-                  color: _textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // ── Messages ────────────────────────────────────────────────────
-        Expanded(
-          child: _msgs.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('💬', style: TextStyle(fontSize: 32)),
-                      SizedBox(height: 8),
-                      Text(
-                        'No messages yet.\nSay hi while you wait!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _textSecondary,
-                          fontSize: 13,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: _accentGlow,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  controller: _scroll,
-                  reverse: true,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  itemCount: _msgs.length,
-                  itemBuilder: (_, i) {
-                    final m = _msgs[i];
-                    if (m.isSystem) {
-                      return _LobbySystemBubble(msg: m);
-                    }
-                    return _LobbyMsgBubble(msg: m);
-                  },
-                ),
-        ),
-        // ── Input ───────────────────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: const BoxDecoration(
-            color: _bg,
-            border: Border(top: BorderSide(color: _border)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: _border),
-                  ),
-                  child: TextField(
-                    controller: _input,
-                    style: const TextStyle(
+                  const SizedBox(width: 10),
+                  const Text(
+                    '💬  LOBBY CHAT',
+                    style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 14,
-                      color: _textPrimary,
+                      fontWeight: FontWeight.w700,
+                      color: _accentGlow,
+                      letterSpacing: 1.2,
                     ),
-                    decoration: const InputDecoration(
-                      hintText: 'Chat while you wait...',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Inter',
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_msgs.length} messages',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      color: _textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Minimize button
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _border),
+                      ),
+                      child: const Icon(
+                        Icons.close_fullscreen_rounded,
+                        size: 16,
                         color: _textSecondary,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
                       ),
                     ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _sending ? null : _send,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: _sending ? _border : _accent,
-                    shape: BoxShape.circle,
-                    boxShadow: _sending
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: _accent.withValues(alpha: 0.4),
-                              blurRadius: 8,
+            ),
+            // ── Messages ───────────────────────────────────────────────────
+            Expanded(
+              child: _msgs.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('💬', style: TextStyle(fontSize: 40)),
+                          SizedBox(height: 12),
+                          Text(
+                            'No messages yet.\nSay hi while you wait!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _textSecondary,
+                              fontSize: 14,
+                              fontFamily: 'Inter',
                             ),
-                          ],
-                  ),
-                  child: _sending
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white54,
                           ),
-                        )
-                      : const Icon(
-                          Icons.send_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scroll,
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      itemCount: _msgs.length,
+                      itemBuilder: (_, i) {
+                        final m = _msgs[i];
+                        if (m.isSystem) return _LobbySystemBubble(msg: m);
+                        return _LobbyMsgBubble(msg: m);
+                      },
+                    ),
+            ),
+            // ── Input ──────────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              decoration: const BoxDecoration(
+                color: _bg,
+                border: Border(top: BorderSide(color: _border)),
               ),
-            ],
-          ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _surface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: _border),
+                      ),
+                      child: TextField(
+                        controller: _input,
+                        autofocus: true,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: _textPrimary,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Say something...',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            color: _textSecondary,
+                            fontSize: 14,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _sending ? null : _send,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: _sending ? _border : _accent,
+                        shape: BoxShape.circle,
+                        boxShadow: _sending
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: _accent.withValues(alpha: 0.45),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                      ),
+                      child: _sending
+                          ? const Padding(
+                              padding: EdgeInsets.all(13),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white54,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

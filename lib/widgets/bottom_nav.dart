@@ -9,14 +9,19 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    const barContentHeight = 60.0;
+    const logoOverlap = 20.0;
+
     return SizedBox(
-      height: 80,
+      height: barContentHeight + bottomInset + logoOverlap,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           // Bottom bar background
           Container(
-            height: 60,
+            height: barContentHeight + bottomInset,
+            padding: EdgeInsets.only(bottom: bottomInset),
             decoration: const BoxDecoration(
               color: Colors.white,
               boxShadow: [

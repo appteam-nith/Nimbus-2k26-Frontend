@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -33,6 +34,7 @@ import 'mafia/screens/action_report_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _configureSystemUi();
 
   await _initializeFirebase();
 
@@ -46,6 +48,20 @@ void main() async {
         ChangeNotifierProvider(create: (_) => GameController()),
       ],
       child: const MyApp(),
+    ),
+  );
+}
+
+Future<void> _configureSystemUi() async {
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ),
   );
 }
@@ -85,22 +101,21 @@ class MyApp extends StatelessWidget {
 
         // Mafia game screens
         '/mafia/role': (_) => ActionReportListener(
-              child: ReporterBroadcastListener(child: const RoleScreen()),
-            ),
+          child: ReporterBroadcastListener(child: const RoleScreen()),
+        ),
         '/mafia/reveal': (_) => ActionReportListener(
-              child: ReporterBroadcastListener(child: const RevealScreen()),
-            ),
+          child: ReporterBroadcastListener(child: const RevealScreen()),
+        ),
         '/mafia/game-over': (_) => const GameOverScreen(),
         '/mafia/night': (_) => ActionReportListener(
-              child: ReporterBroadcastListener(child: const NightScreen()),
-            ),
+          child: ReporterBroadcastListener(child: const NightScreen()),
+        ),
         '/mafia/discussion': (_) => ActionReportListener(
-              child: ReporterBroadcastListener(
-                  child: const DiscussionScreen()),
-            ),
+          child: ReporterBroadcastListener(child: const DiscussionScreen()),
+        ),
         '/mafia/voting': (_) => ActionReportListener(
-              child: ReporterBroadcastListener(child: const VotingScreen()),
-            ),
+          child: ReporterBroadcastListener(child: const VotingScreen()),
+        ),
         '/mafia/lobby': (_) => const LobbyScreen(),
       },
     );
@@ -128,7 +143,7 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
 
     if (!mounted) return;
 
-    // 🔄 Update Check
+    // ?? Update Check
     try {
       final response = await http
           .get(
@@ -180,7 +195,7 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
 
     if (!mounted) return;
 
-    // 🔁 Reconnect logic
+    // ?? Reconnect logic
     final authProvider = context.read<AuthProvider>();
 
     if (authProvider.isAuthenticated) {
@@ -235,8 +250,7 @@ class AppInitScreen extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.all(18),
                     child: Image(
-                      image:
-                          AssetImage('assets/images/nimbus_logo.webp'),
+                      image: AssetImage('assets/images/nimbus_logo.webp'),
                     ),
                   ),
                 ),
@@ -261,8 +275,7 @@ class AppInitScreen extends StatelessWidget {
                 height: 28,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.6,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               ),
             ],
@@ -295,12 +308,10 @@ class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() =>
-      _MainNavigationScreenState();
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState
-    extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
@@ -322,13 +333,9 @@ class _MainNavigationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
-      bottomNavigationBar: MediaQuery.removePadding(
-        context: context,
-        removeBottom: true,
-        child: BottomNav(
-          currentIndex: _currentIndex,
-          onTap: _onNavItemTapped,
-        ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: _currentIndex,
+        onTap: _onNavItemTapped,
       ),
     );
   }

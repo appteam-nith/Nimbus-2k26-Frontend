@@ -32,10 +32,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
         toolbarHeight: 32,
         title: const Text(
           'Timeline',
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
         ),
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -55,7 +52,19 @@ class _TimelineScreenState extends State<TimelineScreen> {
                   return Center(child: Text(controller.error!));
                 }
                 if (controller.events.isEmpty) {
-                  return const Center(child: Text('No events available'));
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'No events for this day yet',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
                 }
                 return Stack(
                   children: [
@@ -70,6 +79,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     ),
                     // EVENT LIST
                     ListView.builder(
+                      key: ValueKey<int>(controller.selectedDay),
+                      physics: const ClampingScrollPhysics(),
                       itemCount: controller.events.length,
                       itemBuilder: (context, index) {
                         return TimelineEventCard(
@@ -134,36 +145,39 @@ class _TimelineScreenState extends State<TimelineScreen> {
     final bool isSelected = selectedDay == index;
 
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          context.read<TimelineController>().changeDay(index + 1);
-        },
-        child: Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: isSelected
-                      ? const Color(0xFF135BEC)
-                      : const Color(0xFF6B7280),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.read<TimelineController>().changeDay(index + 1);
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: isSelected
+                        ? const Color(0xFF135BEC)
+                        : const Color(0xFF6B7280),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                date,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isSelected
-                      ? const Color(0xFF374151)
-                      : const Color(0xFF9CA3AF),
+                const SizedBox(height: 2),
+                Text(
+                  date,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isSelected
+                        ? const Color(0xFF374151)
+                        : const Color(0xFF9CA3AF),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

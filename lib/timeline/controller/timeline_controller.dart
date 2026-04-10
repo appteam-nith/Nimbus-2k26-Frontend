@@ -65,8 +65,8 @@ class TimelineController extends ChangeNotifier {
 
       // Auto-select Day based on current events
       final liveEvent = _allEvents.cast<TimelineEvent?>().firstWhere(
-        (e) => e != null && e.isLive, 
-        orElse: () => null
+        (e) => e != null && e.isLive,
+        orElse: () => null,
       );
       if (liveEvent != null) {
         _selectedDay = liveEvent.day;
@@ -80,6 +80,7 @@ class TimelineController extends ChangeNotifier {
   }
 
   void changeDay(int day) {
+    if (day < 1 || day > 3) return;
     if (day == _selectedDay) return;
     _selectedDay = day;
     notifyListeners();

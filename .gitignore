@@ -46,3 +46,6 @@ app.*.map.json
 
 # Dart defines — contains secret keys, never commit the real file
 dart_defines.json
+
+upload-keystore.jks
+upload_certificate.pem

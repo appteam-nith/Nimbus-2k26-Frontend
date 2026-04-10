@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "874867001359-fsirvd4s1b9mrfvhbigcmdkk9tqsirbe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "appteam.nimbus.app",
+            "certificate_hash": "d162332d55392c094b397f1981e9621d047123e6"
+          }
+        },
+        {
           "client_id": "874867001359-q5trt2696memkm3p615lgikdd5hjlgfi.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -45,6 +53,57 @@
             {
               "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "874867001359-gcem0fpgkcb1ds57urchosseg9g9kfvq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "appteam.nimbus.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874867001359:android:191435948f9b1c90fafb7a",
+        "android_client_info": {
+          "package_name": "com.appteam.nimbus_2k26_frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "874867001359-ucb7rd50a5pt0l16g4tq9u026o23pji7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appteam.nimbus_2k26_frontend",
+            "certificate_hash": "d162332d55392c094b397f1981e9621d047123e6"
+          }
+        },
+        {
+          "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmCs0hL1WUzFrWkB4BnFv398vIp4GejzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "874867001359-gcem0fpgkcb1ds57urchosseg9g9kfvq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "appteam.nimbus.app"
+              }
             }
           ]
         }
