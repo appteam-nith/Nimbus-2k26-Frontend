@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "874867001359-q5trt2696memkm3p615lgikdd5hjlgfi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "appteam.nimbus.app",
+            "certificate_hash": "17355cd001e72dc1253cc857611dff12313841bc"
+          }
+        },
+        {
           "client_id": "874867001359-dcd4e2pamf6tn65b6ls3u0ogd8013nhm.apps.googleusercontent.com",
           "client_type": 3
         }

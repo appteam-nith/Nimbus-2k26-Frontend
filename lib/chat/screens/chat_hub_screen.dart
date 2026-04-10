@@ -34,8 +34,31 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
 
   Future<void> _ensureNickname({required bool required}) async {
     final auth = context.read<AuthProvider>();
-    final existing = auth.userNickname?.trim();
-    if (existing != null && existing.isNotEmpty) return;
+    final existing = auth.userNickname?.trim() ?? '';
+
+    if (!required) {
+      final nickname = await _showNicknameDialog(
+        required: false,
+        currentNickname: existing,
+      );
+      if (!mounted || nickname == null) return;
+
+      final ok = await auth.updateNickname(nickname);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? 'Chat nickname updated.'
+                : (auth.errorMessage ?? 'Unable to update nickname.'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (existing.isNotEmpty) return;
 
     while (mounted) {
       final nickname = await _showNicknameDialog(
@@ -73,7 +96,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     required bool required,
     required String currentNickname,
   }) async {
-    final controller = TextEditingController(text: currentNickname);
+    var nicknameValue = currentNickname;
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: !required,
@@ -82,10 +105,11 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
           canPop: !required,
           child: AlertDialog(
             title: Text(required ? 'Set Chat Nickname' : 'Change Nickname'),
-            content: TextField(
-              controller: controller,
+            content: TextFormField(
+              initialValue: currentNickname,
               maxLength: 24,
               autofocus: true,
+              onChanged: (value) => nicknameValue = value,
               decoration: const InputDecoration(
                 hintText: 'Enter nickname',
                 helperText: 'This name is shown in chat rooms.',
@@ -99,7 +123,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                 ),
               ElevatedButton(
                 onPressed: () {
-                  final value = controller.text.trim();
+                  final value = nicknameValue.trim();
                   if (value.isEmpty) return;
                   Navigator.of(dialogContext).pop(value);
                 },
@@ -110,7 +134,6 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
         );
       },
     );
-    controller.dispose();
     return result;
   }
 
@@ -119,11 +142,11 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     AuthProvider auth,
   ) async {
     final rootMessenger = ScaffoldMessenger.of(context);
-    final roomController = TextEditingController();
-    final passwordController = TextEditingController();
+    var roomValue = '';
+    var passwordValue = '';
     var lockRoom = false;
 
-    await showDialog<void>(
+    final createdRoomName = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -136,7 +159,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
-                      controller: roomController,
+                      onChanged: (value) => roomValue = value,
                       decoration: const InputDecoration(
                         labelText: 'Room name',
                         hintText: 'Example: Hostel D Block',
@@ -154,8 +177,8 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                     if (lockRoom) ...[
                       const SizedBox(height: 4),
                       TextField(
-                        controller: passwordController,
                         obscureText: true,
+                        onChanged: (value) => passwordValue = value,
                         decoration: const InputDecoration(
                           labelText: 'Room password',
                           hintText: 'At least 4 characters',
@@ -172,7 +195,6 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final navigator = Navigator.of(dialogContext);
                     final nickname = auth.userNickname?.trim();
                     if (nickname == null || nickname.isEmpty) {
                       rootMessenger.showSnackBar(
@@ -186,11 +208,11 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                     }
 
                     final error = await chat.createRoom(
-                      name: roomController.text,
+                      name: roomValue,
                       createdById: _currentUserId(auth),
                       createdByName: nickname,
                       lockRoom: lockRoom,
-                      password: passwordController.text,
+                      password: passwordValue,
                     );
 
                     if (error != null) {
@@ -200,15 +222,9 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                       return;
                     }
 
-                    final roomName = roomController.text.trim();
-                    navigator.pop();
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      final room = chat.roomByName(roomName);
-                      if (room != null) {
-                        _openRoom(room);
-                      }
-                    });
+                    final roomName = roomValue.trim();
+                    if (!dialogContext.mounted) return;
+                    Navigator.of(dialogContext).pop(roomName);
                   },
                   child: const Text('Create'),
                 ),
@@ -218,21 +234,25 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
         );
       },
     );
-    roomController.dispose();
-    passwordController.dispose();
+
+    if (!mounted || createdRoomName == null) return;
+    final room = chat.roomByName(createdRoomName);
+    if (room != null) {
+      await _openRoom(room);
+    }
   }
 
   Future<void> _openRoom(CommunityChatRoom room) async {
     if (room.isLocked && !room.isPublic) {
-      final passwordController = TextEditingController();
+      var enteredValue = '';
       final enteredPassword = await showDialog<String>(
         context: context,
         builder: (dialogContext) {
           return AlertDialog(
             title: Text('${room.name} is locked'),
             content: TextField(
-              controller: passwordController,
               obscureText: true,
+              onChanged: (value) => enteredValue = value,
               decoration: const InputDecoration(
                 labelText: 'Enter room password',
               ),
@@ -244,7 +264,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop(passwordController.text);
+                  Navigator.of(dialogContext).pop(enteredValue);
                 },
                 child: const Text('Join'),
               ),
@@ -252,7 +272,6 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
           );
         },
       );
-      passwordController.dispose();
 
       if (!mounted || enteredPassword == null) return;
       final ok = context.read<CommunityChatProvider>().verifyRoomPassword(

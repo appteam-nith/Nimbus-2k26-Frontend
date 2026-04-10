@@ -41,30 +41,32 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCHU5fM7mpPtZricSwxNX1H4ChxpKBrt_Y',
-    appId: '1:4003601570:web:b617cd8665e59b69220bfb',
-    messagingSenderId: '4003601570',
-    projectId: 'nimbus-2k26-e52e6',
-    authDomain: 'nimbus-2k26-e52e6.firebaseapp.com',
-    storageBucket: 'nimbus-2k26-e52e6.firebasestorage.app',
-    measurementId: 'G-LZ3KPXGPWD',
+    apiKey: 'AIzaSyCF54lCs3m0mAw8EYcVB5OqeaxtiGQd-3s',
+    appId: '1:874867001359:web:e5891bac85c4c2a1fafb7a',
+    messagingSenderId: '874867001359',
+    projectId: 'nimbus-2k26-7823c',
+    authDomain: 'nimbus-2k26-7823c.firebaseapp.com',
+    storageBucket: 'nimbus-2k26-7823c.firebasestorage.app',
+    measurementId: 'G-MWDW8FZM80',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAUyMJzQpDGk0PWg8_2bKl28xfAnX4p7Yw',
-    appId: '1:4003601570:android:43538af5619931dc220bfb',
-    messagingSenderId: '4003601570',
-    projectId: 'nimbus-2k26-e52e6',
-    storageBucket: 'nimbus-2k26-e52e6.firebasestorage.app',
+    apiKey: 'AIzaSyCmCs0hL1WUzFrWkB4BnFv398vIp4GejzE',
+    appId: '1:874867001359:android:1228b1c93072f2a3fafb7a',
+    messagingSenderId: '874867001359',
+    projectId: 'nimbus-2k26-7823c',
+    storageBucket: 'nimbus-2k26-7823c.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDLuwkLL6TNi8iJAvzmv6DJN0SDDzSf02w',
-    appId: '1:4003601570:ios:fa94f53c502bbf6a220bfb',
-    messagingSenderId: '4003601570',
-    projectId: 'nimbus-2k26-e52e6',
-    storageBucket: 'nimbus-2k26-e52e6.firebasestorage.app',
-    iosBundleId: 'com.appteam.nimbus2k26frontend',
+    apiKey: 'AIzaSyBJ2ySnDWfItBq_5FvZzhJnVLVwWVLB_yc',
+    appId: '1:874867001359:ios:7d05675203dd93eefafb7a',
+    messagingSenderId: '874867001359',
+    projectId: 'nimbus-2k26-7823c',
+    storageBucket: 'nimbus-2k26-7823c.firebasestorage.app',
+    androidClientId: '874867001359-bs5c6rj00hr7hoiueagv6vvjjvi59t58.apps.googleusercontent.com',
+    iosClientId: '874867001359-gcem0fpgkcb1ds57urchosseg9g9kfvq.apps.googleusercontent.com',
+    iosBundleId: 'appteam.nimbus.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
