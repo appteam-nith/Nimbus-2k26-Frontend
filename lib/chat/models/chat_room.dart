@@ -1,6 +1,7 @@
 import 'chat_message.dart';
 
 class CommunityChatRoom {
+  final String id;
   final String name;
   final bool isPublic;
   final String createdById;
@@ -11,6 +12,7 @@ class CommunityChatRoom {
   final List<CommunityChatMessage> messages;
 
   CommunityChatRoom({
+    this.id = '',
     required this.name,
     required this.isPublic,
     required this.createdById,
@@ -23,6 +25,7 @@ class CommunityChatRoom {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'isPublic': isPublic,
       'createdById': createdById,
@@ -52,6 +55,7 @@ class CommunityChatRoom {
     }
 
     return CommunityChatRoom(
+      id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       isPublic: json['isPublic'] == true,
       createdById: (json['createdById'] ?? '').toString(),

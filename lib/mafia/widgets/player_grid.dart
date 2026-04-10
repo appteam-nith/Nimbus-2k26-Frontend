@@ -327,7 +327,7 @@ class _RoleIconBadge extends StatelessWidget {
         child: Image.asset(
           _iconPath(role),
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) =>
+          errorBuilder: (_, _, _) =>
               const Icon(Icons.shield_rounded, size: 12, color: Colors.white),
         ),
       ),
