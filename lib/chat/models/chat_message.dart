@@ -1,4 +1,5 @@
 class CommunityChatMessage {
+  final String id;
   final String? roomName;
   final String senderNickname;
   final String text;
@@ -6,6 +7,7 @@ class CommunityChatMessage {
   final bool isSystem;
 
   const CommunityChatMessage({
+    this.id = '',
     this.roomName,
     required this.senderNickname,
     required this.text,
@@ -15,6 +17,7 @@ class CommunityChatMessage {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'roomName': roomName,
       'senderNickname': senderNickname,
       'text': text,
@@ -25,6 +28,7 @@ class CommunityChatMessage {
 
   factory CommunityChatMessage.fromJson(Map<String, dynamic> json) {
     return CommunityChatMessage(
+      id: json['id']?.toString() ?? '',
       roomName: json['roomName'] as String?,
       senderNickname: (json['senderNickname'] ?? '').toString(),
       text: (json['text'] ?? '').toString(),

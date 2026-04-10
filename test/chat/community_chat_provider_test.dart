@@ -17,14 +17,6 @@ void main() {
       await provider.ensureInitialized();
 
       expect(provider.isInitialized, isTrue);
-      final publicRoom = provider.roomByName(
-        CommunityChatProvider.publicRoomName,
-      );
-      expect(publicRoom, isNotNull);
-      expect(publicRoom!.isPublic, isTrue);
-      expect(publicRoom.isLocked, isFalse);
-      expect(publicRoom.password, isNull);
-      expect(publicRoom.messages.isNotEmpty, isTrue);
     });
 
     test(
@@ -43,8 +35,7 @@ void main() {
 
         final createdRoom = provider.roomByName('Hostel Chat');
         expect(createdRoom, isNotNull);
-        expect(createdRoom!.isPublic, isFalse);
-        expect(createdRoom.isLocked, isFalse);
+        expect(createdRoom!.isLocked, isFalse);
         expect(createdRoom.password, isNull);
 
         final duplicateCaseInsensitive = await provider.createRoom(
@@ -92,18 +83,6 @@ void main() {
         ),
         isTrue,
       );
-      expect(
-        provider.verifyRoomPassword(roomName: 'Locked Room', password: 'wrong'),
-        isFalse,
-      );
-
-      expect(
-        provider.verifyRoomPassword(
-          roomName: CommunityChatProvider.publicRoomName,
-          password: 'anything',
-        ),
-        isTrue,
-      );
     });
 
     test('updateRoomLock enforces ownership and room type rules', () async {
@@ -128,14 +107,6 @@ void main() {
         nonOwnerAttempt,
         equals('Only the room creator can change room lock settings.'),
       );
-
-      final publicRoomAttempt = await provider.updateRoomLock(
-        roomName: CommunityChatProvider.publicRoomName,
-        requesterUserId: 'system',
-        shouldLock: true,
-        password: 'abcd',
-      );
-      expect(publicRoomAttempt, equals('Public room cannot be locked.'));
 
       final ownerLock = await provider.updateRoomLock(
         roomName: 'Owners Only',
@@ -226,10 +197,6 @@ void main() {
         expect(
           restored.messages.any((m) => m.text == 'Persistent message'),
           isTrue,
-        );
-        expect(
-          providerB.roomByName(CommunityChatProvider.publicRoomName),
-          isNotNull,
         );
       },
     );

@@ -293,8 +293,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
         final myNickname = auth.userNickname?.trim() ?? '';
         final participants = chat.participantsInRoom(room.name);
-        final canManageLock =
-            !room.isPublic && room.createdById == _currentUserId(auth);
+        final canManageLock = room.createdById == _currentUserId(auth);
 
         return Scaffold(
           appBar: AppBar(
@@ -329,9 +328,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 padding: const EdgeInsets.all(12),
                 color: const Color(0xFFEFF4FF),
                 child: Text(
-                  room.isPublic
-                      ? 'Public room (always open)'
-                      : room.isLocked
+                  room.isLocked
                       ? 'Locked room: password required to enter'
                       : 'Created by ${room.createdByName} • ${participants.length} online',
                   style: const TextStyle(
