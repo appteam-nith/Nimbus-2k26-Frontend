@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../models/chat_room.dart';
 import '../providers/community_chat_provider.dart';
 import 'chat_room_screen.dart';
+import 'public_chat_screen.dart';
 
 class ChatHubScreen extends StatefulWidget {
   const ChatHubScreen({super.key});
@@ -238,12 +239,12 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
     if (!mounted || createdRoomName == null) return;
     final room = chat.roomByName(createdRoomName);
     if (room != null) {
-      await _openRoom(room);
+      await _openRoom(room, justCreated: true);
     }
   }
 
-  Future<void> _openRoom(CommunityChatRoom room) async {
-    if (room.isLocked && !room.isPublic) {
+  Future<void> _openRoom(CommunityChatRoom room, {bool justCreated = false}) async {
+    if (room.isLocked && !justCreated) {
       var enteredValue = '';
       final enteredPassword = await showDialog<String>(
         context: context,
@@ -326,40 +327,52 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    // Static Public Chat
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      elevation: 2,
+                      child: ListTile(
+                        onTap: () {
+                           Navigator.of(context).push(
+                             MaterialPageRoute(
+                               builder: (context) => const PublicChatScreen(),
+                             ),
+                           );
+                        },
+                        leading: const CircleAvatar(
+                          backgroundColor: Color(0xFFE8F5E9),
+                          child: Icon(Icons.public, color: Color(0xFF2E7D32)),
+                        ),
+                        title: const Text('Public Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text('Always open global chatroom'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                      ),
+                    ),
+                    const Text('Custom Rooms', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                    const SizedBox(height: 8),
                     ...chat.rooms.map(
                       (room) => Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           onTap: () => _openRoom(room),
                           leading: CircleAvatar(
-                            backgroundColor: room.isPublic
-                                ? const Color(0xFFE8F5E9)
-                                : const Color(0xFFEFF4FF),
+                            backgroundColor: const Color(0xFFEFF4FF),
                             child: Icon(
-                              room.isPublic
-                                  ? Icons.public
-                                  : room.isLocked
+                              room.isLocked
                                   ? Icons.lock_outline
                                   : Icons.chat_bubble_outline,
-                              color: room.isPublic
-                                  ? const Color(0xFF2E7D32)
-                                  : const Color(0xFF1A3BB3),
+                              color: const Color(0xFF1A3BB3),
                             ),
                           ),
                           title: Text(room.name),
-                          subtitle: Text(
-                            room.isPublic
-                                ? 'Always open'
-                                : 'Created by ${room.createdByName}',
-                          ),
-                          trailing: room.isLocked && !room.isPublic
+                          subtitle: Text('Created by ${room.createdByName}'),
+                          trailing: room.isLocked
                               ? const Icon(Icons.key, size: 18)
                               : const Icon(Icons.arrow_forward_ios, size: 14),
                         ),
                       ),
                     ),
-                    if (chat.customRooms.isEmpty)
+                    if (chat.rooms.isEmpty)
                       const Padding(
                         padding: EdgeInsets.only(top: 8),
                         child: Text(

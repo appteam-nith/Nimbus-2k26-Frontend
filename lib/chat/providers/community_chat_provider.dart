@@ -11,30 +11,27 @@ class CommunityChatProvider extends ChangeNotifier {
   static const String _baseUrl = 'https://nimbus-2k26-backend-olhw.onrender.com';
 
   final Map<String, CommunityChatRoom> _rooms = {};
+  final List<CommunityChatMessage> _publicMessages = [];
   bool _isInitialized = false;
 
   bool get isInitialized => _isInitialized;
 
   List<CommunityChatRoom> get rooms {
     final all = _rooms.values.toList();
-    all.sort((a, b) {
-      if (a.isPublic && !b.isPublic) return -1;
-      if (!a.isPublic && b.isPublic) return 1;
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return all;
   }
 
-  List<CommunityChatRoom> get customRooms =>
-      rooms.where((room) => !room.isPublic).toList();
+  List<CommunityChatRoom> get customRooms => rooms;
+  
+  List<CommunityChatMessage> get publicMessages => _publicMessages;
 
   CommunityChatRoom? roomByName(String roomName) {
     return _rooms[roomName.trim()];
   }
   
   List<String> participantsInRoom(String roomName) {
-    // Member tracking was moved to stateless backend messages.
-    return const [];
+    return _rooms[roomName]?.members ?? [];
   }
 
   Future<String?> _getToken() async {
@@ -52,6 +49,7 @@ class CommunityChatProvider extends ChangeNotifier {
     if (_isInitialized) return;
     try {
       await fetchRooms();
+      await fetchPublicMessages();
       _setupGlobalPusher();
       _isInitialized = true;
       notifyListeners();
@@ -65,6 +63,18 @@ class CommunityChatProvider extends ChangeNotifier {
     // Note: To receive pusher events, the backend triggers on 'community-global'.
     // Pusher channels flutter needs us to subscribe to it explicitly if not using a unified channel.
     PusherService.instance.subscribeToGlobalCommunityChat(_onGlobalPusherEvent);
+    // Subscribe to public chat
+    PusherService.instance.subscribeToPublicChat(_onPublicPusherEvent);
+  }
+  
+  void _onPublicPusherEvent(dynamic event) {
+    try {
+      if (event != null && event['event'] == 'chat-message') {
+        final msg = CommunityChatMessage.fromJson(jsonDecode(event['data']));
+        _publicMessages.add(msg);
+        notifyListeners();
+      }
+    } catch (_) {}
   }
   
   void _onGlobalPusherEvent(dynamic event) {
@@ -77,36 +87,56 @@ class CommunityChatProvider extends ChangeNotifier {
           final room = CommunityChatRoom.fromJson(data);
           _rooms[room.name] = room;
           notifyListeners();
+        } else if (eventName == 'room-deleted') {
+          final roomName = data['name'];
+          if (roomName != null) {
+            _rooms.remove(roomName);
+            notifyListeners();
+          }
         }
       }
     } catch (_) {}
   }
 
-  /// Load all rooms from the backend
   Future<void> fetchRooms() async {
     final token = await _getToken() ?? '';
     final url = Uri.parse('$_baseUrl/api/community-chat/rooms');
-    final res = await http.get(url, headers: _headers(token)).timeout(const Duration(seconds: 10));
     
-    if (res.statusCode == 200) {
-      final json = jsonDecode(res.body);
-      _rooms.clear();
+    _rooms.clear();
+    try {
+      final res = await http.get(url, headers: _headers(token)).timeout(const Duration(seconds: 10));
       
-      // Inject the permanent global public room
-      final globalRoom = CommunityChatRoom(
-        id: 'global-1',
-        name: publicRoomName,
-        isPublic: true,
-        createdAt: DateTime(2025, 1, 1),
-      );
-      _rooms[globalRoom.name] = globalRoom;
-
-      for (final r in (json['rooms'] as List)) {
-        final room = CommunityChatRoom.fromJson(r);
-        _rooms[room.name] = room;
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        for (final r in (json['rooms'] as List)) {
+          final room = CommunityChatRoom.fromJson(r);
+          _rooms[room.name] = room;
+        }
       }
-      notifyListeners();
+    } catch (e) {
+      debugPrint('[fetchRooms] Network or parse error: $e');
     }
+    
+    notifyListeners();
+  }
+
+  Future<void> fetchPublicMessages() async {
+    final token = await _getToken() ?? '';
+    final url = Uri.parse('$_baseUrl/api/community-chat/public/messages');
+    
+    _publicMessages.clear();
+    try {
+      final res = await http.get(url, headers: _headers(token)).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        for (final m in (json['messages'] as List)) {
+          _publicMessages.add(CommunityChatMessage.fromJson(m));
+        }
+      }
+    } catch (e) {
+      debugPrint('[fetchPublicMessages] Error: $e');
+    }
+    notifyListeners();
   }
 
   Future<String?> createRoom({
@@ -227,12 +257,50 @@ class CommunityChatProvider extends ChangeNotifier {
       ).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
-        return null; // Successfully sent. Rely on Pusher to render it.
+        final parsedMsg = CommunityChatMessage.fromJson(jsonDecode(res.body)['message']);
+        final room = _rooms[roomName];
+        if (room != null && !room.messages.any((m) => m.id == parsedMsg.id)) {
+          room.messages.add(parsedMsg);
+          notifyListeners();
+        }
+        return null;
       } else {
         return jsonDecode(res.body)['error'] ?? 'Failed to send msg';
       }
     } catch (e) {
       return 'Network error sending message';
+    }
+  }
+
+  Future<String?> sendPublicMessage({
+    required String senderNickname,
+    required String text,
+  }) async {
+    final token = await _getToken() ?? '';
+    final url = Uri.parse('$_baseUrl/api/community-chat/public/messages');
+    
+    try {
+      final res = await http.post(
+        url, 
+        headers: _headers(token),
+        body: jsonEncode({
+          'senderNickname': senderNickname,
+          'text': text
+        })
+      ).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode == 200) {
+        final parsedMsg = CommunityChatMessage.fromJson(jsonDecode(res.body)['message']);
+        if (!_publicMessages.any((m) => m.id == parsedMsg.id)) {
+          _publicMessages.add(parsedMsg);
+          notifyListeners();
+        }
+        return null; // Successfully sent.
+      } else {
+        return jsonDecode(res.body)['error'] ?? 'Failed to send public msg';
+      }
+    } catch (e) {
+      return 'Network error sending public message';
     }
   }
 
@@ -308,10 +376,21 @@ class CommunityChatProvider extends ChangeNotifier {
         
         if (eventName == 'chat-message') {
           final msg = CommunityChatMessage.fromJson(data);
-          final room = _rooms[msg.roomName]; // We added roomName relation in schema!
+          final room = _rooms[msg.roomName]; 
           if (room != null) {
-            room.messages.add(msg);
-            notifyListeners();
+            if (!room.messages.any((m) => m.id == msg.id)) {
+              room.messages.add(msg);
+              if (msg.isSystem) {
+                if (msg.text.endsWith(' joined')) {
+                  final nn = msg.text.replaceAll(' joined', '');
+                  if (!room.members.contains(nn)) room.members.add(nn);
+                } else if (msg.text.endsWith(' left')) {
+                  final nn = msg.text.replaceAll(' left', '');
+                  room.members.remove(nn);
+                }
+              }
+              notifyListeners();
+            }
           }
         }
       }
