@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import '../../../widgets/nimbus_city_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -1017,12 +1017,14 @@ class _LobbyScreenState extends State<LobbyScreen>
       context: context,
       barrierColor: Colors.black87,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF161D2B), // Changed to solid color from transparent to support bottom content
+        backgroundColor: const Color(0xFF161D2B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        clipBehavior: Clip.antiAlias,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Card header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1092,6 +1094,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               ),
             ),
           ],
+          ),
         ),
       ),
     );
