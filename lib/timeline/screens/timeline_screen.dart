@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../services/notification_service.dart';
 import '../controller/timeline_controller.dart';
 import '../widgets/event_card.dart';
 
@@ -15,7 +16,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<TimelineController>().loadTimeline();
+      if (mounted) {
+        LocalNotificationService.instance.requestPermissions();
+        context.read<TimelineController>().loadTimeline();
+      }
     });
   }
 
