@@ -274,7 +274,7 @@ class _ChatHubScreenState extends State<ChatHubScreen> {
       );
 
       if (!mounted || enteredPassword == null) return;
-      final ok = context.read<CommunityChatProvider>().verifyRoomPassword(
+      final ok = await context.read<CommunityChatProvider>().verifyRoomPassword(
         roomName: room.name,
         password: enteredPassword,
       );
