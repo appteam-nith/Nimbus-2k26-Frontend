@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'timeline/controller/timeline_controller.dart';
 import 'chat/providers/community_chat_provider.dart';
@@ -156,7 +157,8 @@ class _AppBootstrapScreenState extends State<AppBootstrapScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final requiredVersionCode = data['requiredVersionCode'] ?? 7;
-        const currentVersionCode = 7;
+        final packageInfo = await PackageInfo.fromPlatform();
+        final currentVersionCode = int.tryParse(packageInfo.buildNumber) ?? 8;
 
         if (currentVersionCode < requiredVersionCode) {
           if (!mounted) return;
