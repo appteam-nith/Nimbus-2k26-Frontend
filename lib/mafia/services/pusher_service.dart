@@ -115,6 +115,31 @@ class PusherService extends ChangeNotifier {
 
   // ─── CONNECT ────────────────────────────────────────────────────────────────
 
+  Future<void> ensureConnected() async {
+    if (_connected) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token') ?? '';
+
+    try {
+      await _pusher.init(
+        apiKey: _appKey,
+        cluster: _cluster,
+        authEndpoint: '$_baseUrl/api/game/pusher/auth',
+        authParams: {
+          'headers': {'Authorization': 'Bearer $token'},
+        },
+        onError: (message, code, error) {
+          debugPrint('[Pusher] Error $code: $message — $error');
+        },
+      );
+      await _pusher.connect();
+      _connected = true;
+    } catch (e) {
+      debugPrint('[Pusher] ensureConnected failed: $e');
+    }
+  }
+
   Future<void> connect({
     required String roomCode,
     required String userId,
