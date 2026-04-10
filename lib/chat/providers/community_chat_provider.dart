@@ -48,6 +48,7 @@ class CommunityChatProvider extends ChangeNotifier {
   Future<void> ensureInitialized() async {
     if (_isInitialized) return;
     try {
+      await PusherService.instance.ensureConnected();
       await fetchRooms();
       await fetchPublicMessages();
       _setupGlobalPusher();
