@@ -91,6 +91,16 @@ class CommunityChatProvider extends ChangeNotifier {
     if (res.statusCode == 200) {
       final json = jsonDecode(res.body);
       _rooms.clear();
+      
+      // Inject the permanent global public room
+      final globalRoom = CommunityChatRoom(
+        id: 'global-1',
+        name: publicRoomName,
+        isPublic: true,
+        createdAt: DateTime(2025, 1, 1),
+      );
+      _rooms[globalRoom.name] = globalRoom;
+
       for (final r in (json['rooms'] as List)) {
         final room = CommunityChatRoom.fromJson(r);
         _rooms[room.name] = room;
