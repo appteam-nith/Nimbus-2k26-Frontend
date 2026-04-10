@@ -206,7 +206,6 @@ class _NightScreenState extends State<NightScreen> {
     bool hasAction = false;
     String actionLabel = 'Select player';
     String voteType = '';
-    Widget? customWidget;
 
     if (!isAlive) {
       title = 'You are Eliminated';
@@ -368,12 +367,7 @@ class _NightScreenState extends State<NightScreen> {
                 const SizedBox(height: 24),
 
                 // Main Interaction Area
-                if (customWidget != null)
-                  Expanded(
-                    flex: _subscribedTeam != null ? 3 : 1,
-                    child: customWidget,
-                  )
-                else if (hasAction)
+                if (hasAction)
                   Expanded(
                     flex: _subscribedTeam != null ? 3 : 1,
                     child: SingleChildScrollView(
@@ -445,7 +439,6 @@ class _NightScreenState extends State<NightScreen> {
 
                 // Controls (Standard)
                 if (hasAction &&
-                    customWidget == null &&
                     myRole != GameRole.HITMAN)
                   Padding(
                     padding: const EdgeInsets.all(24.0),

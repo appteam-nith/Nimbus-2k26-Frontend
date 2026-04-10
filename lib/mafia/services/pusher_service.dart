@@ -376,6 +376,56 @@ class PusherService extends ChangeNotifier {
     }
   }
 
+  // ─── COMMUNITY CHAT ──────────────────────────────────────────────────────────
+
+  Future<void> subscribeToGlobalCommunityChat(void Function(dynamic) onEvent) async {
+    try {
+      await _pusher.subscribe(
+        channelName: 'community-global',
+        onEvent: (e) {
+          final ev = e as PusherEvent;
+          onEvent({'event': ev.eventName, 'data': ev.data});
+        },
+      );
+    } catch (_) {}
+  }
+
+  Future<void> subscribeToPublicChat(void Function(dynamic) onEvent) async {
+    try {
+      await _pusher.subscribe(
+        channelName: 'public-chat',
+        onEvent: (e) {
+          final ev = e as PusherEvent;
+          onEvent({'event': ev.eventName, 'data': ev.data});
+        },
+      );
+    } catch (_) {}
+  }
+
+  Future<void> unsubscribeFromPublicChat() async {
+    try {
+      await _pusher.unsubscribe(channelName: 'public-chat');
+    } catch (_) {}
+  }
+
+  Future<void> subscribeToCommunityRoom(String roomId, void Function(dynamic) onEvent) async {
+    try {
+      await _pusher.subscribe(
+        channelName: 'community-$roomId',
+        onEvent: (e) {
+          final ev = e as PusherEvent;
+          onEvent({'event': ev.eventName, 'data': ev.data});
+        },
+      );
+    } catch (_) {}
+  }
+
+  Future<void> unsubscribeFromCommunityRoom(String roomId) async {
+    try {
+      await _pusher.unsubscribe(channelName: 'community-$roomId');
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     disconnect();

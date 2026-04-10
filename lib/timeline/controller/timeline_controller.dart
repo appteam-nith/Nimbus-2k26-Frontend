@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../services/notification_service.dart';
 import '../models/timeline_event.dart';
 import '../services/timeline_api.dart';
 
@@ -54,6 +55,13 @@ class TimelineController extends ChangeNotifier {
       _allEvents
         ..clear()
         ..addAll(result);
+
+      // Schedule notifications for every cached event safely 
+      for (final event in _allEvents) {
+         try {
+           await LocalNotificationService.instance.scheduleEventNotifications(event);
+         } catch (_) {}
+      }
 
       // Auto-select Day based on current events
       final liveEvent = _allEvents.cast<TimelineEvent?>().firstWhere(
